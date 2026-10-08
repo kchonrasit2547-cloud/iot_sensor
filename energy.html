@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>พลังงานไฟฟ้า PZEM - Smart IoT Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* fallback styles for the PZEM cards */
+    :where(.pz-banner) {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding: 20px 24px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: #fff;
+      margin-bottom: 20px
+    }
+
+    :where(.pz-banner-lbl) {
+      font-size: 12px;
+      color: #94a3b8
+    }
+
+    :where(.pz-banner-val) {
+      font-size: 32px;
+      font-weight: 800;
+      font-family: 'Inter', sans-serif;
+      color: #fbbf24
+    }
+
+    :where(.pz-banner-sub) {
+      font-size: 12px;
+      color: #cbd5e1
+    }
+
+    :where(.pz-banner-state) {
+      font-size: 18px;
+      font-weight: 700;
+      color: #94a3b8
+    }
+
+    :where(.pz-grid) {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px
+    }
+
+    :where(.pz-grid-sm) {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))
+    }
+
+    :where(.pz-card) {
+      background: #fff;
+      border: 1px solid var(--border-color, #e2e8f0);
+      border-radius: 14px;
+      padding: 16px
+    }
+
+    :where(.pz-top) {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px
+    }
+
+    :where(.pz-lbl) {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted, #64748b)
+    }
+
+    :where(.pz-val) {
+      font-size: 32px;
+      font-weight: 800;
+      font-family: 'Inter', sans-serif;
+      margin: 4px 0 8px
+    }
+
+    :where(.pz-val small) {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted, #64748b);
+      margin-left: 4px
+    }
+
+    :where(.pz-kpi) {
+      font-size: 20px;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      margin-top: 6px
+    }
+
+    :where(.pz-odo) {
+      font-family: 'Courier New', monospace;
+      letter-spacing: 2px
+    }
+
+    :where(.pz-bar) {
+      height: 6px;
+      background: #f1f5f9;
+      border-radius: 99px;
+      overflow: hidden
+    }
+
+    :where(.pz-bar i) {
+      display: block;
+      height: 100%;
+      width: 0;
+      border-radius: 99px;
+      transition: width .3s
+    }
+
+    :where(.pz-sub) {
+      font-size: 11px;
+      color: var(--text-muted, #64748b);
+      margin-top: 8px
+    }
+
+    :where(.month-card) {
+      background: #fff;
+      border: 1px solid var(--border-color, #e2e8f0);
+      border-radius: 14px;
+      padding: 16px
+    }
+
+    :where(.month-card-header) {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px
+    }
+
+    :where(.month-card-period) {
+      font-weight: 700
+    }
+
+    :where(.month-card-total) {
+      font-size: 22px;
+      font-weight: 800;
+      color: #b45309;
+      margin-top: 8px
+    }
+
+    :where(.month-card-detail) {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted, #64748b)
+    }
+
+    :where(.month-compare-badge) {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 99px;
+      height: fit-content;
+      background: #f1f5f9
+    }
+
+    :where(.compare-up) {
+      background: #fee2e2;
+      color: #b91c1c
+    }
+
+    :where(.compare-down) {
+      background: #dcfce7;
+      color: #15803d
+    }
+
+    /* สถานะปุ่มเมื่อกำลังจำลองข้อมูล PZEM-004T */
+    button.active {
+      opacity: 0.9;
+      transform: translateY(1px);
+      background-color: #f59e0b !important;
+      color: #fff !important;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Mobile Drawer Overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="brand-box">
+        <div class="brand-icon">⚡</div>
+        <div>
+          <div class="brand-title">Smart IoT Hub</div>
+          <div class="brand-sub">Node-RED Telemetry</div>
+        </div>
+      </a>
+      <button class="sidebar-close-btn" onclick="closeSidebar()">✕</button>
+    </div>
+
+    <div class="nav-label">เมนูระบบ (Navigation)</div>
+    <ul class="nav-list">
+      <li class="nav-item" id="nav-dashboard">
+        <a href="dashboard.html">
+          <span class="nav-icon">📊</span>
+          <span>แดชบอร์ดหลัก</span>
+        </a>
+      </li>
+      <li class="nav-item" id="nav-analytics">
+        <a href="analytics.html">
+          <span class="nav-icon">📈</span>
+          <span>วิเคราะห์กราฟ</span>
+          <span class="nav-badge badge-teal">Live</span>
+        </a>
+      </li>
+      <li class="nav-item active" id="nav-energy">
+        <a href="energy.html">
+          <span class="nav-icon">⚡</span>
+          <span>พลังงานไฟฟ้า PZEM</span>
+          <span class="nav-badge badge-amber">มิเตอร์ & ค่าไฟ</span>
+        </a>
+      </li>
+      <li class="nav-item" id="nav-history">
+        <a href="history.html">
+          <span class="nav-icon">📋</span>
+          <span>ประวัติข้อมูล</span>
+          <span class="nav-badge badge-blue" id="logsCountBadge">0</span>
+        </a>
+      </li>
+      <li class="nav-item" id="nav-settings">
+        <a href="settings.html">
+          <span class="nav-icon">⚙️</span>
+          <span>ตั้งค่าการเชื่อมต่อ</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="nav-label" style="padding-top: 8px;">บริการภายนอก (Node-RED)</div>
+    <ul class="nav-list" style="flex: 0; padding-bottom: 12px;">
+      <li class="nav-item">
+        <a href="http://localhost:1880/dashboard/page1" target="_blank" rel="noopener noreferrer">
+          <span class="nav-icon">🚀</span>
+          <span>Dashboard 2.0</span>
+          <span class="nav-badge badge-green">External</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="http://localhost:1880/" target="_blank" rel="noopener noreferrer">
+          <span class="nav-icon">🛠️</span>
+          <span>Flow Editor</span>
+          <span class="nav-badge badge-yellow">:1880</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <div class="node-status-card">
+        <div class="status-dot" id="statusDot"></div>
+        <div style="overflow: hidden;">
+          <div style="font-size: 12px; font-weight: 600;" id="statusText">รอการเชื่อมต่อ...</div>
+          <div
+            style="font-size: 10px; color: var(--text-muted); text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"
+            id="statusSub">ws://localhost:1880/ws/sensors</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Area -->
+  <div class="main-wrapper">
+    <!-- Top Navbar -->
+    <header class="top-navbar">
+      <div class="top-left">
+        <button class="menu-toggle-btn" onclick="toggleSidebar()" aria-label="Toggle Menu">
+          ☰
+        </button>
+        <div class="page-heading">
+          <div class="breadcrumb">
+            <span>หน้าหลัก</span>
+            <span>/</span>
+            <span id="breadcrumbCurrent">พลังงานไฟฟ้า PZEM</span>
+          </div>
+          <h1 id="pageHeadingTitle">ระบบตรวจวัดพลังงานไฟฟ้า PZEM-004T & คิดคำนวณค่าไฟ</h1>
+        </div>
+      </div>
+
+      <div class="top-actions" style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="btn btn-outline" id="btnSimulation" onclick="toggleSimulation()"
+          title="สุ่มค่าข้อมูลเซ็นเซอร์ส่งเข้าหน้าจออัตโนมัติ">
+          <span>⚡ จำลองข้อมูลทดสอบ</span>
+        </button>
+        <button class="btn btn-outline" onclick="simulateHighLoadScenario()"
+          title="จำลองการเปิดโหลดขนาดใหญ่ (เครื่องปรับอากาศ/กาต้มน้ำ)">
+          <span>🔥 จำลองโหลดสูง</span>
+        </button>
+        <button class="btn btn-primary" onclick="reconnectWs()" title="เชื่อมต่อ WebSocket ใหม่">
+          <span>🔄 รีเฟรชเชื่อมต่อ</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Content Area -->
+    <main class="content-area">
+      <section id="view-energy" class="page-view active">
+
+        <!-- Banner -->
+        <div class="pz-banner">
+          <div>
+            <div class="pz-banner-lbl">ค่าไฟสะสมจากหน่วยที่วัดได้</div>
+            <div class="pz-banner-val" id="bannerCurrentCost">0.00 บาท</div>
+            <div class="pz-banner-sub" id="bannerTariffLabel">อัตราคิดค่าไฟห้องเรียน (ค่าบริการ 0 บาท)</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="pz-banner-lbl">สถานะโหลดปัจจุบัน</div>
+            <div class="pz-banner-state" id="bannerLoadStatus">สแตนด์บาย (Standby)</div>
+          </div>
+        </div>
+
+        <!-- PZEM stat cards -->
+        <div class="pz-grid">
+          <div class="pz-card">
+            <div class="pz-top"><span class="pz-lbl">🔌 แรงดันไฟฟ้า (Voltage)</span><span class="stat-badge badge-blue"
+                id="voltStatus">--</span></div>
+            <div class="pz-val"><span id="valVolt">0.0</span><small>V</small></div>
+            <div class="pz-bar"><i id="voltBarFill" style="background:#3b82f6;"></i></div>
+            <div class="pz-sub">มาตรฐาน 220V (207–245V)</div>
+          </div>
+
+          <div class="pz-card">
+            <div class="pz-top"><span class="pz-lbl">🔋 กระแสไฟฟ้า (Current)</span><span class="stat-badge badge-green"
+                id="ampStatus">--</span></div>
+            <div class="pz-val"><span id="valAmp">0.00</span><small>A</small></div>
+            <div class="pz-bar"><i id="ampBarFill" style="background:#ec4899;"></i></div>
+            <div class="pz-sub">เทียบกับพิกัด 100A</div>
+          </div>
+
+          <div class="pz-card">
+            <div class="pz-top"><span class="pz-lbl">⚡ กำลังไฟฟ้า (Active Power)</span><span
+                class="stat-badge badge-amber" id="wattCostRate">~0.00 ฿/ชม.</span></div>
+            <div class="pz-val"><span id="valWatt">0</span><small>W</small></div>
+            <div class="pz-bar"><i id="wattBarFill" style="background:#f59e0b;"></i></div>
+            <div class="pz-sub"><span id="valKw">0.000</span> kW</div>
+          </div>
+
+          <div class="pz-card">
+            <div class="pz-top"><span class="pz-lbl">📟 หน่วยไฟฟ้าสะสม (Energy)</span>
+              <button class="btn btn-outline btn-sm" onclick="resetPzemEnergy()"
+                style="font-size:11px;padding:3px 8px;">รีเซ็ต</button>
+            </div>
+            <div class="pz-val"><span id="valKwh" class="pz-odo">0000.00</span><small>kWh</small></div>
+            <div class="pz-sub" id="kwhCostEstimate">คิดเป็นค่าไฟ ≈ 0.00 ฿</div>
+          </div>
+
+          <div class="pz-card">
+            <div class="pz-top"><span class="pz-lbl">〰️ ความถี่ (Frequency)</span></div>
+            <div class="pz-val"><span id="valFreq">50.0</span><small>Hz</small></div>
+            <div class="pz-bar"><i id="freqBarFill" style="background:#06b6d4;"></i></div>
+            <div class="pz-sub">มาตรฐาน 50Hz</div>
+          </div>
+
+          <div class="pz-card">
+            <div class="pz-top"><span class="pz-lbl">📐 เพาเวอร์แฟกเตอร์ (PF)</span><span
+                class="stat-badge badge-purple" id="pfStatus">--</span></div>
+            <div class="pz-val"><span id="valPf">0.00</span></div>
+            <div class="pz-bar"><i id="pfBarFill" style="background:#7c3aed;"></i></div>
+            <div class="pz-sub">ยิ่งใกล้ 1.00 ยิ่งดี</div>
+          </div>
+        </div>
+
+        <!-- Secondary KPIs -->
+        <div class="pz-grid pz-grid-sm">
+          <div class="pz-card">
+            <div class="pz-lbl">กำลังไฟปรากฏ (Apparent)</div>
+            <div class="pz-kpi" id="valVa">0.0 VA</div>
+          </div>
+          <div class="pz-card">
+            <div class="pz-lbl">กำลังไฟรีแอคทีฟ (Reactive)</div>
+            <div class="pz-kpi" id="valVar">0.0 VAR</div>
+          </div>
+          <div class="pz-card">
+            <div class="pz-lbl">วัตต์สูงสุด (Peak)</div>
+            <div class="pz-kpi" id="valPeakWatt">0 W</div>
+          </div>
+          <div class="pz-card">
+            <div class="pz-lbl">ค่าไฟต่อชั่วโมง (ตามโหลดตอนนี้)</div>
+            <div class="pz-kpi" id="valCostHour">0.00 ฿/ชม.</div>
+          </div>
+        </div>
+
+        <!-- Realtime charts -->
+        <div class="charts-grid-2col"
+          style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 20px;">
+          <div class="card-panel"
+            style="background: #fff; border: 1px solid var(--border-color, #e2e8f0); border-radius: 14px; padding: 16px;">
+            <div class="panel-header"
+              style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div class="panel-title" style="font-weight: 700;"><span>📈</span> <span>กำลังไฟ & กระแส (Realtime)</span>
+              </div>
+              <span class="stat-badge badge-amber">Power (W) / Current (A)</span>
+            </div>
+            <div class="chart-container" style="position:relative;height:260px;"><canvas id="pzemPowerChart"></canvas>
+            </div>
+          </div>
+
+          <div class="card-panel"
+            style="background: #fff; border: 1px solid var(--border-color, #e2e8f0); border-radius: 14px; padding: 16px;">
+            <div class="panel-header"
+              style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div class="panel-title" style="font-weight: 700;"><span>🔌</span> <span>แรงดันไฟฟ้า (Realtime)</span>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <span class="stat-badge badge-blue">Voltage (V)</span>
+                <button class="btn btn-outline btn-sm" onclick="clearPzemCharts()"
+                  style="font-size: 11px; padding: 2px 8px;">รีเซ็ตกราฟ</button>
+              </div>
+            </div>
+            <div class="chart-container" style="position:relative;height:260px;"><canvas id="pzemVoltageChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Projections & Time-based Estimation Row -->
+        <div class="card-panel"
+          style="background: #fff; border: 1px solid var(--border-color, #e2e8f0); border-radius: 14px; padding: 16px; margin-bottom: 20px;">
+          <div class="panel-header"
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div>
+              <div class="panel-title" style="font-weight: 700;">
+                <span>⏱️</span>
+                <span>การประมาณการค่าไฟฟ้าตามช่วงเวลา (Electricity Cost Projections)</span>
+              </div>
+              <p style="font-size: 12px; color: var(--text-muted, #64748b); margin-top: 4px;">
+                คำนวณคาดการณ์ค่าไฟล่วงหน้า หากเปิดใช้งานอุปกรณ์ด้วยโหลดวัตต์ปัจจุบันต่อเนื่อง
+              </p>
+            </div>
+            <span class="stat-badge badge-amber" id="projWattBadge">อิงตามโหลดปัจจุบัน: 0W</span>
+          </div>
+
+          <div class="stats-grid"
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+            <div
+              style="padding: 16px; background: #f8fafc; border-radius: 12px; border: 1px solid var(--border-color, #e2e8f0);">
+              <div style="font-size: 12px; color: var(--text-muted, #64748b); font-weight: 600;">ค่าไฟต่อ 1 ชั่วโมง (Per
+                Hour)</div>
+              <div
+                style="font-size: 26px; font-weight: 800; color: #b45309; margin: 6px 0; font-family: 'Inter', sans-serif;"
+                id="projCostHour">0.00 ฿</div>
+              <div style="font-size: 11px; color: var(--text-muted, #64748b);" id="projUnitHour">กินไฟ ≈ 0.00 หน่วย/ชม.
+              </div>
+            </div>
+
+            <div
+              style="padding: 16px; background: #f8fafc; border-radius: 12px; border: 1px solid var(--border-color, #e2e8f0);">
+              <div style="font-size: 12px; color: var(--text-muted, #64748b); font-weight: 600;">ค่าไฟตลอดทั้งวัน (24
+                Hours)</div>
+              <div
+                style="font-size: 26px; font-weight: 800; color: #0284c7; margin: 6px 0; font-family: 'Inter', sans-serif;"
+                id="projCostDay">0.00 ฿</div>
+              <div style="font-size: 11px; color: var(--text-muted, #64748b);" id="projUnitDay">กินไฟ ≈ 0.0 หน่วย/วัน
+              </div>
+            </div>
+
+            <div
+              style="padding: 16px; background: #f8fafc; border-radius: 12px; border: 1px solid var(--border-color, #e2e8f0);">
+              <div style="font-size: 12px; color: var(--text-muted, #64748b); font-weight: 600;">ประมาณการค่าไฟต่อเดือน
+                (30 Days)</div>
+              <div
+                style="font-size: 26px; font-weight: 800; color: #10b981; margin: 6px 0; font-family: 'Inter', sans-serif;"
+                id="projCostMonth">0.00 ฿</div>
+              <div style="font-size: 11px; color: var(--text-muted, #64748b);" id="projUnitMonth">กินไฟ ≈ 0 หน่วย/เดือน
+              </div>
+            </div>
+
+            <div
+              style="padding: 16px; background: #f8fafc; border-radius: 12px; border: 1px solid var(--border-color, #e2e8f0);">
+              <div style="font-size: 12px; color: var(--text-muted, #64748b); font-weight: 600;">ประมาณการตลอดทั้งปี
+                (365 Days)</div>
+              <div
+                style="font-size: 26px; font-weight: 800; color: #7c3aed; margin: 6px 0; font-family: 'Inter', sans-serif;"
+                id="projCostYear">0.00 ฿</div>
+              <div style="font-size: 11px; color: var(--text-muted, #64748b);" id="projUnitYear">กินไฟ ≈ 0 หน่วย/ปี
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cost accumulation chart -->
+        <div class="card-panel"
+          style="background: #fff; border: 1px solid var(--border-color, #e2e8f0); border-radius: 14px; padding: 16px; margin-bottom: 20px;">
+          <div class="panel-header"
+            style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+            <div>
+              <div class="panel-title" style="font-weight: 700;"><span>📊</span> <span>กราฟค่าไฟสะสมรายวัน /
+                  รายสัปดาห์</span></div>
+              <p style="font-size: 12px; color: var(--text-muted, #64748b); margin-top: 4px;">กด "บันทึกวันนี้"
+                เพื่อเก็บค่า kWh และค่าไฟของวันนั้นไว้ในเบราว์เซอร์</p>
+            </div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+              <button class="quick-unit-btn active" id="btnCostViewDaily"
+                onclick="setCostChartView('daily')">รายวัน</button>
+              <button class="quick-unit-btn" id="btnCostViewWeekly"
+                onclick="setCostChartView('weekly')">รายสัปดาห์</button>
+              <button class="quick-unit-btn" id="btnCostViewYearly" onclick="setCostChartView('yearly')">รายปี</button>
+              <label
+                style="display:flex; align-items:center; gap:6px; padding:5px 8px; border:1px solid var(--border-color, #e2e8f0); border-radius:8px; background:#fff; font-size:11px; color:var(--text-muted, #64748b);">
+                📅 วันที่
+                <input type="date" id="costChartDatePicker" aria-label="เลือกวันที่สำหรับกราฟ"
+                  style="border:0; outline:none; background:transparent; color:inherit; font-family:inherit; font-size:12px; min-height:28px; cursor:pointer;">
+              </label>
+              <button class="btn btn-primary btn-sm" onclick="recordDailyCostSnapshot()">📸 บันทึกวันนี้</button>
+            </div>
+          </div>
+          <div class="chart-container" style="position:relative;height:280px;"><canvas
+              id="costAccumulationChart"></canvas></div>
+        </div>
+
+        <!-- Monthly bill history -->
+        <div class="card-panel"
+          style="background: #fff; border: 1px solid var(--border-color, #e2e8f0); border-radius: 14px; padding: 16px;">
+          <div class="panel-header"
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div>
+              <div class="panel-title" style="font-weight: 700;"><span>🗓️</span> <span>ประวัติค่าไฟรายเดือน</span>
+              </div>
+              <p style="font-size: 12px; color: var(--text-muted, #64748b); margin-top: 4px;">
+                บันทึกบิลของเดือนนี้เพื่อเทียบกับเดือนก่อนหน้า</p>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-primary btn-sm" onclick="saveCurrentMonthBill()">💾 บันทึกบิลเดือนนี้</button>
+              <button class="btn btn-outline btn-sm" onclick="clearMonthlyHistory()">🗑️ ล้างประวัติ</button>
+            </div>
+          </div>
+          <div id="monthlyHistoryContainer"
+            style="display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px;"></div>
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <!-- Fallback Script for common Functions if common.js is missing -->
+  <script>
+    if (typeof toggleSidebar !== 'function') {
+      window.toggleSidebar = function () {
+        const sb = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        if (sb) sb.classList.toggle('open');
+        if (overlay) overlay.classList.toggle('show');
+      };
+    }
+    if (typeof closeSidebar !== 'function') {
+      window.closeSidebar = function () {
+        const sb = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        if (sb) sb.classList.remove('open');
+        if (overlay) overlay.classList.remove('show');
+      };
+    }
+    if (typeof reconnectWs !== 'function') {
+      window.reconnectWs = function () {
+        const statusText = document.getElementById('statusText');
+        if (statusText) statusText.textContent = 'กำลังเชื่อมต่อ WebSocket...';
+        setTimeout(() => {
+          if (statusText) statusText.textContent = 'เชื่อมต่อแล้ว (จำลอง)';
+        }, 800);
+      };
+    }
+  </script>
+
+  <script src="common.js" onerror="console.log('common.js not found, running standalone mode')"></script>
+
+  <script>
+    // =========================================================================
+    // Initial Setup & Mock State Fallback
+    // =========================================================================
+    window.pzemData = window.pzemData || {
+      voltage: 220.5,
+      current: 2.85,
+      power: 620,
+      energy: 14.8500,
+      frequency: 50.0,
+      pf: 0.94,
+      peakPower: 1250
+    };
+
+    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
+    const TARIFF_STORE_KEY = 'energy_tariff_config';
+    const tariffConfig = Object.assign({
+      mode: 'residential_above_150',
+      ftRate: 0.3972,
+      serviceFee: 0.0,
+      flatRate: 7.0,
+      monthlyBudget: 2500,
+      includeVat: true,
+      calcSource: 'pzem',
+      simulatedUnits: 150,
+      touOnPeakShare: 0.35
+    }, (() => {
+      try {
+        const stored = JSON.parse(localStorage.getItem(TARIFF_STORE_KEY) || '{}');
+        stored.serviceFee = 0.0;
+        return stored;
+      } catch (e) { return {}; }
+    })());
+
+    (function initPzemExtras() {
+      ['voltage', 'current', 'power', 'energy', 'frequency', 'pf'].forEach(k => {
+        if (typeof pzemData[k] !== 'number' || isNaN(pzemData[k])) pzemData[k] = 0;
+      });
+      const savedKwh = parseFloat(localStorage.getItem('pzem_energy_kwh'));
+      if (!pzemData.energy && !isNaN(savedKwh)) pzemData.energy = savedKwh;
+      pzemData.apparentPower = pzemData.voltage * pzemData.current;
+      pzemData.reactivePower = Math.sqrt(Math.max(0, Math.pow(pzemData.apparentPower, 2) - Math.pow(pzemData.power, 2)));
+      pzemData.peakPower = pzemData.power || 0;
+    })();
+
+    function persistPzem() {
+      pzemData.powerFactor = pzemData.pf;
+      try {
+        localStorage.setItem('pzem_energy_kwh', pzemData.energy);
+        localStorage.setItem('pzem_cached_data', JSON.stringify(pzemData));
+      } catch (e) { /* storage blocked */ }
+    }
+
+    const maxDataPoints = 30;
+    const pzemHistoryData = { labels: [], power: [], current: [], voltage: [] };
+
+    // Calculation Tiers
+    const TARIFF_TIERS = {
+      residential_above_150: [
+        { size: 150, rate: 3.2484 },
+        { size: 250, rate: 4.2218 },
+        { size: Infinity, rate: 4.4217 }
+      ]
+    };
+
+    function calculateElectricityBill(units, mode, cfg) {
+      units = Math.max(0, Number(units) || 0);
+      cfg = cfg || tariffConfig;
+      const ftRate = Number(cfg.ftRate) || 0;
+      const serviceFee = 0;
+      const steps = [];
+      let baseCharge = 0;
+
+      const tiers = TARIFF_TIERS.residential_above_150;
+      let remaining = units, from = 0;
+      for (const t of tiers) {
+        if (remaining <= 0) break;
+        const take = Math.min(remaining, t.size);
+        const amount = take * t.rate;
+        baseCharge += amount;
+        remaining -= take;
+        from += take;
+      }
+
+      const ftCharge = units * ftRate;
+      const subtotalBeforeVat = baseCharge + ftCharge + serviceFee;
+      const includeVat = !!cfg.includeVat;
+      const vatAmount = includeVat ? Math.round(subtotalBeforeVat * 0.07 * 100) / 100 : 0;
+      const totalBill = subtotalBeforeVat + vatAmount;
+
+      return { units, baseCharge, ftCharge, serviceFee: 0, subtotalBeforeVat, vatAmount, totalBill };
+    }
+
+    // Realtime Charts Initialization
+    const pzemPowerChart = new Chart(document.getElementById('pzemPowerChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: pzemHistoryData.labels,
+        datasets: [
+          { label: 'Power (W)', data: pzemHistoryData.power, borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.12)', fill: true, tension: 0.3, pointRadius: 2, yAxisID: 'yW' },
+          { label: 'Current (A)', data: pzemHistoryData.current, borderColor: '#ec4899', tension: 0.3, pointRadius: 2, yAxisID: 'yA' }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: false,
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          x: { grid: { display: false }, ticks: { maxTicksLimit: 8, font: { size: 10 } } },
+          yW: { type: 'linear', position: 'left', beginAtZero: true, title: { display: true, text: 'W' } },
+          yA: { type: 'linear', position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: 'A' } }
+        }
+      }
+    });
+
+    const pzemVoltageChart = new Chart(document.getElementById('pzemVoltageChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: pzemHistoryData.labels,
+        datasets: [{ label: 'Voltage (V)', data: pzemHistoryData.voltage, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.3, pointRadius: 2 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: false,
+        scales: {
+          x: { grid: { display: false }, ticks: { maxTicksLimit: 8, font: { size: 10 } } },
+          y: { suggestedMin: 200, suggestedMax: 250, title: { display: true, text: 'V' } }
+        }
+      }
+    });
+
+    function clearPzemCharts() {
+      pzemHistoryData.labels.length = 0;
+      pzemHistoryData.power.length = 0;
+      pzemHistoryData.current.length = 0;
+      pzemHistoryData.voltage.length = 0;
+      pzemPowerChart.update();
+      pzemVoltageChart.update();
+    }
+
+    function updateBillCalculation() {
+      const bill = calculateElectricityBill(pzemData.energy, tariffConfig.mode, tariffConfig);
+      setText('bannerCurrentCost', `${bill.totalBill.toFixed(2)} บาท`);
+      setText('kwhCostEstimate', `คิดเป็นค่าไฟ ≈ ${bill.totalBill.toFixed(2)} ฿`);
+      updateProjections();
+    }
+
+    function updatePzemDataValues(raw) {
+      if (raw.volt !== undefined && raw.volt !== null && !isNaN(raw.volt)) pzemData.voltage = raw.volt;
+      if (raw.amp !== undefined && raw.amp !== null && !isNaN(raw.amp)) pzemData.current = raw.amp;
+      if (raw.watt !== undefined && raw.watt !== null && !isNaN(raw.watt)) pzemData.power = raw.watt;
+      if (raw.kwh !== undefined && raw.kwh !== null && !isNaN(raw.kwh)) pzemData.energy = raw.kwh;
+      if (raw.freq !== undefined && raw.freq !== null && !isNaN(raw.freq)) pzemData.frequency = raw.freq;
+      if (raw.pf !== undefined && raw.pf !== null && !isNaN(raw.pf)) pzemData.pf = raw.pf;
+
+      pzemData.apparentPower = pzemData.voltage * pzemData.current;
+      pzemData.reactivePower = Math.sqrt(Math.max(0, Math.pow(pzemData.apparentPower, 2) - Math.pow(pzemData.power, 2)));
+      if (pzemData.power > pzemData.peakPower) pzemData.peakPower = pzemData.power;
+
+      persistPzem();
+
+      const timeStr = raw.timeStr || new Date().toLocaleTimeString('th-TH');
+      if (pzemHistoryData.labels.length >= maxDataPoints) {
+        pzemHistoryData.labels.shift();
+        pzemHistoryData.power.shift();
+        pzemHistoryData.current.shift();
+        pzemHistoryData.voltage.shift();
+      }
+      pzemHistoryData.labels.push(timeStr);
+      pzemHistoryData.power.push(pzemData.power);
+      pzemHistoryData.current.push(pzemData.current);
+      pzemHistoryData.voltage.push(pzemData.voltage);
+
+      pzemPowerChart.update();
+      pzemVoltageChart.update();
+
+      updatePzemDisplay();
+      updateBillCalculation();
+    }
+
+    function updatePzemDisplay() {
+      setText('valVolt', pzemData.voltage.toFixed(1));
+      const voltStatusEl = document.getElementById('voltStatus');
+      if (voltStatusEl) {
+        if (pzemData.voltage < 207) {
+          voltStatusEl.textContent = '⚠️ ไฟตก';
+          voltStatusEl.className = 'stat-badge badge-red';
+        } else if (pzemData.voltage > 245) {
+          voltStatusEl.textContent = '⚠️ ไฟเกิน';
+          voltStatusEl.className = 'stat-badge badge-red';
+        } else {
+          voltStatusEl.textContent = '✅ ปกติ';
+          voltStatusEl.className = 'stat-badge badge-blue';
+        }
+      }
+      const voltPct = Math.min(100, Math.max(0, ((pzemData.voltage - 180) / 70) * 100));
+      const voltBarFill = document.getElementById('voltBarFill');
+      if (voltBarFill) voltBarFill.style.width = voltPct + '%';
+
+      setText('valAmp', pzemData.current.toFixed(2));
+      const ampStatusEl = document.getElementById('ampStatus');
+      if (ampStatusEl) {
+        if (pzemData.current > 40) {
+          ampStatusEl.textContent = '🚨 โหลดสูง';
+          ampStatusEl.className = 'stat-badge badge-red';
+        } else {
+          ampStatusEl.textContent = 'ปกติ';
+          ampStatusEl.className = 'stat-badge badge-green';
+        }
+      }
+      const ampBarFill = document.getElementById('ampBarFill');
+      if (ampBarFill) ampBarFill.style.width = Math.min(100, (pzemData.current / 100) * 100) + '%';
+
+      setText('valWatt', Math.round(pzemData.power));
+      setText('valKw', (pzemData.power / 1000).toFixed(3));
+      const wattBarFill = document.getElementById('wattBarFill');
+      if (wattBarFill) wattBarFill.style.width = Math.min(100, (pzemData.power / 3500) * 100) + '%';
+
+      setText('valKwh', pzemData.energy.toFixed(2).padStart(7, '0'));
+      setText('valFreq', pzemData.frequency.toFixed(1));
+      setText('valPf', pzemData.pf.toFixed(2));
+
+      setText('valVa', `${pzemData.apparentPower.toFixed(1)} VA`);
+      setText('valVar', `${pzemData.reactivePower.toFixed(1)} VAR`);
+      setText('valPeakWatt', `${Math.round(pzemData.peakPower)} W`);
+
+      const bannerLoad = document.getElementById('bannerLoadStatus');
+      if (bannerLoad) {
+        if (pzemData.power < 50) {
+          bannerLoad.textContent = 'สแตนด์บาย (Standby)';
+          bannerLoad.style.color = '#94a3b8';
+        } else {
+          bannerLoad.textContent = 'กำลังใช้งาน (Active)';
+          bannerLoad.style.color = '#6ee7b7';
+        }
+      }
+    }
+
+    function updateProjections() {
+      const sample100 = calculateElectricityBill(100, tariffConfig.mode, tariffConfig);
+      const avgUnitCost = (sample100.totalBill) / 100 || 4.20;
+
+      const currentKw = pzemData.power / 1000;
+      const costPerHour = currentKw * avgUnitCost;
+      const costPerDay = costPerHour * 24;
+      const costPerMonth = costPerHour * 24 * 30;
+      const costPerYear = costPerHour * 24 * 365;
+
+      setText('valCostHour', `${costPerHour.toFixed(2)} ฿/ชม.`);
+      setText('wattCostRate', `~${costPerHour.toFixed(2)} ฿/ชม.`);
+
+      setText('projWattBadge', `อิงตามโหลดปัจจุบัน: ${Math.round(pzemData.power)}W`);
+      setText('projCostHour', `${costPerHour.toFixed(2)} ฿`);
+      setText('projUnitHour', `กินไฟ ≈ ${currentKw.toFixed(3)} หน่วย/ชม.`);
+
+      setText('projCostDay', `${costPerDay.toFixed(2)} ฿`);
+      setText('projUnitDay', `กินไฟ ≈ ${(currentKw * 24).toFixed(1)} หน่วย/วัน`);
+
+      setText('projCostMonth', `${costPerMonth.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ฿`);
+      setText('projUnitMonth', `กินไฟ ≈ ${(currentKw * 24 * 30).toFixed(0)} หน่วย/เดือน`);
+
+      setText('projCostYear', `${costPerYear.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ฿`);
+      setText('projUnitYear', `กินไฟ ≈ ${(currentKw * 24 * 365).toFixed(0)} หน่วย/ปี`);
+    }
+
+    function resetPzemEnergy() {
+      if (confirm('คุณต้องการรีเซ็ตหน่วยไฟฟ้าสะสม (Zero kWh) หรือไม่?')) {
+        pzemData.energy = 0.00;
+        persistPzem();
+        updatePzemDisplay();
+        updateBillCalculation();
+      }
+    }
+
+    // Chart & Snapshot
+    let costChartView = 'daily';
+    let dailyCostHistory = JSON.parse(localStorage.getItem('daily_cost_history') || '[]');
+
+    const costChartDatePicker = document.getElementById('costChartDatePicker');
+    if (costChartDatePicker) {
+      const today = new Date();
+      costChartDatePicker.value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      costChartDatePicker.addEventListener('change', refreshCostChart);
+    }
+
+    const ctxCostAccum = document.getElementById('costAccumulationChart').getContext('2d');
+    const costAccumulationChart = new Chart(ctxCostAccum, {
+      type: 'bar',
+      data: {
+        labels: [],
+        datasets: [
+          { label: 'Cost (Baht)', data: [], backgroundColor: 'rgba(245, 158, 11, 0.65)', borderColor: '#d97706', borderWidth: 1.5, borderRadius: 6, yAxisID: 'yCost', order: 2 },
+          { label: 'Energy (kWh)', data: [], type: 'line', borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', borderWidth: 2.5, fill: true, tension: 0.3, pointRadius: 4, pointBackgroundColor: '#10b981', yAxisID: 'yKwh', order: 1 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top' } },
+        scales: {
+          x: { grid: { display: false } },
+          yCost: { type: 'linear', position: 'left', beginAtZero: true },
+          yKwh: { type: 'linear', position: 'right', beginAtZero: true, grid: { drawOnChartArea: false } }
+        }
+      }
+    });
+
+    function localDateKey(date) {
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    }
+
+    function getSelectedChartDate() {
+      const value = costChartDatePicker?.value;
+      if (!value) return new Date();
+      const [y, m, d] = value.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function setCostChartView(view) {
+      costChartView = view;
+      refreshCostChart();
+    }
+
+    function refreshCostChart() {
+      const selected = getSelectedChartDate();
+      let labels = [], costs = [], kwhs = [];
+
+      if (costChartView === 'daily') {
+        const key = localDateKey(selected);
+        const item = dailyCostHistory.find(d => d.dateKey === key);
+        labels = [selected.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })];
+        costs = [item ? Number(item.cost) : 0];
+        kwhs = [item ? Number(item.kwh) : 0];
+      }
+      costAccumulationChart.data.labels = labels;
+      costAccumulationChart.data.datasets[0].data = costs;
+      costAccumulationChart.data.datasets[1].data = kwhs;
+      costAccumulationChart.update();
+    }
+
+    function recordDailyCostSnapshot() {
+      const now = new Date();
+      const dateKey = now.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' });
+      const fullDateKey = localDateKey(now);
+
+      const bill = calculateElectricityBill(pzemData.energy, tariffConfig.mode, tariffConfig);
+      dailyCostHistory.push({ dateKey: fullDateKey, label: dateKey, kwh: pzemData.energy, cost: bill.totalBill, timestamp: now.getTime() });
+      localStorage.setItem('daily_cost_history', JSON.stringify(dailyCostHistory));
+      refreshCostChart();
+    }
+
+    // Monthly Bill History
+    let monthlyBillHistory = JSON.parse(localStorage.getItem('monthly_bill_history') || '[]');
+
+    function saveCurrentMonthBill() {
+      const now = new Date();
+      const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const monthLabel = now.toLocaleDateString('th-TH', { year: 'numeric', month: 'long' });
+      const units = pzemData.energy;
+      const bill = calculateElectricityBill(units, tariffConfig.mode, tariffConfig);
+
+      monthlyBillHistory.push({ monthKey, monthLabel, units, totalBill: bill.totalBill, createdAt: now.getTime() });
+      localStorage.setItem('monthly_bill_history', JSON.stringify(monthlyBillHistory));
+      renderMonthlyHistory();
+    }
+
+    function clearMonthlyHistory() {
+      if (!confirm('ล้างประวัติบิลรายเดือนทั้งหมด?')) return;
+      monthlyBillHistory = [];
+      localStorage.removeItem('monthly_bill_history');
+      renderMonthlyHistory();
+    }
+
+    function renderMonthlyHistory() {
+      const container = document.getElementById('monthlyHistoryContainer');
+      if (!container) return;
+      if (monthlyBillHistory.length === 0) {
+        container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted, #64748b); padding: 20px;">📭 ยังไม่มีประวัติ</div>`;
+        return;
+      }
+      container.innerHTML = monthlyBillHistory.map(m => `
+        <div class="month-card">
+          <div class="month-card-period">📅 ${m.monthLabel}</div>
+          <div class="month-card-total">฿ ${m.totalBill.toFixed(2)}</div>
+        </div>
+      `).join('');
+    }
+
+    // =========================================================================
+    // PZEM-004T SIMULATION LOGIC (ระบบจำลองข้อมูล)
+    // =========================================================================
+    function simulateData() {
+      const voltage = +(219 + Math.random() * 5).toFixed(1);       // 219.0 - 224.0 V
+      const current = +(2.00 + Math.random() * 3.00).toFixed(2);     // 2.00 - 5.00 A
+      const pf = +(0.90 + Math.random() * 0.08).toFixed(2);        // 0.90 - 0.98
+      const frequency = +(49.8 + Math.random() * 0.4).toFixed(1);  // 49.8 - 50.2 Hz
+
+      const power = +(voltage * current * pf).toFixed(0);
+
+      const sampleSeconds = 5;
+      const energyIncrease = (power / 1000) * (sampleSeconds / 3600);
+      const energy = +(pzemData.energy + energyIncrease).toFixed(4);
+
+      updatePzemDataValues({
+        volt: voltage,
+        amp: current,
+        watt: power,
+        kwh: energy,
+        freq: frequency,
+        pf: pf,
+        timeStr: new Date().toLocaleTimeString('th-TH')
+      });
+    }
+
+    function simulateHighLoadScenario() {
+      const voltage = +(215 + Math.random() * 3).toFixed(1);
+      const current = +(12.50 + Math.random() * 5.00).toFixed(2);
+      const pf = +(0.96 + Math.random() * 0.03).toFixed(2);
+      const frequency = +(49.9 + Math.random() * 0.2).toFixed(1);
+      const power = +(voltage * current * pf).toFixed(0);
+      const energy = +(pzemData.energy + 0.0150).toFixed(4);
+
+      updatePzemDataValues({
+        volt: voltage,
+        amp: current,
+        watt: power,
+        kwh: energy,
+        freq: frequency,
+        pf: pf,
+        timeStr: new Date().toLocaleTimeString('th-TH')
+      });
+    }
+
+    let simulationTimer = null;
+
+    function toggleSimulation() {
+      const button = document.getElementById('btnSimulation');
+
+      if (simulationTimer) {
+        clearInterval(simulationTimer);
+        simulationTimer = null;
+        if (button) {
+          button.innerHTML = '<span>⚡ จำลองข้อมูลทดสอบ</span>';
+          button.classList.remove('active');
+        }
+        return;
+      }
+
+      simulateData();
+      simulationTimer = setInterval(simulateData, 3000);
+
+      if (button) {
+        button.innerHTML = '<span>⏹️ หยุดจำลองข้อมูล</span>';
+        button.classList.add('active');
+      }
+    }
+
+    // Init Page & Listeners
+    window.addEventListener('DOMContentLoaded', () => {
+      tariffConfig.serviceFee = 0;
+      updatePzemDisplay();
+      updateBillCalculation();
+      refreshCostChart();
+      renderMonthlyHistory();
+    });
+
+    window.addEventListener('iot-telemetry', (e) => {
+      const d = e.detail || {};
+      const ok = v => v !== null && v !== undefined && !isNaN(v);
+      if (ok(d.volt) || ok(d.amp) || ok(d.watt) || ok(d.kwh)) {
+        updatePzemDataValues({
+          volt: d.volt, amp: d.amp, watt: d.watt, kwh: d.kwh,
+          freq: d.freq, pf: d.pf, timeStr: d.timeStr
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>

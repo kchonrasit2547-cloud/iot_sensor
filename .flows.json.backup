@@ -1,0 +1,974 @@
+[
+    {
+        "id": "746e438bb151500f",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "ebbddd4fdda1e542",
+        "type": "tab",
+        "label": "Flow 2",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "1a40247d654a6712",
+        "type": "mqtt-broker",
+        "name": "IP",
+        "broker": "127.0.0.1",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "dfb9a6f1a1ccc731",
+        "type": "ui-base",
+        "name": "My Dashboard",
+        "path": "/dashboard",
+        "appIcon": "",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control"
+        ],
+        "showPathInSidebar": false,
+        "headerContent": "page",
+        "navigationStyle": "default",
+        "titleBarStyle": "default",
+        "showReconnectNotification": true,
+        "notificationDisplayTime": 1,
+        "showDisconnectNotification": true,
+        "allowInstall": false
+    },
+    {
+        "id": "70011d851bdab113",
+        "type": "ui-theme",
+        "name": "Default Theme",
+        "colors": {
+            "surface": "#1e293b",
+            "primary": "#38bdf8",
+            "bgPage": "#0f172a",
+            "groupBg": "#1e293b",
+            "groupOutline": "#334155"
+        },
+        "sizes": {
+            "density": "default",
+            "pagePadding": "16px",
+            "groupGap": "16px",
+            "groupBorderRadius": "12px",
+            "widgetGap": "12px"
+        }
+    },
+    {
+        "id": "7f0850ace1152bee",
+        "type": "ui-page",
+        "name": "Page 1",
+        "ui": "dfb9a6f1a1ccc731",
+        "path": "/page1",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "70011d851bdab113",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 1,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "338a290118d7092e",
+        "type": "ui-group",
+        "name": "Group 1",
+        "page": "7f0850ace1152bee",
+        "width": 6,
+        "height": 1,
+        "order": 2,
+        "showTitle": true,
+        "className": "",
+        "visible": true,
+        "disabled": false,
+        "groupType": "default"
+    },
+    {
+        "id": "57364db4ba11f81f",
+        "type": "ui-group",
+        "name": "Group 2",
+        "page": "7f0850ace1152bee",
+        "width": 6,
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "fd503ab695e9eed7",
+        "type": "telegram bot",
+        "botname": "@Xeb1Bot",
+        "usernames": "",
+        "chatids": "",
+        "baseapiurl": "",
+        "testenvironment": false,
+        "updatemode": "polling",
+        "pollinterval": 300,
+        "usesocks": false,
+        "sockshost": "",
+        "socksprotocol": "socks5",
+        "socksport": 6667,
+        "socksusername": "anonymous",
+        "sockspassword": "",
+        "bothost": "",
+        "botpath": "",
+        "localbothost": "0.0.0.0",
+        "localbotport": 8443,
+        "publicbotport": 8443,
+        "privatekey": "",
+        "certificate": "",
+        "useselfsignedcertificate": false,
+        "sslterminated": false,
+        "verboselogging": false
+    },
+    {
+        "id": "ws_server_01",
+        "type": "websocket-listener",
+        "path": "/ws/sensors",
+        "wholemsg": "false"
+    },
+    {
+        "id": "6bd35ac3bddc0bfd",
+        "type": "MySQLdatabase",
+        "name": "",
+        "host": "127.0.0.1",
+        "port": "3306",
+        "db": "iot_database",
+        "tz": "",
+        "charset": "UTF8"
+    },
+    {
+        "id": "2f4a0455bb83f807",
+        "type": "mqtt in",
+        "z": "746e438bb151500f",
+        "name": "",
+        "topic": "iot/sensor",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "1a40247d654a6712",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 120,
+        "y": 100,
+        "wires": [
+            [
+                "c0558de9b3255841",
+                "1457a55b2ef1fcb4",
+                "ws_prep_func",
+                "d12e1d6cab45600a",
+                "90805ce04b77a3ce"
+            ]
+        ]
+    },
+    {
+        "id": "c0558de9b3255841",
+        "type": "function",
+        "z": "746e438bb151500f",
+        "name": "function 1",
+        "func": "let time = Date.now();\n\nreturn [\n    {\n        topic: \"Temperature\",\n        payload: msg.payload.temperature,\n        timestamp: time\n    },\n    {\n        topic: \"Humidity\",\n        payload: msg.payload.humidity,\n        timestamp: time\n    },\n    {\n        topic: \"Light\",\n        payload: msg.payload.light,\n        timestamp: time\n    }\n];",
+        "outputs": 3,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 100,
+        "wires": [
+            [
+                "379fa4d3ddf23aae",
+                "b676136a0f6f8db0"
+            ],
+            [
+                "8e4fbf445212ae4b",
+                "58fbc86f71519639"
+            ],
+            [
+                "9ff6b1d3eefa76f8",
+                "79dd7a4e0ebda562"
+            ]
+        ]
+    },
+    {
+        "id": "379fa4d3ddf23aae",
+        "type": "ui-gauge",
+        "z": "746e438bb151500f",
+        "name": "Temperature",
+        "group": "338a290118d7092e",
+        "order": 2,
+        "value": "payload",
+        "valueType": "msg",
+        "width": 3,
+        "height": 3,
+        "gtype": "gauge-half",
+        "gstyle": "needle",
+        "title": "Temperature",
+        "alwaysShowTitle": false,
+        "floatingTitlePosition": "top-left",
+        "units": "°C",
+        "icon": "",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "from": "0",
+                "color": "#5cd65c",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "4",
+                "color": "#ffc800",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "7",
+                "color": "#ea5353",
+                "text": "",
+                "textType": "label"
+            }
+        ],
+        "min": 0,
+        "max": "100",
+        "sizeThickness": 16,
+        "sizeGap": 4,
+        "sizeKeyThickness": 8,
+        "styleRounded": true,
+        "styleGlow": false,
+        "className": "",
+        "x": 630,
+        "y": 260,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b676136a0f6f8db0",
+        "type": "ui-chart",
+        "z": "746e438bb151500f",
+        "group": "57364db4ba11f81f",
+        "name": "Temperature Chart",
+        "label": "Temperature Chart",
+        "order": 1,
+        "chartType": "line",
+        "category": "topic",
+        "categoryType": "msg",
+        "xAxisLabel": "Time",
+        "xAxisProperty": "",
+        "xAxisPropertyType": "timestamp",
+        "xAxisType": "time",
+        "xAxisFormat": "",
+        "xAxisFormatType": "auto",
+        "xmin": "",
+        "xmax": "",
+        "yAxisLabel": "Temperature (°C)",
+        "yAxisProperty": "payload",
+        "yAxisPropertyType": "msg",
+        "ymin": "0",
+        "ymax": "100",
+        "bins": 10,
+        "action": "append",
+        "stackSeries": false,
+        "pointShape": "circle",
+        "pointRadius": 4,
+        "showLegend": true,
+        "removeOlder": 1,
+        "removeOlderUnit": "3600",
+        "removeOlderPoints": "",
+        "colors": [
+            "#0095ff",
+            "#ff0000",
+            "#ff7f0e",
+            "#2ca02c",
+            "#a347e1",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "textColor": [
+            "#666666"
+        ],
+        "textColorDefault": true,
+        "gridColor": [
+            "#e5e5e5"
+        ],
+        "gridColorDefault": true,
+        "width": 6,
+        "height": 8,
+        "className": "",
+        "interpolation": "linear",
+        "x": 650,
+        "y": 200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "9ff6b1d3eefa76f8",
+        "type": "ui-gauge",
+        "z": "746e438bb151500f",
+        "name": "Light",
+        "group": "338a290118d7092e",
+        "order": 1,
+        "value": "payload",
+        "valueType": "msg",
+        "width": 3,
+        "height": 3,
+        "gtype": "gauge-half",
+        "gstyle": "needle",
+        "title": "light",
+        "alwaysShowTitle": false,
+        "floatingTitlePosition": "top-left",
+        "units": "units",
+        "icon": "",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "from": "0",
+                "color": "#5cd65c",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "4",
+                "color": "#ffc800",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "7",
+                "color": "#ea5353",
+                "text": "",
+                "textType": "label"
+            }
+        ],
+        "min": 0,
+        "max": "4095",
+        "sizeThickness": 16,
+        "sizeGap": 4,
+        "sizeKeyThickness": 8,
+        "styleRounded": true,
+        "styleGlow": false,
+        "className": "",
+        "x": 630,
+        "y": 480,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "8e4fbf445212ae4b",
+        "type": "ui-gauge",
+        "z": "746e438bb151500f",
+        "name": "Humidity",
+        "group": "338a290118d7092e",
+        "order": 3,
+        "value": "payload",
+        "valueType": "msg",
+        "width": 3,
+        "height": 3,
+        "gtype": "gauge-half",
+        "gstyle": "needle",
+        "title": "humidity",
+        "alwaysShowTitle": false,
+        "floatingTitlePosition": "top-left",
+        "units": "units",
+        "icon": "",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "from": "0",
+                "color": "#5cd65c",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "4",
+                "color": "#ffc800",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "7",
+                "color": "#ea5353",
+                "text": "",
+                "textType": "label"
+            }
+        ],
+        "min": 0,
+        "max": "100",
+        "sizeThickness": 16,
+        "sizeGap": 4,
+        "sizeKeyThickness": 8,
+        "styleRounded": true,
+        "styleGlow": false,
+        "className": "",
+        "x": 640,
+        "y": 360,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "58fbc86f71519639",
+        "type": "ui-chart",
+        "z": "746e438bb151500f",
+        "group": "57364db4ba11f81f",
+        "name": "Humidity Chart",
+        "label": "chart",
+        "order": 2,
+        "chartType": "line",
+        "category": "topic",
+        "categoryType": "msg",
+        "xAxisLabel": "Time",
+        "xAxisProperty": "",
+        "xAxisPropertyType": "timestamp",
+        "xAxisType": "time",
+        "xAxisFormat": "",
+        "xAxisFormatType": "auto",
+        "xmin": "",
+        "xmax": "",
+        "yAxisLabel": "%",
+        "yAxisProperty": "payload",
+        "yAxisPropertyType": "msg",
+        "ymin": "0",
+        "ymax": "100",
+        "bins": 10,
+        "action": "append",
+        "stackSeries": false,
+        "pointShape": "circle",
+        "pointRadius": 4,
+        "showLegend": true,
+        "removeOlder": 1,
+        "removeOlderUnit": "3600",
+        "removeOlderPoints": "",
+        "colors": [
+            "#0095ff",
+            "#ff0000",
+            "#ff7f0e",
+            "#2ca02c",
+            "#a347e1",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "textColor": [
+            "#666666"
+        ],
+        "textColorDefault": true,
+        "gridColor": [
+            "#e5e5e5"
+        ],
+        "gridColorDefault": true,
+        "width": 6,
+        "height": 8,
+        "className": "",
+        "interpolation": "linear",
+        "x": 680,
+        "y": 320,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "79dd7a4e0ebda562",
+        "type": "ui-chart",
+        "z": "746e438bb151500f",
+        "group": "57364db4ba11f81f",
+        "name": "Light chart",
+        "label": "chart",
+        "order": 3,
+        "chartType": "line",
+        "category": "topic",
+        "categoryType": "msg",
+        "xAxisLabel": "Time",
+        "xAxisProperty": "",
+        "xAxisPropertyType": "timestamp",
+        "xAxisType": "time",
+        "xAxisFormat": "",
+        "xAxisFormatType": "auto",
+        "xmin": "",
+        "xmax": "",
+        "yAxisLabel": "lux",
+        "yAxisProperty": "payload",
+        "yAxisPropertyType": "msg",
+        "ymin": "0",
+        "ymax": "4095",
+        "bins": 10,
+        "action": "append",
+        "stackSeries": false,
+        "pointShape": "circle",
+        "pointRadius": 4,
+        "showLegend": true,
+        "removeOlder": 1,
+        "removeOlderUnit": "3600",
+        "removeOlderPoints": "",
+        "colors": [
+            "#0095ff",
+            "#ff0000",
+            "#ff7f0e",
+            "#2ca02c",
+            "#a347e1",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "textColor": [
+            "#666666"
+        ],
+        "textColorDefault": true,
+        "gridColor": [
+            "#e5e5e5"
+        ],
+        "gridColorDefault": true,
+        "width": 6,
+        "height": 8,
+        "className": "",
+        "interpolation": "linear",
+        "x": 670,
+        "y": 440,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f79c6f4318e5037e",
+        "type": "telegram sender",
+        "z": "746e438bb151500f",
+        "name": "",
+        "bot": "fd503ab695e9eed7",
+        "haserroroutput": false,
+        "outputs": 1,
+        "x": 350,
+        "y": 320,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "0af98798a2a62b31",
+        "type": "inject",
+        "z": "746e438bb151500f",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 120,
+        "y": 180,
+        "wires": [
+            [
+                "1457a55b2ef1fcb4"
+            ]
+        ]
+    },
+    {
+        "id": "1457a55b2ef1fcb4",
+        "type": "function",
+        "z": "746e438bb151500f",
+        "name": "function 2",
+        "func": "let temp = msg.payload.temperature;\nlet light = msg.payload.light;\n\nlet tempAlert = temp <= 19;\nlet lightAlert = light > 300;\n\nlet alerts = [];\n\n// Temperature\nif (tempAlert && context.get(\"tempAlert\") !== true) {\n    alerts.push(`🌡️ อุณหภูมิต่ำ: ${temp} °C`);\n}\n\n// Light\nif (lightAlert && context.get(\"lightAlert\") !== true) {\n    alerts.push(`💡 แสงสูง: ${light}`);\n}\n\n// บันทึกสถานะปัจจุบัน\ncontext.set(\"tempAlert\", tempAlert);\ncontext.set(\"lightAlert\", lightAlert);\n\n// ไม่มีเหตุการณ์ใหม่\nif (alerts.length === 0) {\n    return null;\n}\n\nmsg.payload = {\n    chatId: 8602127088,\n    type: \"message\",\n    content: \"🚨 แจ้งเตือน IoT\\n\\n\" + alerts.join(\"\\n\")\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 180,
+        "wires": [
+            [
+                "f79c6f4318e5037e"
+            ]
+        ]
+    },
+    {
+        "id": "70a3bf4c891df0f2",
+        "type": "telegram receiver",
+        "z": "746e438bb151500f",
+        "name": "",
+        "bot": "fd503ab695e9eed7",
+        "saveDataDir": "",
+        "filterCommands": false,
+        "hasinput": false,
+        "inputs": 0,
+        "handleallupdates": false,
+        "handleprocessupdates": false,
+        "x": 150,
+        "y": 600,
+        "wires": [
+            [
+                "4de571c489806e95"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "4de571c489806e95",
+        "type": "debug",
+        "z": "746e438bb151500f",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 360,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "efcf6c070fad4b73",
+        "type": "ui-template",
+        "z": "746e438bb151500f",
+        "group": "",
+        "page": "7f0850ace1152bee",
+        "ui": "dfb9a6f1a1ccc731",
+        "name": "Page 1 Style",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "head": "",
+        "format": "<style>\n/* ===== Page 1 - Clean Dark Theme ===== */\n\n/* Page background */\n.nrdb-page {\n    background: #0f172a !important;\n    font-family: 'Inter', 'Segoe UI', sans-serif !important;\n}\n\n/* Group card */\n.nrdb-ui-group {\n    background: #1e293b !important;\n    border: 1px solid #334155 !important;\n    border-radius: 14px !important;\n    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;\n    overflow: hidden !important;\n    transition: box-shadow 0.3s ease;\n}\n\n.nrdb-ui-group:hover {\n    box-shadow: 0 6px 28px rgba(56, 189, 248, 0.12) !important;\n}\n\n/* Group title bar */\n.nrdb-ui-group .v-card-title,\n.nrdb-ui-group .nrdb-ui-group-name {\n    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;\n    color: #e2e8f0 !important;\n    font-size: 15px !important;\n    font-weight: 600 !important;\n    letter-spacing: 0.5px !important;\n    padding: 12px 16px !important;\n    border-bottom: 1px solid #334155 !important;\n}\n\n/* Widget/card area */\n.nrdb-ui-widget-content {\n    background: #1e293b !important;\n    color: #cbd5e1 !important;\n}\n\n/* Gauge styles */\n.nrdb-ui-gauge svg text {\n    fill: #e2e8f0 !important;\n    font-family: 'Inter', sans-serif !important;\n}\n\n.nrdb-ui-gauge svg .gauge-value {\n    fill: #38bdf8 !important;\n    font-weight: 700 !important;\n    font-size: 1.4em !important;\n}\n\n/* Chart background */\n.nrdb-ui-chart canvas {\n    border-radius: 8px;\n}\n\n/* Text/label color override */\n.nrdb-ui-text {\n    color: #94a3b8 !important;\n}\n\n/* Scrollbar */\n::-webkit-scrollbar {\n    width: 6px;\n}\n::-webkit-scrollbar-track {\n    background: #0f172a;\n}\n::-webkit-scrollbar-thumb {\n    background: #334155;\n    border-radius: 3px;\n}\n::-webkit-scrollbar-thumb:hover {\n    background: #38bdf8;\n}\n</style>\n\n<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n<link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap\" rel=\"stylesheet\">",
+        "storeOutMessages": true,
+        "passthru": true,
+        "resendOnRefresh": true,
+        "templateScope": "page",
+        "className": "",
+        "x": 160,
+        "y": 460,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ws_prep_func",
+        "type": "function",
+        "z": "746e438bb151500f",
+        "name": "Format for Web",
+        "func": "let p = msg.payload;\nif (typeof p === 'string') {\n    try { p = JSON.parse(p); } catch(e) {}\n}\nif (!p || typeof p !== 'object') {\n    p = {};\n}\n\nlet out = {\n    // Environmental\n    temperature: p.temperature !== undefined ? p.temperature : p.temp,\n    humidity: p.humidity !== undefined ? p.humidity : p.humi,\n    light: p.light !== undefined ? p.light : p.ldr,\n\n    // PZEM-004T Electrical parameters\n    voltage: p.voltage !== undefined ? p.voltage : (p.volt !== undefined ? p.volt : p.v),\n    current: p.current !== undefined ? p.current : (p.current_a !== undefined ? p.current_a : (p.amp !== undefined ? p.amp : p.i)),\n    power: p.power !== undefined ? p.power : (p.watt !== undefined ? p.watt : (p.power_w !== undefined ? p.power_w : p.p)),\n    energy: p.energy !== undefined ? p.energy : (p.kwh !== undefined ? p.kwh : (p.energy_kwh !== undefined ? p.energy_kwh : p.e)),\n    frequency: p.frequency !== undefined ? p.frequency : (p.freq !== undefined ? p.freq : (p.hz !== undefined ? p.hz : p.f)),\n    pf: p.pf !== undefined ? p.pf : (p.power_factor !== undefined ? p.power_factor : p.powerFactor),\n\n    topic: msg.topic || p.topic,\n    timestamp: Date.now()\n};\n\nmsg.payload = JSON.stringify(out);\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 380,
+        "y": 40,
+        "wires": [
+            [
+                "ws_out_01"
+            ]
+        ]
+    },
+    {
+        "id": "ws_out_01",
+        "type": "websocket out",
+        "z": "746e438bb151500f",
+        "name": "WS Send Sensors",
+        "server": "ws_server_01",
+        "client": "",
+        "x": 650,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "ws_in_01",
+        "type": "websocket in",
+        "z": "746e438bb151500f",
+        "name": "WS Receive Control",
+        "server": "ws_server_01",
+        "client": "",
+        "x": 160,
+        "y": 720,
+        "wires": [
+            [
+                "ws_debug_01"
+            ]
+        ]
+    },
+    {
+        "id": "ws_debug_01",
+        "type": "debug",
+        "z": "746e438bb151500f",
+        "name": "Web Control In",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 380,
+        "y": 720,
+        "wires": []
+    },
+    {
+        "id": "http_web_in",
+        "type": "http in",
+        "z": "746e438bb151500f",
+        "name": "GET /web",
+        "url": "/web",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 130,
+        "y": 780,
+        "wires": [
+            [
+                "func_web_route"
+            ]
+        ]
+    },
+    {
+        "id": "file_web_read",
+        "type": "file in",
+        "z": "746e438bb151500f",
+        "name": "Read dashboard.html",
+        "filename": "filename",
+        "filenameType": "msg",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 490,
+        "y": 800,
+        "wires": [
+            [
+                "http_web_resp"
+            ]
+        ]
+    },
+    {
+        "id": "http_web_resp",
+        "type": "http response",
+        "z": "746e438bb151500f",
+        "name": "HTTP Response",
+        "statusCode": "200",
+        "headers": {},
+        "x": 680,
+        "y": 800,
+        "wires": []
+    },
+    {
+        "id": "90805ce04b77a3ce",
+        "type": "function",
+        "z": "746e438bb151500f",
+        "name": "function 3",
+        "func": "let d = msg.payload;\n\nmsg.topic = `\nINSERT INTO sensor_data\n(\n    temperature,\n    humidity,\n    light\n)\nVALUES (?, ?, ?)\n`;\n\nmsg.payload = [\n    d.temperature,\n    d.humidity,\n    d.light\n];\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 640,
+        "y": 120,
+        "wires": [
+            [
+                "bdcd80202c297f5c"
+            ]
+        ]
+    },
+    {
+        "id": "bdcd80202c297f5c",
+        "type": "mysql",
+        "z": "746e438bb151500f",
+        "mydb": "6bd35ac3bddc0bfd",
+        "name": "",
+        "x": 910,
+        "y": 120,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "d12e1d6cab45600a",
+        "type": "debug",
+        "z": "746e438bb151500f",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 120,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "pzem_mqtt_in",
+        "type": "mqtt in",
+        "z": "746e438bb151500f",
+        "name": "PZEM-004T MQTT",
+        "topic": "iot/pzem",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "1a40247d654a6712",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 130,
+        "y": 40,
+        "wires": [
+            [
+                "ws_prep_func",
+                "d12e1d6cab45600a"
+            ]
+        ]
+    },
+    {
+        "id": "pzem_inject_test",
+        "type": "inject",
+        "z": "746e438bb151500f",
+        "name": "Simulate PZEM-004T",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "iot/pzem",
+        "payload": "{\"voltage\":224.5,\"current\":2.84,\"power\":625.3,\"energy\":18.42,\"frequency\":50.0,\"pf\":0.98}",
+        "payloadType": "json",
+        "x": 140,
+        "y": 380,
+        "wires": [
+            [
+                "ws_prep_func"
+            ]
+        ]
+    },
+    {
+        "id": "http_web_file_in",
+        "type": "http in",
+        "z": "746e438bb151500f",
+        "name": "GET /web/:file",
+        "url": "/web/:file",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 130,
+        "y": 830,
+        "wires": [
+            [
+                "func_web_route"
+            ]
+        ]
+    },
+    {
+        "id": "func_web_route",
+        "type": "function",
+        "z": "746e438bb151500f",
+        "name": "Route Web File",
+        "func": "const allowed = {\n    'dashboard.html': 'dashboard.html',\n    'analytics.html': 'analytics.html',\n    'energy.html': 'energy.html',\n    'history.html': 'history.html',\n    'settings.html': 'settings.html',\n    'style.css': 'style.css',\n    'common.js': 'common.js'\n};\n\nlet requested = (msg.req.params && msg.req.params.file) ? msg.req.params.file : '';\n\n// Redirect /web or /web/ to /web/dashboard.html for clean relative paths\nif (!requested || requested === '') {\n    msg.statusCode = 302;\n    msg.headers = { 'Location': '/web/dashboard.html' };\n    msg.payload = 'Redirecting...';\n    return [null, msg];\n}\n\nlet target = allowed[requested] || 'dashboard.html';\nmsg.filename = 'c:/Users/ASUS TUF/.node-red/' + target;\n\nif (target.endsWith('.css')) {\n    msg.headers = { 'content-type': 'text/css; charset=utf-8' };\n} else if (target.endsWith('.js')) {\n    msg.headers = { 'content-type': 'application/javascript; charset=utf-8' };\n} else {\n    msg.headers = { 'content-type': 'text/html; charset=utf-8' };\n}\n\nreturn [msg, null];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 800,
+        "wires": [
+            [
+                "file_web_read"
+            ],
+            [
+                "http_web_resp"
+            ]
+        ]
+    }
+]

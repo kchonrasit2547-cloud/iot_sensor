@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>วิเคราะห์กราฟ - Smart IoT Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Mobile Drawer Overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="brand-box">
+        <div class="brand-icon">⚡</div>
+        <div>
+          <div class="brand-title">Smart IoT Hub</div>
+          <div class="brand-sub">Node-RED Telemetry</div>
+        </div>
+      </a>
+      <button class="sidebar-close-btn" onclick="closeSidebar()">✕</button>
+    </div>
+
+    <div class="nav-label">เมนูระบบ (Navigation)</div>
+    <ul class="nav-list">
+      <li class="nav-item" id="nav-dashboard">
+        <a href="dashboard.html">
+          <span class="nav-icon">📊</span>
+          <span>แดชบอร์ดหลัก</span>
+        </a>
+      </li>
+      <li class="nav-item active" id="nav-analytics">
+        <a href="analytics.html">
+          <span class="nav-icon">📈</span>
+          <span>วิเคราะห์กราฟ</span>
+          <span class="nav-badge badge-teal">Live</span>
+        </a>
+      </li>
+      <li class="nav-item" id="nav-energy">
+        <a href="energy.html">
+          <span class="nav-icon">⚡</span>
+          <span>พลังงานไฟฟ้า PZEM</span>
+          <span class="nav-badge badge-amber">มิเตอร์ & ค่าไฟ</span>
+        </a>
+      </li>
+      <li class="nav-item" id="nav-history">
+        <a href="history.html">
+          <span class="nav-icon">📋</span>
+          <span>ประวัติข้อมูล</span>
+          <span class="nav-badge badge-blue" id="logsCountBadge">0</span>
+        </a>
+      </li>
+      <li class="nav-item" id="nav-settings">
+        <a href="settings.html">
+          <span class="nav-icon">⚙️</span>
+          <span>ตั้งค่าการเชื่อมต่อ</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="nav-label" style="padding-top: 8px;">บริการภายนอก (Node-RED)</div>
+    <ul class="nav-list" style="flex: 0; padding-bottom: 12px;">
+      <li class="nav-item">
+        <a href="http://localhost:1880/dashboard/page1" target="_blank" rel="noopener noreferrer">
+          <span class="nav-icon">🚀</span>
+          <span>Dashboard 2.0</span>
+          <span class="nav-badge badge-green">External</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="http://localhost:1880/" target="_blank" rel="noopener noreferrer">
+          <span class="nav-icon">🛠️</span>
+          <span>Flow Editor</span>
+          <span class="nav-badge badge-yellow">:1880</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <div class="node-status-card">
+        <div class="status-dot" id="statusDot"></div>
+        <div style="overflow: hidden;">
+          <div style="font-size: 12px; font-weight: 600;" id="statusText">รอการเชื่อมต่อ...</div>
+          <div
+            style="font-size: 10px; color: var(--text-muted); text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"
+            id="statusSub">ws://localhost:1880/ws/sensors</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Area -->
+  <div class="main-wrapper">
+    <!-- Top Navbar -->
+    <header class="top-navbar">
+      <div class="top-left">
+        <button class="menu-toggle-btn" onclick="toggleSidebar()" aria-label="Toggle Menu">
+          ☰
+        </button>
+        <div class="page-heading">
+          <div class="breadcrumb">
+            <span>หน้าหลัก</span>
+            <span>/</span>
+            <span id="breadcrumbCurrent">วิเคราะห์กราฟ</span>
+          </div>
+          <h1 id="pageHeadingTitle">วิเคราะห์กราฟ & สถิติแนวโน้มเชิงลึก</h1>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button class="btn btn-outline" onclick="simulateData()" title="สุ่มค่าข้อมูลเซ็นเซอร์ส่งเข้าหน้าจอ">
+          <span>⚡ จำลองข้อมูลทดสอบ</span>
+        </button>
+        <button class="btn btn-primary" onclick="reconnectWs()" title="เชื่อมต่อ WebSocket ใหม่">
+          <span>🔄 รีเฟรชเชื่อมต่อ</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Content Area -->
+    <main class="content-area">
+      <!-- Analytics Header KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-title">อุณหภูมิเฉลี่ย (AVG TEMP)</div>
+          <div class="kpi-val" id="kpiAvgTemp">-- °C</div>
+          <span class="stat-badge badge-orange">Sensor DHT22</span>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">อุณหภูมิสูงสุด (PEAK TEMP)</div>
+          <div class="kpi-val" id="kpiMaxTemp">-- °C</div>
+          <span class="stat-badge badge-red" id="kpiMaxTempBadge">ระดับปกติ</span>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">ความชื้นเฉลี่ย (AVG HUMIDITY)</div>
+          <div class="kpi-val" id="kpiAvgHumi">-- %</div>
+          <span class="stat-badge badge-blue">ความชื้นสัมพัทธ์</span>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">ระดับแสงล่าสุด (LIGHT LEVEL)</div>
+          <div class="kpi-val" id="kpiLightVal">-- lux</div>
+          <span class="stat-badge badge-yellow">LDR Sensor</span>
+        </div>
+      </div>
+
+      <!-- SEPARATED ANALYTICS CHART 1: Temperature Deep Analytics -->
+      <div class="card-panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              <span style="color: var(--temp-color);">🌡️</span>
+              <span>วิเคราะห์อุณหภูมิเชิงลึก (Temperature Detailed Stream)</span>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+              กราฟแสดงความเปลี่ยนแปลงและระดับความร้อนสะสมตามไทม์ไลน์
+            </p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <span class="stat-badge badge-orange">หน่วย: °C</span>
+            <button class="btn btn-outline btn-sm" onclick="clearChartData()">รีเซ็ตกราฟ</button>
+          </div>
+        </div>
+        <div class="chart-container chart-container-lg">
+          <canvas id="analyticsTempChart"></canvas>
+        </div>
+      </div>
+
+      <!-- SEPARATED ANALYTICS CHART 2: Humidity Deep Analytics -->
+      <div class="card-panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              <span style="color: var(--humi-color);">💧</span>
+              <span>วิเคราะห์ความชื้นสัมพัทธ์เชิงลึก (Relative Humidity Stream)</span>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+              กราฟติดตามระดับความชื้นในอากาศพร้อมพื้นที่โซนสบาย (Comfort Zone 40% - 60%)
+            </p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <span class="stat-badge badge-blue">หน่วย: % RH</span>
+          </div>
+        </div>
+        <div class="chart-container chart-container-lg">
+          <canvas id="analyticsHumiChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Light Level Bar Chart -->
+      <div class="card-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>☀️</span>
+            <span>การกระจายระดับความเข้มแสง (Light Intensity Distribution)</span>
+          </div>
+          <span class="stat-badge badge-yellow">Lux Metric</span>
+        </div>
+        <div class="chart-container chart-container-lg">
+          <canvas id="lightBarChart"></canvas>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="common.js"></script>
+  <script>
+    // =========================================================================
+    // Analytics Deep Charts Logic
+    // =========================================================================
+    const maxPoints = 25;
+    const labels = [];
+    const tempData = [];
+    const humiData = [];
+    const lightData = [];
+
+    // Chart 1: Analytics Temp
+    const ctxAnalyticsTemp = document.getElementById('analyticsTempChart').getContext('2d');
+    const analyticsTempChart = new Chart(ctxAnalyticsTemp, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'อุณหภูมิ (°C)',
+          data: tempData,
+          borderColor: '#f97316',
+          backgroundColor: 'rgba(249, 115, 22, 0.1)',
+          borderWidth: 3,
+          tension: 0.35,
+          fill: true,
+          pointRadius: 4,
+          pointBackgroundColor: '#f97316'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { font: { family: 'Prompt', size: 12 } } }
+        },
+        scales: {
+          x: { grid: { color: '#f8fafc' }, ticks: { font: { family: 'Inter', size: 11 } } },
+          y: { grid: { color: '#f1f5f9' }, ticks: { font: { family: 'Inter', size: 11 } } }
+        }
+      }
+    });
+
+    // Chart 2: Analytics Humi
+    const ctxAnalyticsHumi = document.getElementById('analyticsHumiChart').getContext('2d');
+    const analyticsHumiChart = new Chart(ctxAnalyticsHumi, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'ความชื้นสัมพัทธ์ (% RH)',
+          data: humiData,
+          borderColor: '#0284c7',
+          backgroundColor: 'rgba(2, 132, 199, 0.1)',
+          borderWidth: 3,
+          tension: 0.35,
+          fill: true,
+          pointRadius: 4,
+          pointBackgroundColor: '#0284c7'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { font: { family: 'Prompt', size: 12 } } }
+        },
+        scales: {
+          x: { grid: { color: '#f8fafc' }, ticks: { font: { family: 'Inter', size: 11 } } },
+          y: { min: 20, max: 100, grid: { color: '#f1f5f9' }, ticks: { font: { family: 'Inter', size: 11 } } }
+        }
+      }
+    });
+
+    // Chart 3: Light Bar
+    const ctxLightBar = document.getElementById('lightBarChart').getContext('2d');
+    const lightBarChart = new Chart(ctxLightBar, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'ความเข้มแสง (lux)',
+          data: lightData,
+          backgroundColor: 'rgba(234, 179, 8, 0.65)',
+          borderColor: '#eab308',
+          borderWidth: 1.5,
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 10 } } },
+          y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { family: 'Inter', size: 10 } } }
+        }
+      }
+    });
+
+    function updateKPIs() {
+      if (tempData.length > 0) {
+        const avgT = (tempData.reduce((a, b) => a + b, 0) / tempData.length).toFixed(1);
+        const maxT = Math.max(...tempData).toFixed(1);
+        document.getElementById('kpiAvgTemp').textContent = `${avgT} °C`;
+        document.getElementById('kpiMaxTemp').textContent = `${maxT} °C`;
+        const badge = document.getElementById('kpiMaxTempBadge');
+        if (maxT > 32) {
+          badge.className = 'stat-badge badge-red';
+          badge.textContent = 'ระดับสูง';
+        } else {
+          badge.className = 'stat-badge badge-teal';
+          badge.textContent = 'ระดับปกติ';
+        }
+      }
+
+      if (humiData.length > 0) {
+        const avgH = (humiData.reduce((a, b) => a + b, 0) / humiData.length).toFixed(1);
+        document.getElementById('kpiAvgHumi').textContent = `${avgH} %`;
+      }
+
+      if (lightData.length > 0) {
+        document.getElementById('kpiLightVal').textContent = `${Math.round(lightData[lightData.length - 1])} lux`;
+      }
+    }
+
+    function clearChartData() {
+      labels.length = 0;
+      tempData.length = 0;
+      humiData.length = 0;
+      lightData.length = 0;
+      analyticsTempChart.update();
+      analyticsHumiChart.update();
+      lightBarChart.update();
+      updateKPIs();
+      showToast('info', '🧹 รีเซ็ตกราฟแล้ว', 'ล้างแคชจุดข้อมูลในกราฟวิเคราะห์เรียบร้อย');
+    }
+
+    // Telemetry Event Listener
+    window.addEventListener('iot-telemetry', (e) => {
+      const d = e.detail;
+
+      if (d.temp !== null || d.humi !== null || d.light !== null) {
+        labels.push(d.timeStr);
+        tempData.push(d.temp !== null ? d.temp : (tempData[tempData.length - 1] || 25));
+        humiData.push(d.humi !== null ? d.humi : (humiData[humiData.length - 1] || 50));
+        lightData.push(d.light !== null ? d.light : (lightData[lightData.length - 1] || 300));
+
+        if (labels.length > maxPoints) {
+          labels.shift();
+          tempData.shift();
+          humiData.shift();
+          lightData.shift();
+        }
+
+        analyticsTempChart.update();
+        analyticsHumiChart.update();
+        lightBarChart.update();
+        updateKPIs();
+      }
+    });
+
+    // Seed from stored logs on load
+    document.addEventListener('DOMContentLoaded', () => {
+      const logs = getStoredLogs().slice(0, 15).reverse();
+      logs.forEach(item => {
+        if (item.temp && item.temp !== '--') {
+          labels.push(item.time);
+          tempData.push(parseFloat(item.temp));
+          humiData.push(parseFloat(item.humi));
+          lightData.push(parseFloat(item.light));
+        }
+      });
+      if (labels.length > 0) {
+        analyticsTempChart.update();
+        analyticsHumiChart.update();
+        lightBarChart.update();
+        updateKPIs();
+      }
+    });
+  </script>
+</body>
+
+</html>
