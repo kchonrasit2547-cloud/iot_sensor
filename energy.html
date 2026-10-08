@@ -137,12 +137,6 @@
       padding: 16px
     }
 
-    :where(.month-card-header) {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px
-    }
-
     :where(.month-card-period) {
       font-weight: 700
     }
@@ -154,41 +148,16 @@
       margin-top: 8px
     }
 
-    :where(.month-card-detail) {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      color: var(--text-muted, #64748b)
+    .status-dot.connected {
+      background-color: #10b981;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
     }
 
-    :where(.month-compare-badge) {
-      font-size: 11px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 99px;
-      height: fit-content;
-      background: #f1f5f9
-    }
-
-    :where(.compare-up) {
-      background: #fee2e2;
-      color: #b91c1c
-    }
-
-    :where(.compare-down) {
-      background: #dcfce7;
-      color: #15803d
-    }
-
-    /* สถานะปุ่มเมื่อกำลังจำลองข้อมูล PZEM-004T */
-    button.active {
-      opacity: 0.9;
-      transform: translateY(1px);
-      background-color: #f59e0b !important;
-      color: #fff !important;
+    .status-dot.disconnected {
+      background-color: #ef4444;
+      box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
     }
   </style>
-
 </head>
 
 <body>
@@ -269,9 +238,9 @@
 
     <div class="sidebar-footer">
       <div class="node-status-card">
-        <div class="status-dot" id="statusDot"></div>
+        <div class="status-dot disconnected" id="statusDot"></div>
         <div style="overflow: hidden;">
-          <div style="font-size: 12px; font-weight: 600;" id="statusText">รอการเชื่อมต่อ...</div>
+          <div style="font-size: 12px; font-weight: 600;" id="statusText">กำลังเชื่อมต่อ...</div>
           <div
             style="font-size: 10px; color: var(--text-muted); text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"
             id="statusSub">ws://localhost:1880/ws/sensors</div>
@@ -294,21 +263,13 @@
             <span>/</span>
             <span id="breadcrumbCurrent">พลังงานไฟฟ้า PZEM</span>
           </div>
-          <h1 id="pageHeadingTitle">ระบบตรวจวัดพลังงานไฟฟ้า PZEM-004T & คิดคำนวณค่าไฟ</h1>
+          <h1 id="pageHeadingTitle">ระบบตรวจวัดพลังงานไฟฟ้า PZEM-004T & คิดคำนวณค่าไฟ (Realtime)</h1>
         </div>
       </div>
 
       <div class="top-actions" style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <button class="btn btn-outline" id="btnSimulation" onclick="toggleSimulation()"
-          title="สุ่มค่าข้อมูลเซ็นเซอร์ส่งเข้าหน้าจออัตโนมัติ">
-          <span>⚡ จำลองข้อมูลทดสอบ</span>
-        </button>
-        <button class="btn btn-outline" onclick="simulateHighLoadScenario()"
-          title="จำลองการเปิดโหลดขนาดใหญ่ (เครื่องปรับอากาศ/กาต้มน้ำ)">
-          <span>🔥 จำลองโหลดสูง</span>
-        </button>
         <button class="btn btn-primary" onclick="reconnectWs()" title="เชื่อมต่อ WebSocket ใหม่">
-          <span>🔄 รีเฟรชเชื่อมต่อ</span>
+          <span>🔄 รีเฟรชการเชื่อมต่อ PZEM</span>
         </button>
       </div>
     </header>
@@ -320,13 +281,13 @@
         <!-- Banner -->
         <div class="pz-banner">
           <div>
-            <div class="pz-banner-lbl">ค่าไฟสะสมจากหน่วยที่วัดได้</div>
+            <div class="pz-banner-lbl">ค่าไฟสะสมจากหน่วยที่วัดได้จริง</div>
             <div class="pz-banner-val" id="bannerCurrentCost">0.00 บาท</div>
             <div class="pz-banner-sub" id="bannerTariffLabel">อัตราคิดค่าไฟห้องเรียน (ค่าบริการ 0 บาท)</div>
           </div>
           <div style="text-align:right;">
             <div class="pz-banner-lbl">สถานะโหลดปัจจุบัน</div>
-            <div class="pz-banner-state" id="bannerLoadStatus">สแตนด์บาย (Standby)</div>
+            <div class="pz-banner-state" id="bannerLoadStatus">รอข้อมูลเซ็นเซอร์...</div>
           </div>
         </div>
 
@@ -367,7 +328,7 @@
 
           <div class="pz-card">
             <div class="pz-top"><span class="pz-lbl">〰️ ความถี่ (Frequency)</span></div>
-            <div class="pz-val"><span id="valFreq">50.0</span><small>Hz</small></div>
+            <div class="pz-val"><span id="valFreq">0.0</span><small>Hz</small></div>
             <div class="pz-bar"><i id="freqBarFill" style="background:#06b6d4;"></i></div>
             <div class="pz-sub">มาตรฐาน 50Hz</div>
           </div>
@@ -392,7 +353,7 @@
             <div class="pz-kpi" id="valVar">0.0 VAR</div>
           </div>
           <div class="pz-card">
-            <div class="pz-lbl">วัตต์สูงสุด (Peak)</div>
+            <div class="pz-lbl">วัตต์สูงสุด (Peak Power)</div>
             <div class="pz-kpi" id="valPeakWatt">0 W</div>
           </div>
           <div class="pz-card">
@@ -444,7 +405,7 @@
                 <span>การประมาณการค่าไฟฟ้าตามช่วงเวลา (Electricity Cost Projections)</span>
               </div>
               <p style="font-size: 12px; color: var(--text-muted, #64748b); margin-top: 4px;">
-                คำนวณคาดการณ์ค่าไฟล่วงหน้า หากเปิดใช้งานอุปกรณ์ด้วยโหลดวัตต์ปัจจุบันต่อเนื่อง
+                คำนวณคาดการณ์ค่าไฟล่วงหน้า อ้างอิงจากกำลังไฟฟ้า (วัตต์) ที่ PZEM-004T อ่านได้ในขณะนี้
               </p>
             </div>
             <span class="stat-badge badge-amber" id="projWattBadge">อิงตามโหลดปัจจุบัน: 0W</span>
@@ -570,31 +531,24 @@
         if (overlay) overlay.classList.remove('show');
       };
     }
-    if (typeof reconnectWs !== 'function') {
-      window.reconnectWs = function () {
-        const statusText = document.getElementById('statusText');
-        if (statusText) statusText.textContent = 'กำลังเชื่อมต่อ WebSocket...';
-        setTimeout(() => {
-          if (statusText) statusText.textContent = 'เชื่อมต่อแล้ว (จำลอง)';
-        }, 800);
-      };
-    }
   </script>
 
   <script src="common.js" onerror="console.log('common.js not found, running standalone mode')"></script>
 
   <script>
     // =========================================================================
-    // Initial Setup & Mock State Fallback
+    // Real PZEM Data State Setup (เริ่มต้นด้วยค่า 0 สำหรับเซ็นเซอร์จริง)
     // =========================================================================
-    window.pzemData = window.pzemData || {
-      voltage: 220.5,
-      current: 2.85,
-      power: 620,
-      energy: 14.8500,
-      frequency: 50.0,
-      pf: 0.94,
-      peakPower: 1250
+    window.pzemData = {
+      voltage: 0.0,
+      current: 0.00,
+      power: 0,
+      energy: 0.0000,
+      frequency: 0.0,
+      pf: 0.00,
+      apparentPower: 0,
+      reactivePower: 0,
+      peakPower: 0
     };
 
     const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
@@ -607,9 +561,7 @@
       flatRate: 7.0,
       monthlyBudget: 2500,
       includeVat: true,
-      calcSource: 'pzem',
-      simulatedUnits: 150,
-      touOnPeakShare: 0.35
+      calcSource: 'pzem'
     }, (() => {
       try {
         const stored = JSON.parse(localStorage.getItem(TARIFF_STORE_KEY) || '{}');
@@ -618,19 +570,15 @@
       } catch (e) { return {}; }
     })());
 
-    (function initPzemExtras() {
-      ['voltage', 'current', 'power', 'energy', 'frequency', 'pf'].forEach(k => {
-        if (typeof pzemData[k] !== 'number' || isNaN(pzemData[k])) pzemData[k] = 0;
-      });
+    // ดึงค่า kWh สะสมเดิมที่เคยกดบันทึกไว้กลับมาใช้อ้างอิง
+    (function initPzemData() {
       const savedKwh = parseFloat(localStorage.getItem('pzem_energy_kwh'));
-      if (!pzemData.energy && !isNaN(savedKwh)) pzemData.energy = savedKwh;
-      pzemData.apparentPower = pzemData.voltage * pzemData.current;
-      pzemData.reactivePower = Math.sqrt(Math.max(0, Math.pow(pzemData.apparentPower, 2) - Math.pow(pzemData.power, 2)));
-      pzemData.peakPower = pzemData.power || 0;
+      if (!isNaN(savedKwh) && savedKwh > 0) {
+        pzemData.energy = savedKwh;
+      }
     })();
 
     function persistPzem() {
-      pzemData.powerFactor = pzemData.pf;
       try {
         localStorage.setItem('pzem_energy_kwh', pzemData.energy);
         localStorage.setItem('pzem_cached_data', JSON.stringify(pzemData));
@@ -654,18 +602,15 @@
       cfg = cfg || tariffConfig;
       const ftRate = Number(cfg.ftRate) || 0;
       const serviceFee = 0;
-      const steps = [];
       let baseCharge = 0;
 
       const tiers = TARIFF_TIERS.residential_above_150;
-      let remaining = units, from = 0;
+      let remaining = units;
       for (const t of tiers) {
         if (remaining <= 0) break;
         const take = Math.min(remaining, t.size);
-        const amount = take * t.rate;
-        baseCharge += amount;
+        baseCharge += take * t.rate;
         remaining -= take;
-        from += take;
       }
 
       const ftCharge = units * ftRate;
@@ -708,7 +653,7 @@
         responsive: true, maintainAspectRatio: false, animation: false,
         scales: {
           x: { grid: { display: false }, ticks: { maxTicksLimit: 8, font: { size: 10 } } },
-          y: { suggestedMin: 200, suggestedMax: 250, title: { display: true, text: 'V' } }
+          y: { suggestedMin: 180, suggestedMax: 260, title: { display: true, text: 'V' } }
         }
       }
     });
@@ -729,20 +674,35 @@
       updateProjections();
     }
 
+    // =========================================================================
+    // Core Function: อัปเดตข้อมูลที่รับมาจาก PZEM-004T จริง
+    // =========================================================================
     function updatePzemDataValues(raw) {
-      if (raw.volt !== undefined && raw.volt !== null && !isNaN(raw.volt)) pzemData.voltage = raw.volt;
-      if (raw.amp !== undefined && raw.amp !== null && !isNaN(raw.amp)) pzemData.current = raw.amp;
-      if (raw.watt !== undefined && raw.watt !== null && !isNaN(raw.watt)) pzemData.power = raw.watt;
-      if (raw.kwh !== undefined && raw.kwh !== null && !isNaN(raw.kwh)) pzemData.energy = raw.kwh;
-      if (raw.freq !== undefined && raw.freq !== null && !isNaN(raw.freq)) pzemData.frequency = raw.freq;
-      if (raw.pf !== undefined && raw.pf !== null && !isNaN(raw.pf)) pzemData.pf = raw.pf;
+      if (!raw) return;
 
+      // เพิ่มความยืดหยุ่นรองรับ Key ชื่อยาวหรือสั้น
+      const volt = raw.voltage ?? raw.volt;
+      const amp = raw.current ?? raw.amp;
+      const watt = raw.power ?? raw.watt;
+      const kwh = raw.energy ?? raw.kwh;
+      const freq = raw.frequency ?? raw.freq;
+      const pf = raw.pf ?? raw.powerFactor;
+
+      if (volt !== undefined && volt !== null && !isNaN(volt)) pzemData.voltage = Number(volt);
+      if (amp !== undefined && amp !== null && !isNaN(amp)) pzemData.current = Number(amp);
+      if (watt !== undefined && watt !== null && !isNaN(watt)) pzemData.power = Number(watt);
+      if (kwh !== undefined && kwh !== null && !isNaN(kwh)) pzemData.energy = Number(kwh);
+      if (freq !== undefined && freq !== null && !isNaN(freq)) pzemData.frequency = Number(freq);
+      if (pf !== undefined && pf !== null && !isNaN(pf)) pzemData.pf = Number(pf);
+
+      // คำนวณค่าทางไฟฟ้าเพิ่มเติม
       pzemData.apparentPower = pzemData.voltage * pzemData.current;
       pzemData.reactivePower = Math.sqrt(Math.max(0, Math.pow(pzemData.apparentPower, 2) - Math.pow(pzemData.power, 2)));
       if (pzemData.power > pzemData.peakPower) pzemData.peakPower = pzemData.power;
 
       persistPzem();
 
+      // เพิ่มข้อมูลเข้า Realtime Chart
       const timeStr = raw.timeStr || new Date().toLocaleTimeString('th-TH');
       if (pzemHistoryData.labels.length >= maxDataPoints) {
         pzemHistoryData.labels.shift();
@@ -766,7 +726,10 @@
       setText('valVolt', pzemData.voltage.toFixed(1));
       const voltStatusEl = document.getElementById('voltStatus');
       if (voltStatusEl) {
-        if (pzemData.voltage < 207) {
+        if (pzemData.voltage === 0) {
+          voltStatusEl.textContent = 'ไม่มีไฟ';
+          voltStatusEl.className = 'stat-badge badge-gray';
+        } else if (pzemData.voltage < 207) {
           voltStatusEl.textContent = '⚠️ ไฟตก';
           voltStatusEl.className = 'stat-badge badge-red';
         } else if (pzemData.voltage > 245) {
@@ -810,11 +773,11 @@
 
       const bannerLoad = document.getElementById('bannerLoadStatus');
       if (bannerLoad) {
-        if (pzemData.power < 50) {
-          bannerLoad.textContent = 'สแตนด์บาย (Standby)';
+        if (pzemData.power <= 5) {
+          bannerLoad.textContent = 'สแตนด์บาย / ไม่มีการใช้ไฟ';
           bannerLoad.style.color = '#94a3b8';
         } else {
-          bannerLoad.textContent = 'กำลังใช้งาน (Active)';
+          bannerLoad.textContent = `กำลังใช้งาน (${Math.round(pzemData.power)}W)`;
           bannerLoad.style.color = '#6ee7b7';
         }
       }
@@ -970,92 +933,84 @@
     }
 
     // =========================================================================
-    // PZEM-004T SIMULATION LOGIC (ระบบจำลองข้อมูล)
+    // Real WebSocket Client Connection (รับข้อมูลจาก Node-RED / ESP32)
     // =========================================================================
-    function simulateData() {
-      const voltage = +(219 + Math.random() * 5).toFixed(1);       // 219.0 - 224.0 V
-      const current = +(2.00 + Math.random() * 3.00).toFixed(2);     // 2.00 - 5.00 A
-      const pf = +(0.90 + Math.random() * 0.08).toFixed(2);        // 0.90 - 0.98
-      const frequency = +(49.8 + Math.random() * 0.4).toFixed(1);  // 49.8 - 50.2 Hz
+    let ws = null;
+    const WS_URL = 'ws://localhost:1880/ws/sensors'; // เปลี่ยนตาม IP ของ Node-RED/Server ที่ใช้งานจริง
 
-      const power = +(voltage * current * pf).toFixed(0);
+    function initWebSocket() {
+      const statusText = document.getElementById('statusText');
+      const statusDot = document.getElementById('statusDot');
+      const statusSub = document.getElementById('statusSub');
 
-      const sampleSeconds = 5;
-      const energyIncrease = (power / 1000) * (sampleSeconds / 3600);
-      const energy = +(pzemData.energy + energyIncrease).toFixed(4);
+      if (statusSub) statusSub.textContent = WS_URL;
+      if (statusText) statusText.textContent = 'กำลังเชื่อมต่อเซ็นเซอร์...';
 
-      updatePzemDataValues({
-        volt: voltage,
-        amp: current,
-        watt: power,
-        kwh: energy,
-        freq: frequency,
-        pf: pf,
-        timeStr: new Date().toLocaleTimeString('th-TH')
-      });
-    }
+      try {
+        ws = new WebSocket(WS_URL);
 
-    function simulateHighLoadScenario() {
-      const voltage = +(215 + Math.random() * 3).toFixed(1);
-      const current = +(12.50 + Math.random() * 5.00).toFixed(2);
-      const pf = +(0.96 + Math.random() * 0.03).toFixed(2);
-      const frequency = +(49.9 + Math.random() * 0.2).toFixed(1);
-      const power = +(voltage * current * pf).toFixed(0);
-      const energy = +(pzemData.energy + 0.0150).toFixed(4);
+        ws.onopen = () => {
+          if (statusText) statusText.textContent = 'เชื่อมต่อ PZEM เรียลไทม์แล้ว';
+          if (statusDot) {
+            statusDot.className = 'status-dot connected';
+          }
+        };
 
-      updatePzemDataValues({
-        volt: voltage,
-        amp: current,
-        watt: power,
-        kwh: energy,
-        freq: frequency,
-        pf: pf,
-        timeStr: new Date().toLocaleTimeString('th-TH')
-      });
-    }
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            updatePzemDataValues(data);
+          } catch (err) {
+            console.error('เกิดข้อผิดพลาดในการแปลงข้อมูล JSON จาก WebSocket:', err);
+          }
+        };
 
-    let simulationTimer = null;
+        ws.onerror = (error) => {
+          console.error('WebSocket Error:', error);
+          if (statusText) statusText.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ';
+          if (statusDot) {
+            statusDot.className = 'status-dot disconnected';
+          }
+        };
 
-    function toggleSimulation() {
-      const button = document.getElementById('btnSimulation');
-
-      if (simulationTimer) {
-        clearInterval(simulationTimer);
-        simulationTimer = null;
-        if (button) {
-          button.innerHTML = '<span>⚡ จำลองข้อมูลทดสอบ</span>';
-          button.classList.remove('active');
-        }
-        return;
-      }
-
-      simulateData();
-      simulationTimer = setInterval(simulateData, 3000);
-
-      if (button) {
-        button.innerHTML = '<span>⏹️ หยุดจำลองข้อมูล</span>';
-        button.classList.add('active');
+        ws.onclose = () => {
+          if (statusText) statusText.textContent = 'การเชื่อมต่อหลุด (กำลังต่อใหม่...)';
+          if (statusDot) {
+            statusDot.className = 'status-dot disconnected';
+          }
+          // พยายามเชื่อมต่อใหม่ทุกๆ 3 วินาที
+          setTimeout(initWebSocket, 3000);
+        };
+      } catch (err) {
+        console.error('ไม่สามารถเปิดใช้งาน WebSocket ได้:', err);
       }
     }
 
-    // Init Page & Listeners
+    window.reconnectWs = function () {
+      if (ws) {
+        ws.close();
+      } else {
+        initWebSocket();
+      }
+    };
+
+    // ฟัง Event กรณีที่ common.js ส่ง Custom Event มา
+    window.addEventListener('iot-telemetry', (e) => {
+      if (e.detail) {
+        updatePzemDataValues(e.detail);
+      }
+    });
+
+    // Init Page & Connected Real Sensors
     window.addEventListener('DOMContentLoaded', () => {
       tariffConfig.serviceFee = 0;
       updatePzemDisplay();
       updateBillCalculation();
       refreshCostChart();
       renderMonthlyHistory();
-    });
 
-    window.addEventListener('iot-telemetry', (e) => {
-      const d = e.detail || {};
-      const ok = v => v !== null && v !== undefined && !isNaN(v);
-      if (ok(d.volt) || ok(d.amp) || ok(d.watt) || ok(d.kwh)) {
-        updatePzemDataValues({
-          volt: d.volt, amp: d.amp, watt: d.watt, kwh: d.kwh,
-          freq: d.freq, pf: d.pf, timeStr: d.timeStr
-        });
-      }
+      // เริ่มการเชื่อมต่อรับข้อมูลจริง
+      initWebSocket();
     });
   </script>
 </body>
