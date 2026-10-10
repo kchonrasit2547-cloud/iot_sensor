@@ -138,7 +138,8 @@
         <div>
           <div class="banner-title">ศูนย์กลางระบบ Smart IoT Hub & Telemetry</div>
           <div class="banner-desc">
-            ระบบมอนิเตอร์และแสดงผลข้อมูลเซ็นเซอร์แบบ Real-time แยกกราฟอุณหภูมิและความชื้นอย่างชัดเจน เชื่อมต่อตรงกับ Node-RED WebSocket
+            ระบบมอนิเตอร์และแสดงผลข้อมูลเซ็นเซอร์แบบ Real-time แยกกราฟอุณหภูมิและความชื้นอย่างชัดเจน เชื่อมต่อตรงกับ
+            Node-RED WebSocket
           </div>
           <div class="banner-chips">
             <div class="banner-chip">🟢 เซิร์ฟเวอร์: Node-RED :1880</div>
@@ -225,7 +226,9 @@
           </div>
           <div class="stat-card-bottom">
             <span class="stat-badge badge-amber" id="energyStatus">มิเตอร์ทำงานปกติ</span>
-            <a href="energy.html" style="font-size: 11px; color: var(--primary); text-decoration: none; font-weight: 600;">ดูมิเตอร์ PZEM →</a>
+            <a href="energy.html"
+              style="font-size: 11px; color: var(--primary); text-decoration: none; font-weight: 600;">ดูมิเตอร์ PZEM
+              →</a>
           </div>
         </div>
       </div>
@@ -442,10 +445,62 @@
       renderRecentLogs(d.allLogs);
     });
 
-    // Populate initial logs on load
+    // Populate initial logs & charts on load
     document.addEventListener('DOMContentLoaded', () => {
       const initialLogs = getStoredLogs();
+      const th = getThresholds();
+
+      // 1. Render recent logs table snippet
       renderRecentLogs(initialLogs);
+
+      // 2. Populate Stat Cards with latest log entry if available
+      if (initialLogs.length > 0) {
+        const latest = initialLogs[0];
+
+        if (latest.temp && latest.temp !== '--') {
+          const tempVal = parseFloat(latest.temp);
+          document.getElementById('valTemp').textContent = tempVal.toFixed(1);
+          document.getElementById('tempTime').textContent = latest.time;
+          const isHot = tempVal > th.tempMax;
+          document.getElementById('tempStatus').textContent = isHot ? '⚠️ ร้อนเกินเกณฑ์' : (tempVal < 20 ? '❄️ อุณหภูมิต่ำ' : 'ปกติ');
+          document.getElementById('tempStatus').className = 'stat-badge ' + (isHot ? 'badge-red' : 'badge-orange');
+        }
+
+        if (latest.humi && latest.humi !== '--') {
+          const humiVal = parseFloat(latest.humi);
+          document.getElementById('valHumi').textContent = humiVal.toFixed(1);
+          document.getElementById('humiTime').textContent = latest.time;
+          const isHumid = humiVal > th.humiMax;
+          document.getElementById('humiStatus').textContent = isHumid ? '⚠️ ชื้นสูงมาก' : (humiVal < 40 ? 'อากาศแห้ง' : 'ความสบายปกติ');
+          document.getElementById('humiStatus').className = 'stat-badge ' + (isHumid ? 'badge-red' : 'badge-blue');
+        }
+
+        if (latest.light && latest.light !== '--') {
+          const lightVal = parseFloat(latest.light);
+          document.getElementById('valLight').textContent = Math.round(lightVal);
+          document.getElementById('lightTime').textContent = latest.time;
+          const isDark = lightVal < th.lightMin;
+          document.getElementById('lightStatus').textContent = isDark ? '⚠️ แสงน้อย/มืด' : (lightVal > 800 ? '☀️ แดดจ้า' : 'แสงเพียงพอ');
+          document.getElementById('lightStatus').className = 'stat-badge ' + (isDark ? 'badge-red' : 'badge-yellow');
+        }
+      }
+
+      // 3. Seed historical data into temperature and humidity charts
+      const chartLogs = initialLogs.slice(0, maxPoints).reverse();
+      chartLogs.forEach(item => {
+        if (item.temp && item.temp !== '--') {
+          chartLabels.push(item.time);
+          tempDataPoints.push(parseFloat(item.temp));
+          humiDataPoints.push(parseFloat(item.humi));
+        }
+      });
+
+      if (chartLabels.length > 0) {
+        dashTempChart.update();
+        dashHumiChart.update();
+      }
+
+      // 4. Cached PZEM Power
       const cachedPzem = getStoredPzemData();
       if (cachedPzem && cachedPzem.power !== undefined) {
         document.getElementById('valWatt').textContent = Math.round(cachedPzem.power);

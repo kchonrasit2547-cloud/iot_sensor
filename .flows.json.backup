@@ -206,7 +206,7 @@
         "rh": 0,
         "inputs": 0,
         "x": 120,
-        "y": 100,
+        "y": 120,
         "wires": [
             [
                 "c0558de9b3255841",
@@ -229,8 +229,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 340,
-        "y": 100,
+        "x": 400,
+        "y": 160,
         "wires": [
             [
                 "379fa4d3ddf23aae",
@@ -602,7 +602,7 @@
         "bot": "fd503ab695e9eed7",
         "haserroroutput": false,
         "outputs": 1,
-        "x": 350,
+        "x": 390,
         "y": 320,
         "wires": [
             []
@@ -629,8 +629,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 120,
-        "y": 180,
+        "x": 80,
+        "y": 340,
         "wires": [
             [
                 "1457a55b2ef1fcb4"
@@ -642,15 +642,15 @@
         "type": "function",
         "z": "746e438bb151500f",
         "name": "function 2",
-        "func": "let temp = msg.payload.temperature;\nlet light = msg.payload.light;\n\nlet tempAlert = temp <= 19;\nlet lightAlert = light > 300;\n\nlet alerts = [];\n\n// Temperature\nif (tempAlert && context.get(\"tempAlert\") !== true) {\n    alerts.push(`🌡️ อุณหภูมิต่ำ: ${temp} °C`);\n}\n\n// Light\nif (lightAlert && context.get(\"lightAlert\") !== true) {\n    alerts.push(`💡 แสงสูง: ${light}`);\n}\n\n// บันทึกสถานะปัจจุบัน\ncontext.set(\"tempAlert\", tempAlert);\ncontext.set(\"lightAlert\", lightAlert);\n\n// ไม่มีเหตุการณ์ใหม่\nif (alerts.length === 0) {\n    return null;\n}\n\nmsg.payload = {\n    chatId: 8602127088,\n    type: \"message\",\n    content: \"🚨 แจ้งเตือน IoT\\n\\n\" + alerts.join(\"\\n\")\n};\n\nreturn msg;",
+        "func": "\nconst now = Date.now();\nconst TIMEOUT = 30000; // ข้อมูลหายเกิน 30 วินาที ถือว่า Disconnect\n\nconst p = msg.payload || {};\nlet alerts = [];\n\n// ใช้เวลาไทย (Asia/Bangkok)\nconst thaiHour = Number(\n    new Intl.DateTimeFormat(\"en-GB\", {\n        timeZone: \"Asia/Bangkok\",\n        hour: \"2-digit\",\n        hourCycle: \"h23\"\n    }).format(new Date(now))\n);\n\nconst after1900 = thaiHour >= 19;\n\n// สถานะเริ่มต้นของ Function Node\nlet startedAt = context.get(\"startedAt\");\nif (!startedAt) {\n    startedAt = now;\n    context.set(\"startedAt\", startedAt);\n}\n\n// เก็บเวลาที่ได้รับข้อมูลล่าสุดจากแต่ละอุปกรณ์\nconst devices = {\n    DHT11: typeof p.temperature === \"number\",\n    LDR: typeof p.light === \"number\",\n    \"PZEM-004T\": [\n        p.voltage, p.current, p.power, p.energy\n    ].some(v => typeof v === \"number\")\n};\n\n// ใช้ msg.topic = \"watchdog\" จาก Inject Node\nif (msg.topic === \"watchdog\") {\n    for (const device of Object.keys(devices)) {\n        const lastSeen = context.get(\"lastSeen_\" + device);\n        const previous = context.get(\"disconnected_\" + device);\n\n        const referenceTime = lastSeen || startedAt;\n        const disconnected = now - referenceTime > TIMEOUT;\n\n        // แจ้งเตือนครั้งเดียวเมื่อ Disconnect\n        if (disconnected && previous !== true) {\n            alerts.push(`🔴 ${device} Disconnect: ไม่พบข้อมูลเกิน 30 วินาที`);\n        }\n\n        // แจ้งเตือนเมื่อกลับมาเชื่อมต่อ\n        if (!disconnected && previous === true) {\n            alerts.push(`🟢 ${device} กลับมาเชื่อมต่อแล้ว`);\n        }\n\n        context.set(\"disconnected_\" + device, disconnected);\n    }\n\n    if (alerts.length === 0) return null;\n\n    msg.payload = {\n        chatId: 8602127088,\n        type: \"message\",\n        content: \"🚨 แจ้งเตือน IoT\\n\\n\" + alerts.join(\"\\n\")\n    };\n\n    return msg;\n}\n\n// บันทึกเวลาที่ได้รับข้อมูลของอุปกรณ์\nfor (const device of Object.keys(devices)) {\n    if (devices[device]) {\n        context.set(\"lastSeen_\" + device, now);\n\n        // ตรวจพบข้อมูลอีกครั้งหลัง Disconnect\n        if (context.get(\"disconnected_\" + device) === true) {\n            context.set(\"disconnected_\" + device, false);\n            alerts.push(`🟢 ${device} กลับมาเชื่อมต่อแล้ว`);\n        }\n    }\n}\n\n// แจ้งเตือนอุณหภูมิและแสง เฉพาะตั้งแต่ 19:00 น.\n// แจ้งเตือนอุณหภูมิและแสง เฉพาะตั้งแต่ 19:00 น.\nif (after1900) {\n    const temp = p.temperature;\n    const light = p.light; // สมมติว่า p.light คือค่า Lux\n\n    const tempAlert =\n        typeof temp === \"number\" && temp <= 20;\n\n    // แก้ไขเครื่องหมายเป็น > และปรับ Threshold เป็น 100 lx\n    const lightAlert =\n        typeof light === \"number\" && light > 100;\n\n    if (tempAlert && context.get(\"tempAlert\") !== true) {\n        alerts.push(`🌡️ อุณหภูมิต่ำ: ${temp} °C`);\n    }\n\n    if (lightAlert && context.get(\"lightAlert\") !== true) {\n        alerts.push(`💡 เปิดไฟทิ้งไว้ (ความสว่าง: ${light} lx)`);\n    }\n\n    context.set(\"tempAlert\", tempAlert);\n    context.set(\"lightAlert\", lightAlert);\n} else {\n    // รีเซ็ตเพื่อให้ตรวจจับเหตุการณ์ใหม่ในช่วงค่ำได้\n    context.set(\"tempAlert\", false);\n    context.set(\"lightAlert\", false);\n}\n\nif (alerts.length === 0) return null;\n\nmsg.payload = {\n    chatId: 8602127088,\n    type: \"message\",\n    content: \"🚨 แจ้งเตือน IoT\\n\\n\" + alerts.join(\"\\n\")\n};\n\nreturn msg;\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 340,
-        "y": 180,
+        "x": 220,
+        "y": 240,
         "wires": [
             [
                 "f79c6f4318e5037e"
@@ -730,7 +730,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 380,
+        "x": 540,
         "y": 40,
         "wires": [
             [
@@ -745,7 +745,7 @@
         "name": "WS Send Sensors",
         "server": "ws_server_01",
         "client": "",
-        "x": 650,
+        "x": 870,
         "y": 40,
         "wires": []
     },
@@ -826,7 +826,7 @@
         "name": "HTTP Response",
         "statusCode": "200",
         "headers": {},
-        "x": 680,
+        "x": 690,
         "y": 800,
         "wires": []
     },
@@ -842,7 +842,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 640,
+        "x": 920,
         "y": 120,
         "wires": [
             [
@@ -856,7 +856,7 @@
         "z": "746e438bb151500f",
         "mydb": "6bd35ac3bddc0bfd",
         "name": "",
-        "x": 910,
+        "x": 1190,
         "y": 120,
         "wires": [
             []
@@ -875,8 +875,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 120,
-        "y": 240,
+        "x": 540,
+        "y": 100,
         "wires": []
     },
     {
@@ -898,35 +898,6 @@
             [
                 "ws_prep_func",
                 "d12e1d6cab45600a"
-            ]
-        ]
-    },
-    {
-        "id": "pzem_inject_test",
-        "type": "inject",
-        "z": "746e438bb151500f",
-        "name": "Simulate PZEM-004T",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "iot/pzem",
-        "payload": "{\"voltage\":224.5,\"current\":2.84,\"power\":625.3,\"energy\":18.42,\"frequency\":50.0,\"pf\":0.98}",
-        "payloadType": "json",
-        "x": 140,
-        "y": 380,
-        "wires": [
-            [
-                "ws_prep_func"
             ]
         ]
     },

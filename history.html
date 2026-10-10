@@ -10,7 +10,38 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
     rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .quick-view-btn {
+      padding: 6px 14px;
+      border: 1px solid var(--border-color, #e2e8f0);
+      border-radius: 8px;
+      background: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted, #64748b);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .quick-view-btn.active,
+    .quick-view-btn:hover {
+      background: var(--primary, #0284c7);
+      color: #fff;
+      border-color: var(--primary, #0284c7);
+    }
+
+    .picker-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f8fafc;
+      padding: 4px 10px;
+      border: 1px solid var(--border-color, #e2e8f0);
+      border-radius: 8px;
+    }
+  </style>
 </head>
 
 <body>
@@ -116,7 +147,7 @@
             <span>/</span>
             <span id="breadcrumbCurrent">ประวัติข้อมูลย้อนหลัง</span>
           </div>
-          <h1 id="pageHeadingTitle">ประวัติข้อมูลเซ็นเซอร์ & การใช้พลังงาน</h1>
+          <h1 id="pageHeadingTitle">ประวัติข้อมูลเซ็นเซอร์ & กราฟย้อนหลัง</h1>
         </div>
       </div>
 
@@ -133,6 +164,7 @@
     <!-- Content Area -->
     <main class="content-area">
       <section id="view-history" class="page-view active">
+
         <!-- Date Picker & Historical Range Filter Bar -->
         <div class="date-filter-bar">
           <div class="date-filter-group">
@@ -147,14 +179,17 @@
           <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; align-items: center;">
             <button class="quick-date-btn active" id="btnDateAll" onclick="setQuickDateRange('all')">ทั้งหมด</button>
             <button class="quick-date-btn" id="btnDateToday" onclick="setQuickDateRange('today')">วันนี้</button>
-            <button class="quick-date-btn" id="btnDateYesterday" onclick="setQuickDateRange('yesterday')">เมื่อวาน</button>
+            <button class="quick-date-btn" id="btnDateYesterday"
+              onclick="setQuickDateRange('yesterday')">เมื่อวาน</button>
             <button class="quick-date-btn" id="btnDate7Days" onclick="setQuickDateRange('7days')">7 วันล่าสุด</button>
-            <button class="quick-date-btn" id="btnDate30Days" onclick="setQuickDateRange('30days')">30 วันล่าสุด</button>
-            <button class="btn btn-outline btn-sm" onclick="resetDateFilter()" title="รีเซ็ตช่วงวันที่">🔄 ล้างตัวกรองวัน</button>
+            <button class="quick-date-btn" id="btnDate30Days" onclick="setQuickDateRange('30days')">30
+              วันล่าสุด</button>
+            <button class="btn btn-outline btn-sm" onclick="resetDateFilter()" title="รีเซ็ตช่วงวันที่">🔄
+              ล้างตัวกรองวัน</button>
           </div>
         </div>
 
-        <!-- Metric Summary Cards for the selected period -->
+        <!-- Metric Summary Cards -->
         <div class="summary-metrics-bar">
           <div class="metric-summary-card">
             <div class="metric-summary-icon" style="background: var(--temp-soft); color: var(--temp-color);">🌡️</div>
@@ -193,6 +228,71 @@
           </div>
         </div>
 
+        <!-- NEW PANEL: HISTORICAL TREND CHARTS (Daily / Monthly / Yearly) -->
+        <div class="card-panel" style="margin-bottom: 20px;">
+          <div class="panel-header" style="flex-wrap: wrap; gap: 12px;">
+            <div>
+              <div class="panel-title">
+                <span>📈</span>
+                <span>วิเคราะห์กราฟประวัติย้อนหลัง (Historical Trend Charts)</span>
+              </div>
+              <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                แสดงการเปลี่ยนแปลงของอุณหภูมิ ความชื้น และกำลังไฟฟ้า แบบ รายวัน, รายเดือน และ รายปี
+              </p>
+            </div>
+
+            <!-- Chart Period Switcher Controls -->
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+              <button class="quick-view-btn active" id="btnChartDaily"
+                onclick="setChartPeriodMode('daily')">รายวัน</button>
+              <button class="quick-view-btn" id="btnChartMonthly"
+                onclick="setChartPeriodMode('monthly')">รายเดือน</button>
+              <button class="quick-view-btn" id="btnChartYearly" onclick="setChartPeriodMode('yearly')">รายปี</button>
+
+              <!-- Dynamic Pickers -->
+              <div class="picker-container" id="pickerDailyBox">
+                <span style="font-size: 12px; font-weight: 600;">เลือกวัน:</span>
+                <input type="date" id="chartDatePicker" class="date-input" style="padding: 3px 6px;"
+                  onchange="updateHistoryCharts()">
+              </div>
+
+              <div class="picker-container" id="pickerMonthlyBox" style="display: none;">
+                <span style="font-size: 12px; font-weight: 600;">เลือกเดือน:</span>
+                <input type="month" id="chartMonthPicker" class="date-input" style="padding: 3px 6px;"
+                  onchange="updateHistoryCharts()">
+              </div>
+
+              <div class="picker-container" id="pickerYearlyBox" style="display: none;">
+                <span style="font-size: 12px; font-weight: 600;">เลือกปี:</span>
+                <select id="chartYearPicker" class="input-field" style="width: auto; padding: 3px 8px; font-size: 12px;"
+                  onchange="updateHistoryCharts()">
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Grid (2 Columns) -->
+          <div class="charts-grid-2col"
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-top: 12px;">
+            <!-- Chart 1: Temp & Humi -->
+            <div style="border: 1px solid var(--border-color, #e2e8f0); border-radius: 12px; padding: 12px;">
+              <div style="font-size: 13px; font-weight: 700; margin-bottom: 8px;">🌡️ แนวโน้มอุณหภูมิ & ความชื้น</div>
+              <div class="chart-container" style="position: relative; height: 260px;">
+                <canvas id="histTempHumiChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Chart 2: Power & Light -->
+            <div style="border: 1px solid var(--border-color, #e2e8f0); border-radius: 12px; padding: 12px;">
+              <div style="font-size: 13px; font-weight: 700; margin-bottom: 8px;">⚡ แนวโน้มกำลังไฟฟ้า & ระดับแสง</div>
+              <div class="chart-container" style="position: relative; height: 260px;">
+                <canvas id="histPowerLightChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Historical Table Panel -->
         <div class="card-panel">
           <div class="panel-header">
             <div>
@@ -218,7 +318,8 @@
           <div class="table-toolbar">
             <div class="search-input-box">
               <span class="search-icon-pos">🔍</span>
-              <input type="text" id="logSearchInput" placeholder="ค้นหาตามวันที่ เวลา หรือค่าตัวเลข..." oninput="filterLogs()">
+              <input type="text" id="logSearchInput" placeholder="ค้นหาตามวันที่ เวลา หรือค่าตัวเลข..."
+                oninput="filterLogs()">
             </div>
             <div style="display: flex; gap: 8px;">
               <select class="input-field" style="width: auto; padding: 8px 12px;" id="filterTypeSelect"
@@ -270,7 +371,6 @@
     // =========================================================================
     let currentFilteredLogs = [];
 
-    // Helper: format Date to YYYY-MM-DD
     function formatDateIso(d) {
       const year = d.getFullYear();
       const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -278,7 +378,6 @@
       return `${year}-${month}-${day}`;
     }
 
-    // Set Quick Date Range buttons (All, Today, Yesterday, 7 Days, 30 Days)
     function setQuickDateRange(range) {
       document.querySelectorAll('.quick-date-btn').forEach(b => b.classList.remove('active'));
       const activeBtn = document.getElementById({
@@ -328,7 +427,6 @@
       filterLogs();
     }
 
-    // Update the 4 Metric Summary Cards based on the currently filtered items
     function updateMetricsSummary(items) {
       if (!items || items.length === 0) {
         document.getElementById('summaryAvgTemp').textContent = '-- °C';
@@ -356,7 +454,6 @@
         if (!isNaN(w)) validWatts.push(w);
       });
 
-      // Temp
       if (validTemps.length > 0) {
         const avg = validTemps.reduce((a, b) => a + b, 0) / validTemps.length;
         const min = Math.min(...validTemps);
@@ -368,7 +465,6 @@
         document.getElementById('summaryMinMaxTemp').textContent = 'Min -- / Max --';
       }
 
-      // Humi
       if (validHumis.length > 0) {
         const avg = validHumis.reduce((a, b) => a + b, 0) / validHumis.length;
         const min = Math.min(...validHumis);
@@ -380,7 +476,6 @@
         document.getElementById('summaryMinMaxHumi').textContent = 'Min -- / Max --';
       }
 
-      // Light
       if (validLights.length > 0) {
         const avg = validLights.reduce((a, b) => a + b, 0) / validLights.length;
         const min = Math.min(...validLights);
@@ -392,7 +487,6 @@
         document.getElementById('summaryMinMaxLight').textContent = 'Min -- / Max --';
       }
 
-      // Power / Records count
       if (validWatts.length > 0) {
         const avg = validWatts.reduce((a, b) => a + b, 0) / validWatts.length;
         document.getElementById('summaryAvgWatt').textContent = `${Math.round(avg)} W`;
@@ -411,13 +505,10 @@
       const logs = getStoredLogs();
 
       let filtered = logs.filter(item => {
-        // 1. Date Range Filter
-        // If item doesn't have a date (legacy log), assume today's date
         const itemDate = item.date || formatDateIso(new Date());
         if (startDate && itemDate < startDate) return false;
         if (endDate && itemDate > endDate) return false;
 
-        // 2. Text Search
         const matchText = (item.time || '').toLowerCase().includes(search) ||
           (item.date || '').toLowerCase().includes(search) ||
           (item.thaiDate || '').toLowerCase().includes(search) ||
@@ -428,7 +519,6 @@
           String(item.watt || '').includes(search);
         if (!matchText) return false;
 
-        // 3. Sensor Threshold Alert Filter
         if (filterType === 'temp_high') return parseFloat(item.temp) > 32;
         if (filterType === 'humi_high') return parseFloat(item.humi) > 70;
         if (filterType === 'light_low') return parseFloat(item.light) < 200;
@@ -499,17 +589,195 @@
         saveStoredLogs([]);
         updateBadgeCounts();
         filterLogs();
+        updateHistoryCharts();
         showToast('info', 'ล้างข้อมูลแล้ว', 'ลบประวัติเซ็นเซอร์ทั้งหมดเรียบร้อย');
       }
     }
 
-    // Telemetry Event Listener to update table in real time
+    // =========================================================================
+    // NEW: Historical Trend Charts Logic (Daily / Monthly / Yearly)
+    // =========================================================================
+    let chartPeriodMode = 'daily';
+    let histTempHumiChart = null;
+    let histPowerLightChart = null;
+
+    function initHistoryCharts() {
+      // 1. Chart 1: Temp & Humi
+      const ctx1 = document.getElementById('histTempHumiChart').getContext('2d');
+      histTempHumiChart = new Chart(ctx1, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            { label: 'อุณหภูมิ (°C)', data: [], borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.1)', borderWidth: 2.5, tension: 0.3, fill: true, yAxisID: 'yTemp' },
+            { label: 'ความชื้น (%)', data: [], borderColor: '#0284c7', backgroundColor: 'rgba(2,132,199,0.1)', borderWidth: 2.5, tension: 0.3, fill: true, yAxisID: 'yHumi' }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'top' } },
+          scales: {
+            x: { grid: { display: false } },
+            yTemp: { type: 'linear', position: 'left', beginAtZero: false, title: { display: true, text: '°C' } },
+            yHumi: { type: 'linear', position: 'right', beginAtZero: true, max: 100, grid: { drawOnChartArea: false }, title: { display: true, text: '%' } }
+          }
+        }
+      });
+
+      // 2. Chart 2: Power & Light
+      const ctx2 = document.getElementById('histPowerLightChart').getContext('2d');
+      histPowerLightChart = new Chart(ctx2, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            { label: 'กำลังไฟฟ้า (W)', data: [], borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.15)', borderWidth: 2.5, tension: 0.3, fill: true, yAxisID: 'yWatt' },
+            { label: 'ความเข้มแสง (lux)', data: [], borderColor: '#eab308', borderWidth: 2, tension: 0.3, yAxisID: 'yLight' }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'top' } },
+          scales: {
+            x: { grid: { display: false } },
+            yWatt: { type: 'linear', position: 'left', beginAtZero: true, title: { display: true, text: 'Watts' } },
+            yLight: { type: 'linear', position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: 'Lux' } }
+          }
+        }
+      });
+
+      // Init Year Dropdown Options (Past 3 years to Current Year)
+      const yearPicker = document.getElementById('chartYearPicker');
+      const currentYear = new Date().getFullYear();
+      yearPicker.innerHTML = '';
+      for (let y = currentYear; y >= currentYear - 3; y--) {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = `ปี ${y + 543} (${y})`;
+        yearPicker.appendChild(opt);
+      }
+
+      // Default Date Pickers Value
+      const today = new Date();
+      document.getElementById('chartDatePicker').value = formatDateIso(today);
+      document.getElementById('chartMonthPicker').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+
+      updateHistoryCharts();
+    }
+
+    function setChartPeriodMode(mode) {
+      chartPeriodMode = mode;
+      document.getElementById('btnChartDaily').classList.toggle('active', mode === 'daily');
+      document.getElementById('btnChartMonthly').classList.toggle('active', mode === 'monthly');
+      document.getElementById('btnChartYearly').classList.toggle('active', mode === 'yearly');
+
+      document.getElementById('pickerDailyBox').style.display = mode === 'daily' ? 'flex' : 'none';
+      document.getElementById('pickerMonthlyBox').style.display = mode === 'monthly' ? 'flex' : 'none';
+      document.getElementById('pickerYearlyBox').style.display = mode === 'yearly' ? 'flex' : 'none';
+
+      updateHistoryCharts();
+    }
+
+    function updateHistoryCharts() {
+      if (!histTempHumiChart || !histPowerLightChart) return;
+
+      const logs = getStoredLogs();
+      let labels = [], temps = [], humis = [], watts = [], lights = [];
+
+      if (chartPeriodMode === 'daily') {
+        const selectedDate = document.getElementById('chartDatePicker').value || formatDateIso(new Date());
+        const dayLogs = logs.filter(item => (item.date || formatDateIso(new Date())) === selectedDate).reverse();
+
+        dayLogs.forEach(it => {
+          labels.push(it.time || '00:00');
+          temps.push(parseFloat(it.temp) || 0);
+          humis.push(parseFloat(it.humi) || 0);
+          watts.push(parseFloat(it.watt) || 0);
+          lights.push(parseFloat(it.light) || 0);
+        });
+
+      } else if (chartPeriodMode === 'monthly') {
+        const selectedMonth = document.getElementById('chartMonthPicker').value; // YYYY-MM
+        const [yearStr, monthStr] = selectedMonth.split('-');
+        const targetYear = parseInt(yearStr);
+        const targetMonth = parseInt(monthStr);
+
+        const daysInMonth = new Date(targetYear, targetMonth, 0).getDate();
+
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dayPad = String(day).padStart(2, '0');
+          const dateKey = `${selectedMonth}-${dayPad}`;
+          labels.push(`${day} ${new Date(targetYear, targetMonth - 1, day).toLocaleDateString('th-TH', { month: 'short' })}`);
+
+          const matchedLogs = logs.filter(item => (item.date || formatDateIso(new Date())) === dateKey);
+          if (matchedLogs.length > 0) {
+            const avgT = matchedLogs.reduce((acc, x) => acc + (parseFloat(x.temp) || 0), 0) / matchedLogs.length;
+            const avgH = matchedLogs.reduce((acc, x) => acc + (parseFloat(x.humi) || 0), 0) / matchedLogs.length;
+            const avgW = matchedLogs.reduce((acc, x) => acc + (parseFloat(x.watt) || 0), 0) / matchedLogs.length;
+            const avgL = matchedLogs.reduce((acc, x) => acc + (parseFloat(x.light) || 0), 0) / matchedLogs.length;
+
+            temps.push(Number(avgT.toFixed(1)));
+            humis.push(Number(avgH.toFixed(1)));
+            watts.push(Math.round(avgW));
+            lights.push(Math.round(avgL));
+          } else {
+            temps.push(null);
+            humis.push(null);
+            watts.push(null);
+            lights.push(null);
+          }
+        }
+
+      } else if (chartPeriodMode === 'yearly') {
+        const selectedYear = document.getElementById('chartYearPicker').value; // YYYY
+        const monthNames = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
+        for (let m = 1; m <= 12; m++) {
+          const mPad = String(m).padStart(2, '0');
+          const yearMonthKey = `${selectedYear}-${mPad}`;
+          labels.push(monthNames[m - 1]);
+
+          const matchedLogs = logs.filter(item => (item.date || formatDateIso(new Date())).startsWith(yearMonthKey));
+          if (matchedLogs.length > 0) {
+            const avgT = matchedLogs.reduce((acc, x) => acc + (parseFloat(x.temp) || 0), 0) / matchedLogs.length;
+            const avgH = matchedLogs.reduce((acc, x) => acc + (parseFloat(x.humi) || 0), 0) / matchedLogs.length;
+            const avgW = matchedLogs.reduce((acc, x) => acc + (parseFloat(x.watt) || 0), 0) / matchedLogs.length;
+            const avgL = matchedLogs.reduce((acc, x) => acc + (parseFloat(x.light) || 0), 0) / matchedLogs.length;
+
+            temps.push(Number(avgT.toFixed(1)));
+            humis.push(Number(avgH.toFixed(1)));
+            watts.push(Math.round(avgW));
+            lights.push(Math.round(avgL));
+          } else {
+            temps.push(null);
+            humis.push(null);
+            watts.push(null);
+            lights.push(null);
+          }
+        }
+      }
+
+      // Update Chart Datasets
+      histTempHumiChart.data.labels = labels;
+      histTempHumiChart.data.datasets[0].data = temps;
+      histTempHumiChart.data.datasets[1].data = humis;
+      histTempHumiChart.update();
+
+      histPowerLightChart.data.labels = labels;
+      histPowerLightChart.data.datasets[0].data = watts;
+      histPowerLightChart.data.datasets[1].data = lights;
+      histPowerLightChart.update();
+    }
+
+    // Telemetry Event Listener
     window.addEventListener('iot-telemetry', () => {
       filterLogs();
+      updateHistoryCharts();
     });
 
     document.addEventListener('DOMContentLoaded', () => {
       filterLogs();
+      initHistoryCharts();
     });
   </script>
 </body>

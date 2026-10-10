@@ -200,14 +200,21 @@
         </div>
       </div>
 
-      <!-- Light Level Bar Chart -->
+      <!-- SEPARATED ANALYTICS CHART 3: Light Level Deep Analytics -->
       <div class="card-panel">
         <div class="panel-header">
-          <div class="panel-title">
-            <span>☀️</span>
-            <span>การกระจายระดับความเข้มแสง (Light Intensity Distribution)</span>
+          <div>
+            <div class="panel-title">
+              <span style="color: #eab308;">☀️</span>
+              <span>วิเคราะห์ความเข้มแสงเชิงลึก (Light Intensity Stream)</span>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+              กราฟติดตามระดับความเข้มแสงและการเปลี่ยนแปลงตามไทม์ไลน์
+            </p>
           </div>
-          <span class="stat-badge badge-yellow">Lux Metric</span>
+          <div style="display: flex; gap: 8px;">
+            <span class="stat-badge badge-yellow">หน่วย: lux</span>
+          </div>
         </div>
         <div class="chart-container chart-container-lg">
           <canvas id="lightBarChart"></canvas>
@@ -221,7 +228,7 @@
     // =========================================================================
     // Analytics Deep Charts Logic
     // =========================================================================
-    const maxPoints = 25;
+    const maxPoints = 20;
     const labels = [];
     const tempData = [];
     const humiData = [];
@@ -289,30 +296,33 @@
       }
     });
 
-    // Chart 3: Light Bar
+    // Chart 3: Light Line Chart
     const ctxLightBar = document.getElementById('lightBarChart').getContext('2d');
     const lightBarChart = new Chart(ctxLightBar, {
-      type: 'bar',
+      type: 'line',
       data: {
         labels: labels,
         datasets: [{
           label: 'ความเข้มแสง (lux)',
           data: lightData,
-          backgroundColor: 'rgba(234, 179, 8, 0.65)',
           borderColor: '#eab308',
-          borderWidth: 1.5,
-          borderRadius: 6
+          backgroundColor: 'rgba(234, 179, 8, 0.1)',
+          borderWidth: 3,
+          tension: 0.35,
+          fill: true,
+          pointRadius: 4,
+          pointBackgroundColor: '#eab308'
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { display: false }
+          legend: { position: 'top', labels: { font: { family: 'Prompt', size: 12 } } }
         },
         scales: {
-          x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 10 } } },
-          y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { family: 'Inter', size: 10 } } }
+          x: { grid: { color: '#f8fafc' }, ticks: { font: { family: 'Inter', size: 11 } } },
+          y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { family: 'Inter', size: 11 } } }
         }
       }
     });
@@ -361,9 +371,9 @@
 
       if (d.temp !== null || d.humi !== null || d.light !== null) {
         labels.push(d.timeStr);
-        tempData.push(d.temp !== null ? d.temp : (tempData[tempData.length - 1] || 25));
-        humiData.push(d.humi !== null ? d.humi : (humiData[humiData.length - 1] || 50));
-        lightData.push(d.light !== null ? d.light : (lightData[lightData.length - 1] || 300));
+        tempData.push(d.temp !== null ? d.temp : (tempData[tempData.length - 1] || 0));
+        humiData.push(d.humi !== null ? d.humi : (humiData[humiData.length - 1] || 0));
+        lightData.push(d.light !== null ? d.light : (lightData[lightData.length - 1] || 0));
 
         if (labels.length > maxPoints) {
           labels.shift();
@@ -381,7 +391,7 @@
 
     // Seed from stored logs on load
     document.addEventListener('DOMContentLoaded', () => {
-      const logs = getStoredLogs().slice(0, 15).reverse();
+      const logs = getStoredLogs().slice(0, maxPoints).reverse();
       logs.forEach(item => {
         if (item.temp && item.temp !== '--') {
           labels.push(item.time);
