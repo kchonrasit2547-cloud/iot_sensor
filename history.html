@@ -88,10 +88,16 @@
         </a>
       </li>
       <li class="nav-item active" id="nav-history">
-        <a href="history.html">
+        <a href="./history.html">
           <span class="nav-icon">📋</span>
           <span>ประวัติข้อมูล</span>
           <span class="nav-badge badge-blue" id="logsCountBadge">0</span>
+        </a>
+      </li>
+      <li class="nav-item" id="nav-energyhistory">
+        <a href="./energy_history.html">
+          <span class="nav-icon">⚡</span>
+          <span>ประวัติข้อมูลพลังงานไฟฟ้า</span>
         </a>
       </li>
       <li class="nav-item" id="nav-settings">
@@ -228,7 +234,7 @@
           </div>
         </div>
 
-        <!-- NEW PANEL: HISTORICAL TREND CHARTS (Daily / Monthly / Yearly) -->
+        <!-- HISTORICAL TREND CHARTS PANEL -->
         <div class="card-panel" style="margin-bottom: 20px;">
           <div class="panel-header" style="flex-wrap: wrap; gap: 12px;">
             <div>
@@ -328,8 +334,6 @@
                 <option value="temp_high">อุณหภูมิสูง (> 32°C)</option>
                 <option value="humi_high">ความชื้นสูง (> 70%)</option>
                 <option value="light_low">แสงน้อย (< 200 lux)</option>
-                <option value="pzem_high_watt">⚡ โหลดไฟฟ้าสูง (> 1,500W)</option>
-                <option value="pzem_volt_alert">⚠️ แรงดันไฟฟ้าผิดปกติ (ไฟตก/ไฟเกิน)</option>
               </select>
             </div>
           </div>
@@ -344,15 +348,11 @@
                   <th>อุณหภูมิ (°C)</th>
                   <th>ความชื้น (%)</th>
                   <th>ความเข้มแสง (lux)</th>
-                  <th>แรงดัน (V)</th>
-                  <th>กระแส (A)</th>
-                  <th>กำลังไฟ (W)</th>
-                  <th>หน่วยสะสม (kWh)</th>
                 </tr>
               </thead>
               <tbody id="fullLogsTableBody">
                 <tr>
-                  <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                  <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">
                     ยังไม่มีข้อมูลประวัติเข้ามาในระบบ
                   </td>
                 </tr>
@@ -514,16 +514,12 @@
           (item.thaiDate || '').toLowerCase().includes(search) ||
           String(item.temp || '').includes(search) ||
           String(item.humi || '').includes(search) ||
-          String(item.light || '').includes(search) ||
-          String(item.volt || '').includes(search) ||
-          String(item.watt || '').includes(search);
+          String(item.light || '').includes(search);
         if (!matchText) return false;
 
         if (filterType === 'temp_high') return parseFloat(item.temp) > 32;
         if (filterType === 'humi_high') return parseFloat(item.humi) > 70;
         if (filterType === 'light_low') return parseFloat(item.light) < 200;
-        if (filterType === 'pzem_high_watt') return (parseFloat(item.watt) || 0) > 1500;
-        if (filterType === 'pzem_volt_alert') return (parseFloat(item.volt) || 220) < 207 || (parseFloat(item.volt) || 220) > 245;
         return true;
       });
 
@@ -533,7 +529,7 @@
       if (filtered.length === 0) {
         fullTbody.innerHTML = `
           <tr>
-            <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 32px;">
+            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 32px;">
               🔍 ไม่พบข้อมูลประวัติที่ตรงกับช่วงวันที่หรือเงื่อนไขการค้นหา
             </td>
           </tr>
@@ -551,10 +547,6 @@
             <td><span style="color:#f97316; font-weight:600;">${item.temp} °C</span></td>
             <td><span style="color:#0284c7; font-weight:600;">${item.humi} %</span></td>
             <td><span style="color:#eab308; font-weight:600;">${item.light} lux</span></td>
-            <td><span style="color:#3b82f6; font-weight:600;">${item.volt ? parseFloat(item.volt).toFixed(1) + ' V' : '--'}</span></td>
-            <td><span style="color:#ec4899; font-weight:600;">${item.amp ? parseFloat(item.amp).toFixed(2) + ' A' : '--'}</span></td>
-            <td><span style="color:#f59e0b; font-weight:600;">${item.watt ? Math.round(parseFloat(item.watt)) + ' W' : '--'}</span></td>
-            <td><span style="color:#10b981; font-weight:600;">${item.kwh ? parseFloat(item.kwh).toFixed(2) + ' kWh' : '--'}</span></td>
           </tr>
         `;
       }).join('');
@@ -567,10 +559,10 @@
         return;
       }
 
-      let csv = "\uFEFFID,Date,Time,Temperature_C,Humidity_Percent,Light_Lux,Voltage_V,Current_A,Power_W,Energy_kWh,Status\n";
+      let csv = "\uFEFFID,Date,Time,Temperature_C,Humidity_Percent,Light_Lux,Status\n";
       logs.forEach(row => {
         const rDate = row.date || formatDateIso(new Date());
-        csv += `${row.id},"${rDate}","${row.time}",${row.temp},${row.humi},${row.light},${row.volt || ''},${row.amp || ''},${row.watt || ''},${row.kwh || ''},${row.status}\n`;
+        csv += `${row.id},"${rDate}","${row.time}",${row.temp},${row.humi},${row.light},${row.status}\n`;
       });
 
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -595,7 +587,7 @@
     }
 
     // =========================================================================
-    // NEW: Historical Trend Charts Logic (Daily / Monthly / Yearly)
+    // Historical Trend Charts Logic (Daily / Monthly / Yearly)
     // =========================================================================
     let chartPeriodMode = 'daily';
     let histTempHumiChart = null;

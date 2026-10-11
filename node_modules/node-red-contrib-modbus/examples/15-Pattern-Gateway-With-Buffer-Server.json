@@ -1,0 +1,197 @@
+[
+  {
+    "id": "6bda7708cf8a4b48",
+    "type": "tab",
+    "label": "15 Gateway (buffer)",
+    "disabled": false,
+    "info": "PATTERN: Gateway with buffer server (what works TODAY)\n\nFEATURES IN THIS FLOW\n- Modbus-Server as a buffer-backed 'cache' slave\n- Flow inject fills holding buffers; external or local clients read them\n- Shows the boundary of the in-package server (no per-request flow replies)\n\nWHAT THE CONFIG DOES\n- Server buffers hold the last written values (FC3/FC6 style access from clients)\n- Inject payload register/address/value \u2192 writes into the buffer\n- Local Modbus-Read demonstrates reading the cache back\n\nHOW TO RUN\n1) Deploy\n2) Click Cache HR values\n3) Watch Read / Debug for buffered values\n4) Point an external Modbus master at 127.0.0.1:10516 to read the same buffers\n\nDemo TCP port: 10516\n\nYou CANNOT craft protocol responses per inbound request in the flow.\nDynamic Server / Gateway = GitHub #567 \u2192 planned SEPARATE package.\nSee docs/p4nr/capabilities/modbus-dynamic-server-gateway.md\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config."
+  },
+  {
+    "id": "28e65f018a4d42d3",
+    "type": "comment",
+    "z": "6bda7708cf8a4b48",
+    "name": "PATTERN: Gateway with buffer server (what works TODAY)",
+    "info": "PATTERN: Gateway with buffer server (what works TODAY)\n\nFEATURES IN THIS FLOW\n- Modbus-Server as a buffer-backed 'cache' slave\n- Flow inject fills holding buffers; external or local clients read them\n- Shows the boundary of the in-package server (no per-request flow replies)\n\nWHAT THE CONFIG DOES\n- Server buffers hold the last written values (FC3/FC6 style access from clients)\n- Inject payload register/address/value \u2192 writes into the buffer\n- Local Modbus-Read demonstrates reading the cache back\n\nHOW TO RUN\n1) Deploy\n2) Click Cache HR values\n3) Watch Read / Debug for buffered values\n4) Point an external Modbus master at 127.0.0.1:10516 to read the same buffers\n\nDemo TCP port: 10516\n\nYou CANNOT craft protocol responses per inbound request in the flow.\nDynamic Server / Gateway = GitHub #567 \u2192 planned SEPARATE package.\nSee docs/p4nr/capabilities/modbus-dynamic-server-gateway.md\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config.",
+    "x": 200,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "457f77e79c144f24",
+    "type": "inject",
+    "z": "6bda7708cf8a4b48",
+    "name": "Cache HR values",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "10",
+    "crontab": "",
+    "once": true,
+    "onceDelay": 0.5,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 180,
+    "y": 280,
+    "wires": [
+      [
+        "4ea0633d78874a0f"
+      ]
+    ]
+  },
+  {
+    "id": "4ea0633d78874a0f",
+    "type": "function",
+    "z": "6bda7708cf8a4b48",
+    "name": "simulate cache",
+    "func": "msg.payload = {\n  value: [100, 200, 300],\n  register: 'holding',\n  address: 0,\n  disableMsgOutput: 0\n};\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 400,
+    "y": 280,
+    "wires": [
+      [
+        "15e90e7d8d0445c2"
+      ]
+    ]
+  },
+  {
+    "id": "15e90e7d8d0445c2",
+    "type": "modbus-server",
+    "z": "6bda7708cf8a4b48",
+    "name": "Edge cache slave",
+    "logEnabled": false,
+    "hostname": "127.0.0.1",
+    "serverPort": "10516",
+    "responseDelay": 100,
+    "delayUnit": "ms",
+    "coilsBufferSize": 10000,
+    "holdingBufferSize": 10000,
+    "inputBufferSize": 10000,
+    "discreteBufferSize": 10000,
+    "showErrors": true,
+    "showStatusActivities": true,
+    "x": 640,
+    "y": 280,
+    "wires": [
+      [
+        "0093f8230f9a40a3"
+      ],
+      [
+        "0093f8230f9a40a3"
+      ],
+      [
+        "0093f8230f9a40a3"
+      ],
+      [
+        "0093f8230f9a40a3"
+      ],
+      [
+        "0093f8230f9a40a3"
+      ]
+    ]
+  },
+  {
+    "id": "0093f8230f9a40a3",
+    "type": "debug",
+    "z": "6bda7708cf8a4b48",
+    "name": "server activity",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "true",
+    "x": 880,
+    "y": 240,
+    "wires": []
+  },
+  {
+    "id": "5e21d3d4d2a0480b",
+    "type": "modbus-client",
+    "z": "6bda7708cf8a4b48",
+    "name": "Local verify client",
+    "clienttype": "tcp",
+    "bufferCommands": true,
+    "stateLogEnabled": false,
+    "queueLogEnabled": false,
+    "failureLogEnabled": true,
+    "tcpHost": "127.0.0.1",
+    "tcpPort": "10516",
+    "tcpType": "DEFAULT",
+    "serialPort": "/dev/ttyUSB0",
+    "serialType": "RTU-BUFFERD",
+    "serialBaudrate": "9600",
+    "serialDatabits": "8",
+    "serialStopbits": "1",
+    "serialParity": "none",
+    "serialConnectionDelay": "100",
+    "serialAsciiResponseStartDelimiter": "0x3A",
+    "unit_id": "1",
+    "commandDelay": "1",
+    "clientTimeout": "1000",
+    "reconnectOnTimeout": true,
+    "reconnectTimeout": "2000",
+    "parallelUnitIdsAllowed": true
+  },
+  {
+    "id": "4ad4734d4bcf4d86",
+    "type": "modbus-read",
+    "z": "6bda7708cf8a4b48",
+    "name": "Verify cache FC3",
+    "topic": "",
+    "showStatusActivities": true,
+    "logIOActivities": false,
+    "showErrors": true,
+    "showWarnings": true,
+    "unitid": "1",
+    "dataType": "HoldingRegister",
+    "adr": "0",
+    "quantity": "3",
+    "rate": "5",
+    "rateUnit": "s",
+    "delayOnStart": true,
+    "startDelayTime": "2",
+    "server": "5e21d3d4d2a0480b",
+    "useIOFile": false,
+    "ioFile": "",
+    "useIOForPayload": false,
+    "emptyMsgOnFail": false,
+    "keepMsgProperties": false,
+    "x": 640,
+    "y": 420,
+    "wires": [
+      [
+        "b85250d7114e4988"
+      ],
+      [
+        "47eb90f558f04c57"
+      ]
+    ]
+  },
+  {
+    "id": "47eb90f558f04c57",
+    "type": "modbus-response",
+    "z": "6bda7708cf8a4b48",
+    "name": "",
+    "registerShowMax": 20,
+    "x": 880,
+    "y": 500,
+    "wires": []
+  },
+  {
+    "id": "b85250d7114e4988",
+    "type": "debug",
+    "z": "6bda7708cf8a4b48",
+    "name": "SEE: Verify cache FC3",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "x": 880,
+    "y": 340,
+    "wires": []
+  }
+]

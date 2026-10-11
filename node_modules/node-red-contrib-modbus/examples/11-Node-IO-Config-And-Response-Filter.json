@@ -1,0 +1,249 @@
+[
+  {
+    "id": "f359cca63f4848e1",
+    "type": "tab",
+    "label": "11 IO-Config / Filter",
+    "disabled": false,
+    "info": "NODE: Modbus-IO-Config + Modbus-Response-Filter \u2014 named values\n\nFEATURES IN THIS FLOW\n- Give human-readable names to Modbus addresses via an IO JSON file\n- Modbus-Read with useIOFile + useIOForPayload \u2192 payload = [{name, value, \u2026}, \u2026]\n- Modbus-Response-Filter keeps only one named entry (by exact name string)\n- Starter file extras/ioFileData/names-starter.json (easy to edit)\n- Larger PLC-style sample still available: learning-device.json\n\nWHAT THE CONFIG DOES\n- IO-Config path \u2192 NDJSON file (one JSON object per line)\n- IO-Config addressOffset \u2192 optional shift applied to all mappings\n- Read useIOFile=true + ioFile=this config \u2192 apply name mapping\n- Read useIOForPayload=true \u2192 msg.payload becomes named list (not raw ints)\n- Read logIOActivities=true \u2192 debug mapping activity in Node-RED log\n- Filter filter \u2192 exact name string from the IO file (e.g. iTemperature)\n- Filter registers=0 \u2192 REQUIRED for named IO lists (do not use Modbus quantity)\n- Filter filterResponseBuffer/Values/Input \u2192 strip heavy msg fields after filter\n\nHOW TO RUN\n1) Deploy (seed inject fills Holding Registers once)\n2) Open Debug \u2192 IO names (all): see iTemperature, iSetpoint, iCounter, \u2026\n3) filtered name Debug shows only [{ name: 'iTemperature', value: 42, \u2026 }]\n4) Edit names-starter.json (add a line with type-prefix name), redeploy\n5) Change Filter name to match your new name and redeploy\n\nDemo TCP port: 10513\n\nHOW TO MAINTAIN / PROVIDE NAMES (critical)\n\nEdit (or copy) an IO file. Each line is one mapping:\n\n  {\"name\":\"iTemperature\",\"valueAddress\":\"%IW0\"}\n  {\"name\":\"iSetpoint\",\"valueAddress\":\"%IW1\"}\n  {\"name\":\"bMotorRunning\",\"valueAddress\":\"%IX8.0\"}\n\nNAME PREFIX = DATA TYPE (first character of name is required!):\n  i\u2026 Integer   w\u2026 Word   u\u2026 Unsigned   b\u2026 Boolean (with %Ix/%Qx)\n  f\u2026/r\u2026 Float/Real   d\u2026 Double   l\u2026 Long\nWithout a known prefix the mapping is SKIPPED \u2192 empty payload [].\nBad:  {\"name\":\"temperature\",\"valueAddress\":\"%IW0\"}\nGood: {\"name\":\"iTemperature\",\"valueAddress\":\"%IW0\"}\n\nAddress syntax (CODESYS-style) + which FC to use:\n  %IW*  \u2192 Holding-side words \u2192 use FC3 HoldingRegister (this demo)\n  %QW*  \u2192 Input-register side \u2192 use FC4 InputRegister\n  %IX*.* / %QX*.* \u2192 bits (coils / discrete)\n\nAfter editing the file: Deploy the flow (IO-Config reloads on deploy).\nOptional: export from PLC/CODESYS CSV and convert \u2014 see IO-Config node help.\nFull demo dump: extras/ioFileData/learning-device.json\n\nSeed vs names in this flow:\n  HR[0]=42 \u2192 iTemperature, HR[1]=7 \u2192 iSetpoint, HR[2]=3 \u2192 iCounter, \u2026\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config."
+  },
+  {
+    "id": "2b2e51ba1dd6437b",
+    "type": "comment",
+    "z": "f359cca63f4848e1",
+    "name": "NODE: Modbus-IO-Config + Modbus-Response-Filter \u2014 named valu",
+    "info": "NODE: Modbus-IO-Config + Modbus-Response-Filter \u2014 named values\n\nFEATURES IN THIS FLOW\n- Give human-readable names to Modbus addresses via an IO JSON file\n- Modbus-Read with useIOFile + useIOForPayload \u2192 payload = [{name, value, \u2026}, \u2026]\n- Modbus-Response-Filter keeps only one named entry (by exact name string)\n- Starter file extras/ioFileData/names-starter.json (easy to edit)\n- Larger PLC-style sample still available: learning-device.json\n\nWHAT THE CONFIG DOES\n- IO-Config path \u2192 NDJSON file (one JSON object per line)\n- IO-Config addressOffset \u2192 optional shift applied to all mappings\n- Read useIOFile=true + ioFile=this config \u2192 apply name mapping\n- Read useIOForPayload=true \u2192 msg.payload becomes named list (not raw ints)\n- Read logIOActivities=true \u2192 debug mapping activity in Node-RED log\n- Filter filter \u2192 exact name string from the IO file (e.g. iTemperature)\n- Filter registers=0 \u2192 REQUIRED for named IO lists (do not use Modbus quantity)\n- Filter filterResponseBuffer/Values/Input \u2192 strip heavy msg fields after filter\n\nHOW TO RUN\n1) Deploy (seed inject fills Holding Registers once)\n2) Open Debug \u2192 IO names (all): see iTemperature, iSetpoint, iCounter, \u2026\n3) filtered name Debug shows only [{ name: 'iTemperature', value: 42, \u2026 }]\n4) Edit names-starter.json (add a line with type-prefix name), redeploy\n5) Change Filter name to match your new name and redeploy\n\nDemo TCP port: 10513\n\nHOW TO MAINTAIN / PROVIDE NAMES (critical)\n\nEdit (or copy) an IO file. Each line is one mapping:\n\n  {\"name\":\"iTemperature\",\"valueAddress\":\"%IW0\"}\n  {\"name\":\"iSetpoint\",\"valueAddress\":\"%IW1\"}\n  {\"name\":\"bMotorRunning\",\"valueAddress\":\"%IX8.0\"}\n\nNAME PREFIX = DATA TYPE (first character of name is required!):\n  i\u2026 Integer   w\u2026 Word   u\u2026 Unsigned   b\u2026 Boolean (with %Ix/%Qx)\n  f\u2026/r\u2026 Float/Real   d\u2026 Double   l\u2026 Long\nWithout a known prefix the mapping is SKIPPED \u2192 empty payload [].\nBad:  {\"name\":\"temperature\",\"valueAddress\":\"%IW0\"}\nGood: {\"name\":\"iTemperature\",\"valueAddress\":\"%IW0\"}\n\nAddress syntax (CODESYS-style) + which FC to use:\n  %IW*  \u2192 Holding-side words \u2192 use FC3 HoldingRegister (this demo)\n  %QW*  \u2192 Input-register side \u2192 use FC4 InputRegister\n  %IX*.* / %QX*.* \u2192 bits (coils / discrete)\n\nAfter editing the file: Deploy the flow (IO-Config reloads on deploy).\nOptional: export from PLC/CODESYS CSV and convert \u2014 see IO-Config node help.\nFull demo dump: extras/ioFileData/learning-device.json\n\nSeed vs names in this flow:\n  HR[0]=42 \u2192 iTemperature, HR[1]=7 \u2192 iSetpoint, HR[2]=3 \u2192 iCounter, \u2026\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config.",
+    "x": 160,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "1a0e47fae7da4f4f",
+    "type": "comment",
+    "z": "f359cca63f4848e1",
+    "name": "HOW TO: add / edit names",
+    "info": "HOW TO ADD YOUR OWN NAME (quick)\n\n1) Open extras/ioFileData/names-starter.json in an editor\n2) Add a line \u2014 name MUST start with type letter:\n   {\"name\":\"iLineSpeed\",\"valueAddress\":\"%IW2\"}\n   (i=Integer, w=Word, u=Unsigned, b=Boolean, \u2026)\n3) In Modbus-IO-Config set Path to that file (relative extras/\u2026 is OK)\n4) On Modbus-Read: enable \"Use IO File\" + \"IO's As Payload\"\n5) On Response-Filter: Filter = iLineSpeed, Registers = 0\n6) Deploy \u2192 Debug shows only that named object\n\nDo NOT set Registers to the Modbus quantity when filtering named lists.\nDo NOT use names without a type prefix (payload will be empty []).\n",
+    "x": 160,
+    "y": 110,
+    "wires": []
+  },
+  {
+    "id": "a744174d8b1147bf",
+    "type": "comment",
+    "z": "f359cca63f4848e1",
+    "name": "CONFIG: Modbus-Read IO flags",
+    "info": "Modbus-Read flags used here\n\n\u2022 Use IO File = on \u2192 attach IO-Config mapping\n\u2022 IO's As Payload = on \u2192 payload is named objects (not [42,7,3,\u2026])\n\u2022 log IO Activities = on \u2192 mapping traces in the log\n\u2022 dataType HoldingRegister, adr 0, quantity 12 \u2192 FC3 range that covers %IW0..%IW11\n\u2022 FC3 reads %I* names; FC4 would read %Q* names\n",
+    "x": 160,
+    "y": 180,
+    "wires": []
+  },
+  {
+    "id": "e8e66fdbad1d48c2",
+    "type": "comment",
+    "z": "f359cca63f4848e1",
+    "name": "CONFIG: Response-Filter",
+    "info": "Modbus-Response-Filter flags used here\n\n\u2022 filter = iTemperature \u2192 keep items where item.name === 'iTemperature'\n\u2022 registers = 0 \u2192 skip raw-length check (named list length \u2260 Modbus quantity)\n\u2022 filter Response Buffer / Values / Input = on \u2192 smaller msg after filter\n\u2022 Lookup button (after Deploy) lists names from the linked IO-Config\n",
+    "x": 160,
+    "y": 250,
+    "wires": []
+  },
+  {
+    "id": "4c0a82471a0a4a1e",
+    "type": "modbus-server",
+    "z": "f359cca63f4848e1",
+    "name": "IO Demo Server",
+    "logEnabled": false,
+    "hostname": "127.0.0.1",
+    "serverPort": "10513",
+    "responseDelay": 100,
+    "delayUnit": "ms",
+    "coilsBufferSize": 10000,
+    "holdingBufferSize": 10000,
+    "inputBufferSize": 10000,
+    "discreteBufferSize": 10000,
+    "showErrors": false,
+    "showStatusActivities": false,
+    "x": 160,
+    "y": 340,
+    "wires": [
+      [],
+      [],
+      [],
+      [],
+      []
+    ]
+  },
+  {
+    "id": "601f568eb5d54666",
+    "type": "modbus-client",
+    "z": "f359cca63f4848e1",
+    "name": "IO Client",
+    "clienttype": "tcp",
+    "bufferCommands": true,
+    "stateLogEnabled": false,
+    "queueLogEnabled": false,
+    "failureLogEnabled": true,
+    "tcpHost": "127.0.0.1",
+    "tcpPort": "10513",
+    "tcpType": "DEFAULT",
+    "serialPort": "/dev/ttyUSB0",
+    "serialType": "RTU-BUFFERD",
+    "serialBaudrate": "9600",
+    "serialDatabits": "8",
+    "serialStopbits": "1",
+    "serialParity": "none",
+    "serialConnectionDelay": "100",
+    "serialAsciiResponseStartDelimiter": "0x3A",
+    "unit_id": "1",
+    "commandDelay": "1",
+    "clientTimeout": "1000",
+    "reconnectOnTimeout": true,
+    "reconnectTimeout": "2000",
+    "parallelUnitIdsAllowed": true
+  },
+  {
+    "id": "35b49e7518ca4109",
+    "type": "modbus-io-config",
+    "z": "f359cca63f4848e1",
+    "name": "Names starter (edit me)",
+    "path": "extras/ioFileData/names-starter.json",
+    "format": "utf8",
+    "addressOffset": ""
+  },
+  {
+    "id": "95f8acf206d4453f",
+    "type": "inject",
+    "z": "f359cca63f4848e1",
+    "name": "Seed HR [42,7,3,\u2026]",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": true,
+    "onceDelay": 0.5,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 160,
+    "y": 440,
+    "wires": [
+      [
+        "c932398afaef4abd"
+      ]
+    ]
+  },
+  {
+    "id": "c932398afaef4abd",
+    "type": "function",
+    "z": "f359cca63f4848e1",
+    "name": "holding seed \u2192 named HR",
+    "func": "// HR0..11 \u2192 iTemperature, iSetpoint, iCounter, \u2026 (name prefix = type!)\nmsg.payload = {\n  value: [42, 7, 3, 9, 0, 11, 0, 13, 0, 0, 0, 15],\n  register: 'holding',\n  address: 0,\n  disableMsgOutput: 1\n};\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 400,
+    "y": 440,
+    "wires": [
+      [
+        "4c0a82471a0a4a1e"
+      ]
+    ]
+  },
+  {
+    "id": "41ee37bee362456d",
+    "type": "modbus-read",
+    "z": "f359cca63f4848e1",
+    "name": "Read HR + IO names",
+    "topic": "",
+    "showStatusActivities": true,
+    "logIOActivities": true,
+    "showErrors": true,
+    "showWarnings": true,
+    "unitid": "1",
+    "dataType": "HoldingRegister",
+    "adr": "0",
+    "quantity": "12",
+    "rate": "2",
+    "rateUnit": "s",
+    "delayOnStart": true,
+    "startDelayTime": "2",
+    "server": "601f568eb5d54666",
+    "useIOFile": true,
+    "ioFile": "35b49e7518ca4109",
+    "useIOForPayload": true,
+    "emptyMsgOnFail": false,
+    "keepMsgProperties": false,
+    "x": 400,
+    "y": 560,
+    "wires": [
+      [
+        "fe96ec1bb7004d51",
+        "2bf1875851a84359"
+      ],
+      [
+        "0a2fbba4e4c943a5"
+      ]
+    ]
+  },
+  {
+    "id": "0a2fbba4e4c943a5",
+    "type": "modbus-response",
+    "z": "f359cca63f4848e1",
+    "name": "Read response",
+    "registerShowMax": 20,
+    "x": 900,
+    "y": 640,
+    "wires": []
+  },
+  {
+    "id": "fe96ec1bb7004d51",
+    "type": "debug",
+    "z": "f359cca63f4848e1",
+    "name": "IO names (all)",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "x": 680,
+    "y": 500,
+    "wires": []
+  },
+  {
+    "id": "2bf1875851a84359",
+    "type": "modbus-response-filter",
+    "z": "f359cca63f4848e1",
+    "name": "filter: iTemperature",
+    "filter": "iTemperature",
+    "registers": "0",
+    "ioFile": "35b49e7518ca4109",
+    "filterResponseBuffer": true,
+    "filterValues": true,
+    "filterInput": true,
+    "showStatusActivities": false,
+    "showErrors": true,
+    "showWarnings": true,
+    "x": 680,
+    "y": 580,
+    "wires": [
+      [
+        "ed7b907b665d4338"
+      ]
+    ]
+  },
+  {
+    "id": "ed7b907b665d4338",
+    "type": "debug",
+    "z": "f359cca63f4848e1",
+    "name": "filtered: iTemperature",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "x": 960,
+    "y": 580,
+    "wires": []
+  }
+]

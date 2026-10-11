@@ -1,0 +1,206 @@
+[
+  {
+    "id": "7fad1a9c92b145d5",
+    "type": "tab",
+    "label": "01 Modbus Basics",
+    "disabled": false,
+    "info": "LEARN: Modbus memory areas and function codes\n\nFEATURES IN THIS FLOW\n- Local Modbus-Server (TCP slave buffers) + Modbus-Client\n- Modbus-Write (FC6 Holding) and Modbus-Read (FC3)\n- One Modbus-Response per data source (status stays readable)\n\nWHAT THE CONFIG DOES\n- Client tcpHost/tcpPort \u2192 must match Server hostname/serverPort\n- Write dataType + adr + quantity \u2192 which FC and address to write\n- Read dataType HoldingRegister + adr/quantity \u2192 FC3 range to poll\n- Unit ID on client/nodes \u2192 slave id (TCP demos use 1)\n\nHOW TO RUN\n1) Deploy and wait until the client is active\n2) Click inject Write 42 to HR0\n3) Watch each node's own Modbus-Response status\n\nDemo TCP port: 10502\n\nAreas (common mapping):\n- Coils (R/W bits)           FC1 read / FC5, FC15 write\n- Discrete Inputs (R bits)   FC2 read\n- Holding Registers (R/W)    FC3 read / FC6, FC16 write\n- Input Registers (R)        FC4 read\n\nAddresses in this package are 0-based (address 0 = first register).\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config."
+  },
+  {
+    "id": "92f47d0ed3fa4ef0",
+    "type": "comment",
+    "z": "7fad1a9c92b145d5",
+    "name": "LEARN: Modbus memory areas and function codes",
+    "info": "LEARN: Modbus memory areas and function codes\n\nFEATURES IN THIS FLOW\n- Local Modbus-Server (TCP slave buffers) + Modbus-Client\n- Modbus-Write (FC6 Holding) and Modbus-Read (FC3)\n- One Modbus-Response per data source (status stays readable)\n\nWHAT THE CONFIG DOES\n- Client tcpHost/tcpPort \u2192 must match Server hostname/serverPort\n- Write dataType + adr + quantity \u2192 which FC and address to write\n- Read dataType HoldingRegister + adr/quantity \u2192 FC3 range to poll\n- Unit ID on client/nodes \u2192 slave id (TCP demos use 1)\n\nHOW TO RUN\n1) Deploy and wait until the client is active\n2) Click inject Write 42 to HR0\n3) Watch each node's own Modbus-Response status\n\nDemo TCP port: 10502\n\nAreas (common mapping):\n- Coils (R/W bits)           FC1 read / FC5, FC15 write\n- Discrete Inputs (R bits)   FC2 read\n- Holding Registers (R/W)    FC3 read / FC6, FC16 write\n- Input Registers (R)        FC4 read\n\nAddresses in this package are 0-based (address 0 = first register).\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config.",
+    "x": 200,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "c443325645314a87",
+    "type": "modbus-server",
+    "z": "7fad1a9c92b145d5",
+    "name": "Basics Server",
+    "logEnabled": false,
+    "hostname": "127.0.0.1",
+    "serverPort": "10502",
+    "responseDelay": 100,
+    "delayUnit": "ms",
+    "coilsBufferSize": 10000,
+    "holdingBufferSize": 10000,
+    "inputBufferSize": 10000,
+    "discreteBufferSize": 10000,
+    "showErrors": false,
+    "showStatusActivities": false,
+    "x": 140,
+    "y": 220,
+    "wires": [
+      [],
+      [],
+      [],
+      [],
+      []
+    ]
+  },
+  {
+    "id": "b96c6e7f9bd942e6",
+    "type": "modbus-client",
+    "z": "7fad1a9c92b145d5",
+    "name": "Basics Client",
+    "clienttype": "tcp",
+    "bufferCommands": true,
+    "stateLogEnabled": false,
+    "queueLogEnabled": false,
+    "failureLogEnabled": true,
+    "tcpHost": "127.0.0.1",
+    "tcpPort": "10502",
+    "tcpType": "DEFAULT",
+    "serialPort": "/dev/ttyUSB0",
+    "serialType": "RTU-BUFFERD",
+    "serialBaudrate": "9600",
+    "serialDatabits": "8",
+    "serialStopbits": "1",
+    "serialParity": "none",
+    "serialConnectionDelay": "100",
+    "serialAsciiResponseStartDelimiter": "0x3A",
+    "unit_id": "1",
+    "commandDelay": "1",
+    "clientTimeout": "1000",
+    "reconnectOnTimeout": true,
+    "reconnectTimeout": "2000",
+    "parallelUnitIdsAllowed": true
+  },
+  {
+    "id": "c7f731ed27b24587",
+    "type": "inject",
+    "z": "7fad1a9c92b145d5",
+    "name": "Write 42 to HR0",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "topic": "",
+    "payload": "42",
+    "payloadType": "num",
+    "x": 160,
+    "y": 340,
+    "wires": [
+      [
+        "c8f4d3cec674436b"
+      ]
+    ]
+  },
+  {
+    "id": "c8f4d3cec674436b",
+    "type": "modbus-write",
+    "z": "7fad1a9c92b145d5",
+    "name": "FC6 Holding",
+    "showStatusActivities": true,
+    "showErrors": true,
+    "showWarnings": true,
+    "unitid": "1",
+    "dataType": "HoldingRegister",
+    "adr": "0",
+    "quantity": "1",
+    "server": "b96c6e7f9bd942e6",
+    "emptyMsgOnFail": false,
+    "keepMsgProperties": false,
+    "x": 400,
+    "y": 340,
+    "wires": [
+      [
+        "cf1a16a979484699"
+      ],
+      [
+        "ff9472d81bb0413a"
+      ]
+    ]
+  },
+  {
+    "id": "10eb87fd87ae4f27",
+    "type": "modbus-read",
+    "z": "7fad1a9c92b145d5",
+    "name": "Poll FC3",
+    "topic": "",
+    "showStatusActivities": true,
+    "logIOActivities": false,
+    "showErrors": true,
+    "showWarnings": true,
+    "unitid": "1",
+    "dataType": "HoldingRegister",
+    "adr": "0",
+    "quantity": "2",
+    "rate": "2",
+    "rateUnit": "s",
+    "delayOnStart": true,
+    "startDelayTime": "1",
+    "server": "b96c6e7f9bd942e6",
+    "useIOFile": false,
+    "ioFile": "",
+    "useIOForPayload": false,
+    "emptyMsgOnFail": false,
+    "keepMsgProperties": false,
+    "x": 380,
+    "y": 440,
+    "wires": [
+      [
+        "f67c1abe02374ad3"
+      ],
+      [
+        "3457b0e1230e4cb2"
+      ]
+    ]
+  },
+  {
+    "id": "ff9472d81bb0413a",
+    "type": "modbus-response",
+    "z": "7fad1a9c92b145d5",
+    "name": "Write response",
+    "registerShowMax": 20,
+    "x": 640,
+    "y": 420,
+    "wires": []
+  },
+  {
+    "id": "3457b0e1230e4cb2",
+    "type": "modbus-response",
+    "z": "7fad1a9c92b145d5",
+    "name": "Read response",
+    "registerShowMax": 20,
+    "x": 640,
+    "y": 520,
+    "wires": []
+  },
+  {
+    "id": "cf1a16a979484699",
+    "type": "debug",
+    "z": "7fad1a9c92b145d5",
+    "name": "SEE: FC6 Holding",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "x": 640,
+    "y": 260,
+    "wires": []
+  },
+  {
+    "id": "f67c1abe02374ad3",
+    "type": "debug",
+    "z": "7fad1a9c92b145d5",
+    "name": "SEE: Poll FC3",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "x": 640,
+    "y": 360,
+    "wires": []
+  }
+]

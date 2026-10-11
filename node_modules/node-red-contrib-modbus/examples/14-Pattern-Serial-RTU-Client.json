@@ -1,0 +1,139 @@
+[
+  {
+    "id": "cfff84c5bc1747e8",
+    "type": "tab",
+    "label": "14 Serial RTU",
+    "disabled": false,
+    "info": "PATTERN: Serial RTU client (educational)\n\nFEATURES IN THIS FLOW\n- Modbus-Client type = serial (RTU-BUFFERD)\n- Flex-Getter payload same shape as TCP demos\n- Shows required serial settings without needing CI hardware\n\nWHAT THE CONFIG DOES\n- serialPort \u2192 /dev/ttyUSB0, COMx, \u2026 (must exist on your host)\n- serialBaudrate / databits / stopbits / parity \u2192 match the device\n- serialType RTU-BUFFERD \u2192 usual choice for RTU\n- unit_id on client \u2192 default slave; override per Flex-Getter payload\n\nHOW TO RUN\n1) Set serialPort to your adapter\n2) Deploy (client stays inactive without a real port \u2014 expected)\n3) When the port is up, click Read HR to issue FC3\n\nNot for CI without hardware. TCP learning: examples 02\u201313.\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config."
+  },
+  {
+    "id": "9188c01b209d4554",
+    "type": "comment",
+    "z": "cfff84c5bc1747e8",
+    "name": "PATTERN: Serial RTU client (educational)",
+    "info": "PATTERN: Serial RTU client (educational)\n\nFEATURES IN THIS FLOW\n- Modbus-Client type = serial (RTU-BUFFERD)\n- Flex-Getter payload same shape as TCP demos\n- Shows required serial settings without needing CI hardware\n\nWHAT THE CONFIG DOES\n- serialPort \u2192 /dev/ttyUSB0, COMx, \u2026 (must exist on your host)\n- serialBaudrate / databits / stopbits / parity \u2192 match the device\n- serialType RTU-BUFFERD \u2192 usual choice for RTU\n- unit_id on client \u2192 default slave; override per Flex-Getter payload\n\nHOW TO RUN\n1) Set serialPort to your adapter\n2) Deploy (client stays inactive without a real port \u2014 expected)\n3) When the port is up, click Read HR to issue FC3\n\nNot for CI without hardware. TCP learning: examples 02\u201313.\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config.",
+    "x": 200,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "e0d86899b92b4c65",
+    "type": "modbus-client",
+    "z": "cfff84c5bc1747e8",
+    "name": "Serial Client",
+    "clienttype": "serial",
+    "bufferCommands": true,
+    "stateLogEnabled": false,
+    "queueLogEnabled": false,
+    "failureLogEnabled": true,
+    "tcpHost": "127.0.0.1",
+    "tcpPort": "502",
+    "tcpType": "DEFAULT",
+    "serialPort": "/dev/ttyUSB0",
+    "serialType": "RTU-BUFFERD",
+    "serialBaudrate": "9600",
+    "serialDatabits": "8",
+    "serialStopbits": "1",
+    "serialParity": "none",
+    "serialConnectionDelay": "100",
+    "serialAsciiResponseStartDelimiter": "0x3A",
+    "unit_id": "1",
+    "commandDelay": "1",
+    "clientTimeout": "1000",
+    "reconnectOnTimeout": true,
+    "reconnectTimeout": "2000",
+    "parallelUnitIdsAllowed": true
+  },
+  {
+    "id": "6fbc21a86a064591",
+    "type": "inject",
+    "z": "cfff84c5bc1747e8",
+    "name": "Read HR (when port up)",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 200,
+    "y": 280,
+    "wires": [
+      [
+        "c8db96ee013b463f"
+      ]
+    ]
+  },
+  {
+    "id": "c8db96ee013b463f",
+    "type": "function",
+    "z": "cfff84c5bc1747e8",
+    "name": "FC3 payload",
+    "func": "msg.payload = { fc: 3, unitid: 1, address: 0, quantity: 2 };\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 420,
+    "y": 280,
+    "wires": [
+      [
+        "9f50337700844eef"
+      ]
+    ]
+  },
+  {
+    "id": "9f50337700844eef",
+    "type": "modbus-flex-getter",
+    "z": "cfff84c5bc1747e8",
+    "name": "",
+    "showStatusActivities": true,
+    "showErrors": true,
+    "showWarnings": true,
+    "logIOActivities": false,
+    "server": "e0d86899b92b4c65",
+    "useIOFile": false,
+    "ioFile": "",
+    "useIOForPayload": false,
+    "emptyMsgOnFail": false,
+    "keepMsgProperties": true,
+    "delayOnStart": false,
+    "startDelayTime": "",
+    "x": 640,
+    "y": 280,
+    "wires": [
+      [
+        "b3f1600ae2814b02"
+      ],
+      [
+        "3bc74b29e8b24200"
+      ]
+    ]
+  },
+  {
+    "id": "3bc74b29e8b24200",
+    "type": "modbus-response",
+    "z": "cfff84c5bc1747e8",
+    "name": "",
+    "registerShowMax": 20,
+    "x": 860,
+    "y": 360,
+    "wires": []
+  },
+  {
+    "id": "b3f1600ae2814b02",
+    "type": "debug",
+    "z": "cfff84c5bc1747e8",
+    "name": "SEE: modbus-flex-getter",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "x": 860,
+    "y": 200,
+    "wires": []
+  }
+]

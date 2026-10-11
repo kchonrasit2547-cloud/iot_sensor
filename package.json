@@ -5,6 +5,7 @@
     "private": true,
     "dependencies": {
         "@flowfuse/node-red-dashboard": "~1.31.0",
+        "node-red-contrib-modbus": "~5.60.2",
         "node-red-contrib-telegrambot": "~19.0.2",
         "node-red-node-mysql": "~3.0.3"
     }

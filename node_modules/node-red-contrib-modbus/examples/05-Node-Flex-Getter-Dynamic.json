@@ -1,0 +1,205 @@
+[
+  {
+    "id": "5ef6d0acb55c4f51",
+    "type": "tab",
+    "label": "05 Flex-Getter",
+    "disabled": false,
+    "info": "NODE: Modbus-Flex-Getter (dynamic read)\n\nFEATURES IN THIS FLOW\n- FC / address / quantity / unit id come from msg.payload each time\n- Same node can issue FC3 Holding and FC1 Coils in one flow\n- Both unitId and unitid accepted (v5.46+)\n\nWHAT THE CONFIG DOES\n- Node editor mainly selects the Modbus-Client\n- msg.payload shape: { fc, unitid|unitId, address, quantity }\n- useIOFile / useIOForPayload \u2192 optional named IO mapping (see example 11)\n- keepMsgProperties \u2192 correlation fields survive the round-trip\n\nHOW TO RUN\n1) Deploy\n2) Click FC3 qty 4 \u2192 read Holding Registers\n3) Click FC1 coils \u2192 read coils with a different payload\n4) Edit the Function nodes to change address/quantity at runtime\n\nDemo TCP port: 10506\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config."
+  },
+  {
+    "id": "c16a9d3d9a8a4163",
+    "type": "comment",
+    "z": "5ef6d0acb55c4f51",
+    "name": "NODE: Modbus-Flex-Getter (dynamic read)",
+    "info": "NODE: Modbus-Flex-Getter (dynamic read)\n\nFEATURES IN THIS FLOW\n- FC / address / quantity / unit id come from msg.payload each time\n- Same node can issue FC3 Holding and FC1 Coils in one flow\n- Both unitId and unitid accepted (v5.46+)\n\nWHAT THE CONFIG DOES\n- Node editor mainly selects the Modbus-Client\n- msg.payload shape: { fc, unitid|unitId, address, quantity }\n- useIOFile / useIOForPayload \u2192 optional named IO mapping (see example 11)\n- keepMsgProperties \u2192 correlation fields survive the round-trip\n\nHOW TO RUN\n1) Deploy\n2) Click FC3 qty 4 \u2192 read Holding Registers\n3) Click FC1 coils \u2192 read coils with a different payload\n4) Edit the Function nodes to change address/quantity at runtime\n\nDemo TCP port: 10506\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config.",
+    "x": 200,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "7339fdea9c4f41fc",
+    "type": "modbus-server",
+    "z": "5ef6d0acb55c4f51",
+    "name": "",
+    "logEnabled": false,
+    "hostname": "127.0.0.1",
+    "serverPort": "10506",
+    "responseDelay": 100,
+    "delayUnit": "ms",
+    "coilsBufferSize": 10000,
+    "holdingBufferSize": 10000,
+    "inputBufferSize": 10000,
+    "discreteBufferSize": 10000,
+    "showErrors": false,
+    "showStatusActivities": false,
+    "x": 120,
+    "y": 200,
+    "wires": [
+      [],
+      [],
+      [],
+      [],
+      []
+    ]
+  },
+  {
+    "id": "82db8f537efe4835",
+    "type": "modbus-client",
+    "z": "5ef6d0acb55c4f51",
+    "name": "Flex-Getter Client",
+    "clienttype": "tcp",
+    "bufferCommands": true,
+    "stateLogEnabled": false,
+    "queueLogEnabled": false,
+    "failureLogEnabled": true,
+    "tcpHost": "127.0.0.1",
+    "tcpPort": "10506",
+    "tcpType": "DEFAULT",
+    "serialPort": "/dev/ttyUSB0",
+    "serialType": "RTU-BUFFERD",
+    "serialBaudrate": "9600",
+    "serialDatabits": "8",
+    "serialStopbits": "1",
+    "serialParity": "none",
+    "serialConnectionDelay": "100",
+    "serialAsciiResponseStartDelimiter": "0x3A",
+    "unit_id": "1",
+    "commandDelay": "1",
+    "clientTimeout": "1000",
+    "reconnectOnTimeout": true,
+    "reconnectTimeout": "2000",
+    "parallelUnitIdsAllowed": true
+  },
+  {
+    "id": "52b6fbead2224817",
+    "type": "inject",
+    "z": "5ef6d0acb55c4f51",
+    "name": "FC3 qty 4",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 150,
+    "y": 280,
+    "wires": [
+      [
+        "7cdbf40696374605"
+      ]
+    ]
+  },
+  {
+    "id": "7cdbf40696374605",
+    "type": "function",
+    "z": "5ef6d0acb55c4f51",
+    "name": "Build FC3",
+    "func": "msg.payload = { fc: 3, unitid: 1, address: 0, quantity: 4 };\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 340,
+    "y": 280,
+    "wires": [
+      [
+        "1a5992e4573c4e3b"
+      ]
+    ]
+  },
+  {
+    "id": "47a676ea403f4ffb",
+    "type": "inject",
+    "z": "5ef6d0acb55c4f51",
+    "name": "FC1 coils",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 150,
+    "y": 360,
+    "wires": [
+      [
+        "492ca89a37f04f63"
+      ]
+    ]
+  },
+  {
+    "id": "492ca89a37f04f63",
+    "type": "function",
+    "z": "5ef6d0acb55c4f51",
+    "name": "Build FC1",
+    "func": "msg.payload = { fc: 1, unitid: 1, address: 0, quantity: 8 };\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 340,
+    "y": 360,
+    "wires": [
+      [
+        "1a5992e4573c4e3b"
+      ]
+    ]
+  },
+  {
+    "id": "1a5992e4573c4e3b",
+    "type": "modbus-flex-getter",
+    "z": "5ef6d0acb55c4f51",
+    "name": "",
+    "showStatusActivities": true,
+    "showErrors": true,
+    "showWarnings": true,
+    "logIOActivities": false,
+    "server": "82db8f537efe4835",
+    "useIOFile": false,
+    "ioFile": "",
+    "useIOForPayload": false,
+    "emptyMsgOnFail": false,
+    "keepMsgProperties": true,
+    "delayOnStart": false,
+    "startDelayTime": "",
+    "x": 560,
+    "y": 320,
+    "wires": [
+      [
+        "8b89ca3abbdd4174"
+      ],
+      [
+        "e3e08b5db2ad4445"
+      ]
+    ]
+  },
+  {
+    "id": "e3e08b5db2ad4445",
+    "type": "modbus-response",
+    "z": "5ef6d0acb55c4f51",
+    "name": "",
+    "registerShowMax": 20,
+    "x": 780,
+    "y": 400,
+    "wires": []
+  },
+  {
+    "id": "8b89ca3abbdd4174",
+    "type": "debug",
+    "z": "5ef6d0acb55c4f51",
+    "name": "SEE: modbus-flex-getter",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "x": 780,
+    "y": 240,
+    "wires": []
+  }
+]

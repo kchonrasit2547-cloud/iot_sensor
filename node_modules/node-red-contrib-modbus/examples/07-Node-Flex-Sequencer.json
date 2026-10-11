@@ -1,0 +1,173 @@
+[
+  {
+    "id": "d171804261214cd3",
+    "type": "tab",
+    "label": "07 Flex-Sequencer",
+    "disabled": false,
+    "info": "NODE: Modbus-Flex-Sequencer\n\nFEATURES IN THIS FLOW\n- Runs an ordered list of FC1\u20134 reads on each trigger\n- Useful for multi-range polls without wiring many Read nodes\n\nWHAT THE CONFIG DOES\n- sequences (editor) \u2192 list of {fc, unitid, address, quantity}\n- delayOnStart \u2192 wait before accepting first trigger after deploy\n- emptyMsgOnFail / keepMsgProperties \u2192 failure and correlation behaviour\n- Client Queue Commands \u2192 recommended when sequences are long\n\nHOW TO RUN\n1) Deploy\n2) Click Run sequence\n3) Inspect Modbus-Response for each step's results on the outputs\n4) Edit the sequence in the node to add another address range\n\nDemo TCP port: 10508\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config."
+  },
+  {
+    "id": "cbac906c7b8f49f3",
+    "type": "comment",
+    "z": "d171804261214cd3",
+    "name": "NODE: Modbus-Flex-Sequencer",
+    "info": "NODE: Modbus-Flex-Sequencer\n\nFEATURES IN THIS FLOW\n- Runs an ordered list of FC1\u20134 reads on each trigger\n- Useful for multi-range polls without wiring many Read nodes\n\nWHAT THE CONFIG DOES\n- sequences (editor) \u2192 list of {fc, unitid, address, quantity}\n- delayOnStart \u2192 wait before accepting first trigger after deploy\n- emptyMsgOnFail / keepMsgProperties \u2192 failure and correlation behaviour\n- Client Queue Commands \u2192 recommended when sequences are long\n\nHOW TO RUN\n1) Deploy\n2) Click Run sequence\n3) Inspect Modbus-Response for each step's results on the outputs\n4) Edit the sequence in the node to add another address range\n\nDemo TCP port: 10508\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config.",
+    "x": 200,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "0a151c2f30e4434a",
+    "type": "modbus-server",
+    "z": "d171804261214cd3",
+    "name": "",
+    "logEnabled": false,
+    "hostname": "127.0.0.1",
+    "serverPort": "10508",
+    "responseDelay": 100,
+    "delayUnit": "ms",
+    "coilsBufferSize": 10000,
+    "holdingBufferSize": 10000,
+    "inputBufferSize": 10000,
+    "discreteBufferSize": 10000,
+    "showErrors": false,
+    "showStatusActivities": false,
+    "x": 120,
+    "y": 200,
+    "wires": [
+      [],
+      [],
+      [],
+      [],
+      []
+    ]
+  },
+  {
+    "id": "3f609a138d13456b",
+    "type": "modbus-client",
+    "z": "d171804261214cd3",
+    "name": "Sequencer Client",
+    "clienttype": "tcp",
+    "bufferCommands": true,
+    "stateLogEnabled": false,
+    "queueLogEnabled": false,
+    "failureLogEnabled": true,
+    "tcpHost": "127.0.0.1",
+    "tcpPort": "10508",
+    "tcpType": "DEFAULT",
+    "serialPort": "/dev/ttyUSB0",
+    "serialType": "RTU-BUFFERD",
+    "serialBaudrate": "9600",
+    "serialDatabits": "8",
+    "serialStopbits": "1",
+    "serialParity": "none",
+    "serialConnectionDelay": "100",
+    "serialAsciiResponseStartDelimiter": "0x3A",
+    "unit_id": "1",
+    "commandDelay": "1",
+    "clientTimeout": "1000",
+    "reconnectOnTimeout": true,
+    "reconnectTimeout": "2000",
+    "parallelUnitIdsAllowed": true
+  },
+  {
+    "id": "ed00384b0f934ce4",
+    "type": "inject",
+    "z": "d171804261214cd3",
+    "name": "Run sequence",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "5",
+    "crontab": "",
+    "once": true,
+    "onceDelay": 1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 180,
+    "y": 300,
+    "wires": [
+      [
+        "4362d6e7aaa04517"
+      ]
+    ]
+  },
+  {
+    "id": "4362d6e7aaa04517",
+    "type": "modbus-flex-sequencer",
+    "z": "d171804261214cd3",
+    "name": "",
+    "sequences": [
+      {
+        "name": "coils",
+        "unitid": "1",
+        "fc": "FC1",
+        "address": "0",
+        "quantity": "4"
+      },
+      {
+        "name": "holding",
+        "unitid": "1",
+        "fc": "FC3",
+        "address": "0",
+        "quantity": "4"
+      },
+      {
+        "name": "input",
+        "unitid": "1",
+        "fc": "FC4",
+        "address": "0",
+        "quantity": "2"
+      }
+    ],
+    "server": "3f609a138d13456b",
+    "showStatusActivities": true,
+    "showErrors": true,
+    "showWarnings": true,
+    "logIOActivities": false,
+    "useIOFile": false,
+    "ioFile": "",
+    "useIOForPayload": false,
+    "emptyMsgOnFail": true,
+    "keepMsgProperties": true,
+    "delayOnStart": true,
+    "startDelayTime": "1",
+    "x": 420,
+    "y": 300,
+    "wires": [
+      [
+        "59620ba89f894683"
+      ],
+      [
+        "59a2ba4a28204a36"
+      ]
+    ]
+  },
+  {
+    "id": "59a2ba4a28204a36",
+    "type": "modbus-response",
+    "z": "d171804261214cd3",
+    "name": "",
+    "registerShowMax": 20,
+    "x": 660,
+    "y": 380,
+    "wires": []
+  },
+  {
+    "id": "59620ba89f894683",
+    "type": "debug",
+    "z": "d171804261214cd3",
+    "name": "SEE: modbus-flex-sequencer",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "x": 660,
+    "y": 220,
+    "wires": []
+  }
+]

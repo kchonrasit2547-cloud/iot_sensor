@@ -1,0 +1,174 @@
+[
+  {
+    "id": "42b4b17f06604c17",
+    "type": "tab",
+    "label": "08 Flex-FC",
+    "disabled": false,
+    "info": "NODE: Modbus-Flex-FC (custom / mapped function codes)\n\nFEATURES IN THIS FLOW\n- Build non-default or vendor FC request/response layouts\n- Argument maps loaded from extras/argumentMaps/\n- requestCard / responseCard define field offsets and types\n\nWHAT THE CONFIG DOES\n- mapPath \u2192 folder with FC map JSON (defaults shipped in package)\n- selectedFc \u2192 which map entry to use\n- requestCard fields \u2192 values sent in the PDU\n- responseCard fields \u2192 how the reply buffer is decoded\n- If relative mapPath fails, set absolute path under node_modules/\u2026/extras/argumentMaps/\n\nHOW TO RUN\n1) Deploy (ensure mapPath resolves \u2014 see ArgumentMaps.md)\n2) Click Trigger FC map\n3) Inspect Modbus-Response / msg for decoded fields\n4) Open extras/argumentMaps/ArgumentMaps.md to add your own map\n\nDemo TCP port: 10509\n\nDocs: extras/argumentMaps/ArgumentMaps.md\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config."
+  },
+  {
+    "id": "e3f96d88af4942f1",
+    "type": "comment",
+    "z": "42b4b17f06604c17",
+    "name": "NODE: Modbus-Flex-FC (custom / mapped function codes)",
+    "info": "NODE: Modbus-Flex-FC (custom / mapped function codes)\n\nFEATURES IN THIS FLOW\n- Build non-default or vendor FC request/response layouts\n- Argument maps loaded from extras/argumentMaps/\n- requestCard / responseCard define field offsets and types\n\nWHAT THE CONFIG DOES\n- mapPath \u2192 folder with FC map JSON (defaults shipped in package)\n- selectedFc \u2192 which map entry to use\n- requestCard fields \u2192 values sent in the PDU\n- responseCard fields \u2192 how the reply buffer is decoded\n- If relative mapPath fails, set absolute path under node_modules/\u2026/extras/argumentMaps/\n\nHOW TO RUN\n1) Deploy (ensure mapPath resolves \u2014 see ArgumentMaps.md)\n2) Click Trigger FC map\n3) Inspect Modbus-Response / msg for decoded fields\n4) Open extras/argumentMaps/ArgumentMaps.md to add your own map\n\nDemo TCP port: 10509\n\nDocs: extras/argumentMaps/ArgumentMaps.md\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config.",
+    "x": 200,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "b0543ec70bae495b",
+    "type": "modbus-server",
+    "z": "42b4b17f06604c17",
+    "name": "",
+    "logEnabled": false,
+    "hostname": "127.0.0.1",
+    "serverPort": "10509",
+    "responseDelay": 100,
+    "delayUnit": "ms",
+    "coilsBufferSize": 10000,
+    "holdingBufferSize": 10000,
+    "inputBufferSize": 10000,
+    "discreteBufferSize": 10000,
+    "showErrors": false,
+    "showStatusActivities": false,
+    "x": 120,
+    "y": 220,
+    "wires": [
+      [],
+      [],
+      [],
+      [],
+      []
+    ]
+  },
+  {
+    "id": "5d02074a01f146b6",
+    "type": "modbus-client",
+    "z": "42b4b17f06604c17",
+    "name": "Flex-FC Client",
+    "clienttype": "tcp",
+    "bufferCommands": true,
+    "stateLogEnabled": false,
+    "queueLogEnabled": false,
+    "failureLogEnabled": true,
+    "tcpHost": "127.0.0.1",
+    "tcpPort": "10509",
+    "tcpType": "DEFAULT",
+    "serialPort": "/dev/ttyUSB0",
+    "serialType": "RTU-BUFFERD",
+    "serialBaudrate": "9600",
+    "serialDatabits": "8",
+    "serialStopbits": "1",
+    "serialParity": "none",
+    "serialConnectionDelay": "100",
+    "serialAsciiResponseStartDelimiter": "0x3A",
+    "unit_id": "1",
+    "commandDelay": "1",
+    "clientTimeout": "1000",
+    "reconnectOnTimeout": true,
+    "reconnectTimeout": "2000",
+    "parallelUnitIdsAllowed": true
+  },
+  {
+    "id": "336275ebc79c480c",
+    "type": "inject",
+    "z": "42b4b17f06604c17",
+    "name": "Trigger FC map",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 180,
+    "y": 320,
+    "wires": [
+      [
+        "06ad957c4ae14295"
+      ]
+    ]
+  },
+  {
+    "id": "06ad957c4ae14295",
+    "type": "modbus-flex-fc",
+    "z": "42b4b17f06604c17",
+    "name": "Mapped FC03",
+    "showStatusActivities": true,
+    "showErrors": true,
+    "showWarnings": true,
+    "unitid": "1",
+    "server": "5d02074a01f146b6",
+    "emptyMsgOnFail": false,
+    "keepMsgProperties": false,
+    "mapPath": "./extras/argumentMaps/defaults/",
+    "selectedFc": "bdd84caa-4191-11ee-989f-4384dc45e6c3",
+    "fc": "0x03",
+    "requestCard": [
+      {
+        "name": "startingAddress",
+        "data": 0,
+        "offset": 0,
+        "type": "uint16be"
+      },
+      {
+        "name": "quantityRegisters",
+        "data": 2,
+        "offset": 2,
+        "type": "uint16be"
+      }
+    ],
+    "responseCard": [
+      {
+        "name": "byteCount",
+        "data": 0,
+        "offset": 0,
+        "type": "uint8be"
+      },
+      {
+        "name": "HoldingRegisterValue",
+        "data": 0,
+        "offset": 1,
+        "type": "uint16be"
+      }
+    ],
+    "lastSelectedFc": "bdd84caa-4191-11ee-989f-4384dc45e6c3",
+    "x": 420,
+    "y": 320,
+    "wires": [
+      [
+        "4cf7275c02b240f9",
+        "4d396d3a9aca4a13"
+      ]
+    ]
+  },
+  {
+    "id": "4cf7275c02b240f9",
+    "type": "modbus-response",
+    "z": "42b4b17f06604c17",
+    "name": "",
+    "registerShowMax": 20,
+    "x": 660,
+    "y": 400,
+    "wires": []
+  },
+  {
+    "id": "4d396d3a9aca4a13",
+    "type": "debug",
+    "z": "42b4b17f06604c17",
+    "name": "SEE: Mapped FC03",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "x": 660,
+    "y": 240,
+    "wires": []
+  }
+]

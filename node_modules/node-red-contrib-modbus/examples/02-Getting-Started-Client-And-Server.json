@@ -1,0 +1,132 @@
+[
+  {
+    "id": "480586da362f4718",
+    "type": "tab",
+    "label": "02 Getting Started",
+    "disabled": false,
+    "info": "GETTING STARTED: first TCP client + server + poll\n\nFEATURES IN THIS FLOW\n- Modbus-Server as local demo slave\n- Modbus-Client (TCP) as shared connection config\n- Modbus-Read polling Holding Registers (FC3)\n- Modbus-Response showing live register values on node status\n\nWHAT THE CONFIG DOES\n- Server serverPort 10503 \u2192 TCP listen port\n- Client tcpPort 10503 \u2192 must match server\n- Read rate/rateUnit \u2192 poll interval (here 1 s)\n- delayOnStart / startDelayTime \u2192 wait before first poll after deploy\n- useIOFile=false \u2192 raw numeric payload (no named IO mapping)\n\nHOW TO RUN\n1) Deploy this tab alone (or keep ports unique vs other examples)\n2) Wait until Modbus-Client shows active / reading\n3) Watch Modbus-Response status for Holding Register values\n\nDemo TCP port: 10503\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config."
+  },
+  {
+    "id": "b046c092a1b341aa",
+    "type": "comment",
+    "z": "480586da362f4718",
+    "name": "GETTING STARTED: first TCP client + server + poll",
+    "info": "GETTING STARTED: first TCP client + server + poll\n\nFEATURES IN THIS FLOW\n- Modbus-Server as local demo slave\n- Modbus-Client (TCP) as shared connection config\n- Modbus-Read polling Holding Registers (FC3)\n- Modbus-Response showing live register values on node status\n\nWHAT THE CONFIG DOES\n- Server serverPort 10503 \u2192 TCP listen port\n- Client tcpPort 10503 \u2192 must match server\n- Read rate/rateUnit \u2192 poll interval (here 1 s)\n- delayOnStart / startDelayTime \u2192 wait before first poll after deploy\n- useIOFile=false \u2192 raw numeric payload (no named IO mapping)\n\nHOW TO RUN\n1) Deploy this tab alone (or keep ports unique vs other examples)\n2) Wait until Modbus-Client shows active / reading\n3) Watch Modbus-Response status for Holding Register values\n\nDemo TCP port: 10503\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config.",
+    "x": 200,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "df52903496024f43",
+    "type": "modbus-server",
+    "z": "480586da362f4718",
+    "name": "Demo Server",
+    "logEnabled": false,
+    "hostname": "127.0.0.1",
+    "serverPort": "10503",
+    "responseDelay": 100,
+    "delayUnit": "ms",
+    "coilsBufferSize": 10000,
+    "holdingBufferSize": 10000,
+    "inputBufferSize": 10000,
+    "discreteBufferSize": 10000,
+    "showErrors": false,
+    "showStatusActivities": false,
+    "x": 140,
+    "y": 200,
+    "wires": [
+      [],
+      [],
+      [],
+      [],
+      []
+    ]
+  },
+  {
+    "id": "0720181e3eea43a2",
+    "type": "modbus-client",
+    "z": "480586da362f4718",
+    "name": "Demo Client",
+    "clienttype": "tcp",
+    "bufferCommands": true,
+    "stateLogEnabled": false,
+    "queueLogEnabled": false,
+    "failureLogEnabled": true,
+    "tcpHost": "127.0.0.1",
+    "tcpPort": "10503",
+    "tcpType": "DEFAULT",
+    "serialPort": "/dev/ttyUSB0",
+    "serialType": "RTU-BUFFERD",
+    "serialBaudrate": "9600",
+    "serialDatabits": "8",
+    "serialStopbits": "1",
+    "serialParity": "none",
+    "serialConnectionDelay": "100",
+    "serialAsciiResponseStartDelimiter": "0x3A",
+    "unit_id": "1",
+    "commandDelay": "1",
+    "clientTimeout": "1000",
+    "reconnectOnTimeout": true,
+    "reconnectTimeout": "2000",
+    "parallelUnitIdsAllowed": true
+  },
+  {
+    "id": "1a1048f67a614452",
+    "type": "modbus-read",
+    "z": "480586da362f4718",
+    "name": "Read HR",
+    "topic": "hr",
+    "showStatusActivities": true,
+    "logIOActivities": false,
+    "showErrors": true,
+    "showWarnings": true,
+    "unitid": "1",
+    "dataType": "HoldingRegister",
+    "adr": "0",
+    "quantity": "4",
+    "rate": "1",
+    "rateUnit": "s",
+    "delayOnStart": true,
+    "startDelayTime": "1",
+    "server": "0720181e3eea43a2",
+    "useIOFile": false,
+    "ioFile": "",
+    "useIOForPayload": false,
+    "emptyMsgOnFail": false,
+    "keepMsgProperties": false,
+    "x": 380,
+    "y": 280,
+    "wires": [
+      [
+        "39c314d5aecd416b"
+      ],
+      [
+        "51a77ac2c1a14610"
+      ]
+    ]
+  },
+  {
+    "id": "51a77ac2c1a14610",
+    "type": "modbus-response",
+    "z": "480586da362f4718",
+    "name": "",
+    "registerShowMax": 20,
+    "x": 600,
+    "y": 360,
+    "wires": []
+  },
+  {
+    "id": "39c314d5aecd416b",
+    "type": "debug",
+    "z": "480586da362f4718",
+    "name": "SEE: Read HR",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "x": 600,
+    "y": 200,
+    "wires": []
+  }
+]

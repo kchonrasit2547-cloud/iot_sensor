@@ -1,0 +1,109 @@
+[
+  {
+    "id": "fa077f7c86b94b15",
+    "type": "tab",
+    "label": "12 Server Buffer",
+    "disabled": false,
+    "info": "NODE: Modbus-Server (buffer slave)\n\nFEATURES IN THIS FLOW\n- In-package TCP Modbus slave backed by register buffers\n- Inject writes into holding / coils / input / discrete buffers\n- Five outputs mirror activity (not a per-request flow gateway)\n\nWHAT THE CONFIG DOES\n- serverPort / hostname \u2192 TCP listen endpoint\n- coilsBufferSize / holdingBufferSize / \u2026 \u2192 buffer lengths\n- Inject payload: { value, register, address, disableMsgOutput }\n- register: 'holding' | 'coils' | 'input' | 'discrete'\n\nHOW TO RUN\n1) Deploy\n2) Click Fill holding \u2192 writes [11,22,33,44] into holding from address 0\n3) Attach a Modbus-Client (other examples) to read the buffer back\n\nDemo TCP port: 10514\n\nNOT a flow-based request/response gateway \u2014 see example 15 and GitHub #567.\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config."
+  },
+  {
+    "id": "e217e3192e7d450b",
+    "type": "comment",
+    "z": "fa077f7c86b94b15",
+    "name": "NODE: Modbus-Server (buffer slave)",
+    "info": "NODE: Modbus-Server (buffer slave)\n\nFEATURES IN THIS FLOW\n- In-package TCP Modbus slave backed by register buffers\n- Inject writes into holding / coils / input / discrete buffers\n- Five outputs mirror activity (not a per-request flow gateway)\n\nWHAT THE CONFIG DOES\n- serverPort / hostname \u2192 TCP listen endpoint\n- coilsBufferSize / holdingBufferSize / \u2026 \u2192 buffer lengths\n- Inject payload: { value, register, address, disableMsgOutput }\n- register: 'holding' | 'coils' | 'input' | 'discrete'\n\nHOW TO RUN\n1) Deploy\n2) Click Fill holding \u2192 writes [11,22,33,44] into holding from address 0\n3) Attach a Modbus-Client (other examples) to read the buffer back\n\nDemo TCP port: 10514\n\nNOT a flow-based request/response gateway \u2014 see example 15 and GitHub #567.\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config.",
+    "x": 200,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "34ca20e33ca845a6",
+    "type": "inject",
+    "z": "fa077f7c86b94b15",
+    "name": "Fill holding",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 160,
+    "y": 280,
+    "wires": [
+      [
+        "d2eea9bc9d244f0d"
+      ]
+    ]
+  },
+  {
+    "id": "d2eea9bc9d244f0d",
+    "type": "function",
+    "z": "fa077f7c86b94b15",
+    "name": "holding buf",
+    "func": "msg.payload = { value: [11, 22, 33, 44], register: 'holding', address: 0, disableMsgOutput: 0 };\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 360,
+    "y": 280,
+    "wires": [
+      [
+        "a177138146954529"
+      ]
+    ]
+  },
+  {
+    "id": "a177138146954529",
+    "type": "modbus-server",
+    "z": "fa077f7c86b94b15",
+    "name": "Buffer Slave",
+    "logEnabled": false,
+    "hostname": "127.0.0.1",
+    "serverPort": "10514",
+    "responseDelay": 100,
+    "delayUnit": "ms",
+    "coilsBufferSize": 10000,
+    "holdingBufferSize": 10000,
+    "inputBufferSize": 10000,
+    "discreteBufferSize": 10000,
+    "showErrors": true,
+    "showStatusActivities": true,
+    "x": 580,
+    "y": 280,
+    "wires": [
+      [
+        "c455cdc50d0543b6"
+      ],
+      [
+        "c455cdc50d0543b6"
+      ],
+      [
+        "c455cdc50d0543b6"
+      ],
+      [
+        "c455cdc50d0543b6"
+      ],
+      [
+        "c455cdc50d0543b6"
+      ]
+    ]
+  },
+  {
+    "id": "c455cdc50d0543b6",
+    "type": "debug",
+    "z": "fa077f7c86b94b15",
+    "name": "server outs",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "true",
+    "x": 800,
+    "y": 280,
+    "wires": []
+  }
+]

@@ -1,0 +1,151 @@
+[
+  {
+    "id": "27714930a03e47b5",
+    "type": "tab",
+    "label": "04 Modbus-Getter",
+    "disabled": false,
+    "info": "NODE: Modbus-Getter (on-demand read)\n\nFEATURES IN THIS FLOW\n- FC1\u20134 read only when an input message arrives\n- Address / quantity fixed in the node editor (not in msg.payload)\n- Useful for HTTP triggers, UI buttons, and event-driven flows\n\nWHAT THE CONFIG DOES\n- dataType / adr / quantity / unitid \u2192 same meaning as Modbus-Read\n- No rate field \u2192 timing comes from upstream inject / HTTP / etc.\n- emptyMsgOnFail \u2192 optional empty message on error\n- keepMsgProperties \u2192 keep topic and other msg fields through the read\n\nHOW TO RUN\n1) Deploy\n2) Click Trigger read\n3) Inspect Modbus-Response and optional Debug on output 1\n\nDemo TCP port: 10505\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config."
+  },
+  {
+    "id": "40c5e5b221a041dc",
+    "type": "comment",
+    "z": "27714930a03e47b5",
+    "name": "NODE: Modbus-Getter (on-demand read)",
+    "info": "NODE: Modbus-Getter (on-demand read)\n\nFEATURES IN THIS FLOW\n- FC1\u20134 read only when an input message arrives\n- Address / quantity fixed in the node editor (not in msg.payload)\n- Useful for HTTP triggers, UI buttons, and event-driven flows\n\nWHAT THE CONFIG DOES\n- dataType / adr / quantity / unitid \u2192 same meaning as Modbus-Read\n- No rate field \u2192 timing comes from upstream inject / HTTP / etc.\n- emptyMsgOnFail \u2192 optional empty message on error\n- keepMsgProperties \u2192 keep topic and other msg fields through the read\n\nHOW TO RUN\n1) Deploy\n2) Click Trigger read\n3) Inspect Modbus-Response and optional Debug on output 1\n\nDemo TCP port: 10505\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config.",
+    "x": 200,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "890cfd6ff52c4996",
+    "type": "modbus-server",
+    "z": "27714930a03e47b5",
+    "name": "",
+    "logEnabled": false,
+    "hostname": "127.0.0.1",
+    "serverPort": "10505",
+    "responseDelay": 100,
+    "delayUnit": "ms",
+    "coilsBufferSize": 10000,
+    "holdingBufferSize": 10000,
+    "inputBufferSize": 10000,
+    "discreteBufferSize": 10000,
+    "showErrors": false,
+    "showStatusActivities": false,
+    "x": 120,
+    "y": 200,
+    "wires": [
+      [],
+      [],
+      [],
+      [],
+      []
+    ]
+  },
+  {
+    "id": "e4c7486c46b14064",
+    "type": "modbus-client",
+    "z": "27714930a03e47b5",
+    "name": "Getter Client",
+    "clienttype": "tcp",
+    "bufferCommands": true,
+    "stateLogEnabled": false,
+    "queueLogEnabled": false,
+    "failureLogEnabled": true,
+    "tcpHost": "127.0.0.1",
+    "tcpPort": "10505",
+    "tcpType": "DEFAULT",
+    "serialPort": "/dev/ttyUSB0",
+    "serialType": "RTU-BUFFERD",
+    "serialBaudrate": "9600",
+    "serialDatabits": "8",
+    "serialStopbits": "1",
+    "serialParity": "none",
+    "serialConnectionDelay": "100",
+    "serialAsciiResponseStartDelimiter": "0x3A",
+    "unit_id": "1",
+    "commandDelay": "1",
+    "clientTimeout": "1000",
+    "reconnectOnTimeout": true,
+    "reconnectTimeout": "2000",
+    "parallelUnitIdsAllowed": true
+  },
+  {
+    "id": "f981f1bc2fda4c85",
+    "type": "inject",
+    "z": "27714930a03e47b5",
+    "name": "Trigger read",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 160,
+    "y": 300,
+    "wires": [
+      [
+        "9c15915104e64a48"
+      ]
+    ]
+  },
+  {
+    "id": "9c15915104e64a48",
+    "type": "modbus-getter",
+    "z": "27714930a03e47b5",
+    "name": "Get HR",
+    "showStatusActivities": true,
+    "showErrors": true,
+    "showWarnings": true,
+    "logIOActivities": false,
+    "unitid": "1",
+    "dataType": "HoldingRegister",
+    "adr": "0",
+    "quantity": "4",
+    "server": "e4c7486c46b14064",
+    "useIOFile": false,
+    "ioFile": "",
+    "useIOForPayload": false,
+    "emptyMsgOnFail": false,
+    "keepMsgProperties": false,
+    "x": 380,
+    "y": 300,
+    "wires": [
+      [
+        "535dbc303d584c34"
+      ],
+      [
+        "c1a4a79b95fd486c"
+      ]
+    ]
+  },
+  {
+    "id": "c1a4a79b95fd486c",
+    "type": "modbus-response",
+    "z": "27714930a03e47b5",
+    "name": "",
+    "registerShowMax": 20,
+    "x": 600,
+    "y": 380,
+    "wires": []
+  },
+  {
+    "id": "535dbc303d584c34",
+    "type": "debug",
+    "z": "27714930a03e47b5",
+    "name": "SEE: Get HR",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "x": 600,
+    "y": 220,
+    "wires": []
+  }
+]

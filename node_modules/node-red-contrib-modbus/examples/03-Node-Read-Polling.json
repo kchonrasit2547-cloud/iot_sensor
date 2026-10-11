@@ -1,0 +1,191 @@
+[
+  {
+    "id": "2841c86060174570",
+    "type": "tab",
+    "label": "03 Modbus-Read",
+    "disabled": false,
+    "info": "NODE: Modbus-Read (interval polling)\n\nFEATURES IN THIS FLOW\n- Periodic FC1\u20134 reads without an inject input\n- Two readers: Holding Registers (FC3) and Coils (FC1)\n- Dedicated Modbus-Response per reader\n\nWHAT THE CONFIG DOES\n- dataType \u2192 Coil / DiscreteInput / HoldingRegister / InputRegister (FC1\u20134)\n- adr + quantity \u2192 start address and count (0-based)\n- rate + rateUnit \u2192 poll interval\n- delayOnStart \u2192 avoid racing the server right after deploy\n- unitid \u2192 override Unit ID for this node (blank = client default)\n- showStatusActivities / showErrors / showWarnings \u2192 UI + logging\n\nHOW TO RUN\n1) Deploy and wait ~1\u20132 s\n2) Compare FC3 vs FC1 Modbus-Response status panes\n3) Change quantity or rate and redeploy to see the effect\n\nDemo TCP port: 10504\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config."
+  },
+  {
+    "id": "0d7b9f85d99d468f",
+    "type": "comment",
+    "z": "2841c86060174570",
+    "name": "NODE: Modbus-Read (interval polling)",
+    "info": "NODE: Modbus-Read (interval polling)\n\nFEATURES IN THIS FLOW\n- Periodic FC1\u20134 reads without an inject input\n- Two readers: Holding Registers (FC3) and Coils (FC1)\n- Dedicated Modbus-Response per reader\n\nWHAT THE CONFIG DOES\n- dataType \u2192 Coil / DiscreteInput / HoldingRegister / InputRegister (FC1\u20134)\n- adr + quantity \u2192 start address and count (0-based)\n- rate + rateUnit \u2192 poll interval\n- delayOnStart \u2192 avoid racing the server right after deploy\n- unitid \u2192 override Unit ID for this node (blank = client default)\n- showStatusActivities / showErrors / showWarnings \u2192 UI + logging\n\nHOW TO RUN\n1) Deploy and wait ~1\u20132 s\n2) Compare FC3 vs FC1 Modbus-Response status panes\n3) Change quantity or rate and redeploy to see the effect\n\nDemo TCP port: 10504\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config.",
+    "x": 200,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "b609aa3b9d704f56",
+    "type": "modbus-server",
+    "z": "2841c86060174570",
+    "name": "",
+    "logEnabled": false,
+    "hostname": "127.0.0.1",
+    "serverPort": "10504",
+    "responseDelay": 100,
+    "delayUnit": "ms",
+    "coilsBufferSize": 10000,
+    "holdingBufferSize": 10000,
+    "inputBufferSize": 10000,
+    "discreteBufferSize": 10000,
+    "showErrors": false,
+    "showStatusActivities": false,
+    "x": 120,
+    "y": 200,
+    "wires": [
+      [],
+      [],
+      [],
+      [],
+      []
+    ]
+  },
+  {
+    "id": "3f6ae42943874541",
+    "type": "modbus-client",
+    "z": "2841c86060174570",
+    "name": "Read Client",
+    "clienttype": "tcp",
+    "bufferCommands": true,
+    "stateLogEnabled": false,
+    "queueLogEnabled": false,
+    "failureLogEnabled": true,
+    "tcpHost": "127.0.0.1",
+    "tcpPort": "10504",
+    "tcpType": "DEFAULT",
+    "serialPort": "/dev/ttyUSB0",
+    "serialType": "RTU-BUFFERD",
+    "serialBaudrate": "9600",
+    "serialDatabits": "8",
+    "serialStopbits": "1",
+    "serialParity": "none",
+    "serialConnectionDelay": "100",
+    "serialAsciiResponseStartDelimiter": "0x3A",
+    "unit_id": "1",
+    "commandDelay": "1",
+    "clientTimeout": "1000",
+    "reconnectOnTimeout": true,
+    "reconnectTimeout": "2000",
+    "parallelUnitIdsAllowed": true
+  },
+  {
+    "id": "6e79b816403c4a02",
+    "type": "modbus-read",
+    "z": "2841c86060174570",
+    "name": "FC3 Holding",
+    "topic": "",
+    "showStatusActivities": true,
+    "logIOActivities": false,
+    "showErrors": true,
+    "showWarnings": true,
+    "unitid": "1",
+    "dataType": "HoldingRegister",
+    "adr": "0",
+    "quantity": "4",
+    "rate": "1",
+    "rateUnit": "s",
+    "delayOnStart": true,
+    "startDelayTime": "1",
+    "server": "3f6ae42943874541",
+    "useIOFile": false,
+    "ioFile": "",
+    "useIOForPayload": false,
+    "emptyMsgOnFail": false,
+    "keepMsgProperties": false,
+    "x": 360,
+    "y": 260,
+    "wires": [
+      [
+        "6d8c6acb1cd540df"
+      ],
+      [
+        "668e00180c5d4eed"
+      ]
+    ]
+  },
+  {
+    "id": "2639362baaad4770",
+    "type": "modbus-read",
+    "z": "2841c86060174570",
+    "name": "FC1 Coils",
+    "topic": "",
+    "showStatusActivities": true,
+    "logIOActivities": false,
+    "showErrors": true,
+    "showWarnings": true,
+    "unitid": "1",
+    "dataType": "Coil",
+    "adr": "0",
+    "quantity": "8",
+    "rate": "2",
+    "rateUnit": "s",
+    "delayOnStart": true,
+    "startDelayTime": "1",
+    "server": "3f6ae42943874541",
+    "useIOFile": false,
+    "ioFile": "",
+    "useIOForPayload": false,
+    "emptyMsgOnFail": false,
+    "keepMsgProperties": false,
+    "x": 360,
+    "y": 380,
+    "wires": [
+      [
+        "be842905c7f04c07"
+      ],
+      [
+        "54c8735a533e47e5"
+      ]
+    ]
+  },
+  {
+    "id": "668e00180c5d4eed",
+    "type": "modbus-response",
+    "z": "2841c86060174570",
+    "name": "FC3 response",
+    "registerShowMax": 20,
+    "x": 600,
+    "y": 340,
+    "wires": []
+  },
+  {
+    "id": "54c8735a533e47e5",
+    "type": "modbus-response",
+    "z": "2841c86060174570",
+    "name": "FC1 response",
+    "registerShowMax": 20,
+    "x": 600,
+    "y": 460,
+    "wires": []
+  },
+  {
+    "id": "6d8c6acb1cd540df",
+    "type": "debug",
+    "z": "2841c86060174570",
+    "name": "SEE: FC3 Holding",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "x": 600,
+    "y": 180,
+    "wires": []
+  },
+  {
+    "id": "be842905c7f04c07",
+    "type": "debug",
+    "z": "2841c86060174570",
+    "name": "SEE: FC1 Coils",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "x": 600,
+    "y": 300,
+    "wires": []
+  }
+]

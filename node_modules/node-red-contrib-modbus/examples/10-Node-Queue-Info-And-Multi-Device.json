@@ -1,0 +1,204 @@
+[
+  {
+    "id": "d0faaeed04ad4a5e",
+    "type": "tab",
+    "label": "10 Queue-Info",
+    "disabled": false,
+    "info": "NODE: Modbus-Queue-Info (+ burst reads)\n\nFEATURES IN THIS FLOW\n- Shows command-queue depth for a Modbus-Client\n- Burst Flex-Getter reads to fill the queue visibly\n- Threshold levels for low / high queue warnings\n\nWHAT THE CONFIG DOES\n- Client bufferCommands (Queue Commands) \u2192 must be enabled for queuing\n- queueReadIntervalTime \u2192 how often Queue-Info samples depth\n- lowLowLevel / lowLevel / highLevel / highHighLevel \u2192 status thresholds\n- updateOnAllQueueChanges \u2192 emit when depth changes\n- errorOnHighLevel \u2192 raise node error when high threshold hit\n\nHOW TO RUN\n1) Deploy\n2) Click Burst reads (3 Flex-Getter FC3 requests)\n3) Watch Queue-Info status / output while the queue drains\n\nDemo TCP port: 10512\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config."
+  },
+  {
+    "id": "19965b35cd4a4f01",
+    "type": "comment",
+    "z": "d0faaeed04ad4a5e",
+    "name": "NODE: Modbus-Queue-Info (+ burst reads)",
+    "info": "NODE: Modbus-Queue-Info (+ burst reads)\n\nFEATURES IN THIS FLOW\n- Shows command-queue depth for a Modbus-Client\n- Burst Flex-Getter reads to fill the queue visibly\n- Threshold levels for low / high queue warnings\n\nWHAT THE CONFIG DOES\n- Client bufferCommands (Queue Commands) \u2192 must be enabled for queuing\n- queueReadIntervalTime \u2192 how often Queue-Info samples depth\n- lowLowLevel / lowLevel / highLevel / highHighLevel \u2192 status thresholds\n- updateOnAllQueueChanges \u2192 emit when depth changes\n- errorOnHighLevel \u2192 raise node error when high threshold hit\n\nHOW TO RUN\n1) Deploy\n2) Click Burst reads (3 Flex-Getter FC3 requests)\n3) Watch Queue-Info status / output while the queue drains\n\nDemo TCP port: 10512\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config.",
+    "x": 200,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "f9f672f45c80402e",
+    "type": "modbus-server",
+    "z": "d0faaeed04ad4a5e",
+    "name": "",
+    "logEnabled": false,
+    "hostname": "127.0.0.1",
+    "serverPort": "10512",
+    "responseDelay": 100,
+    "delayUnit": "ms",
+    "coilsBufferSize": 10000,
+    "holdingBufferSize": 10000,
+    "inputBufferSize": 10000,
+    "discreteBufferSize": 10000,
+    "showErrors": false,
+    "showStatusActivities": false,
+    "x": 120,
+    "y": 200,
+    "wires": [
+      [],
+      [],
+      [],
+      [],
+      []
+    ]
+  },
+  {
+    "id": "6848b7b427b84837",
+    "type": "modbus-client",
+    "z": "d0faaeed04ad4a5e",
+    "name": "Queue Client",
+    "clienttype": "tcp",
+    "bufferCommands": true,
+    "stateLogEnabled": false,
+    "queueLogEnabled": false,
+    "failureLogEnabled": true,
+    "tcpHost": "127.0.0.1",
+    "tcpPort": "10512",
+    "tcpType": "DEFAULT",
+    "serialPort": "/dev/ttyUSB0",
+    "serialType": "RTU-BUFFERD",
+    "serialBaudrate": "9600",
+    "serialDatabits": "8",
+    "serialStopbits": "1",
+    "serialParity": "none",
+    "serialConnectionDelay": "100",
+    "serialAsciiResponseStartDelimiter": "0x3A",
+    "unit_id": "1",
+    "commandDelay": "1",
+    "clientTimeout": "1000",
+    "reconnectOnTimeout": true,
+    "reconnectTimeout": "2000",
+    "parallelUnitIdsAllowed": true
+  },
+  {
+    "id": "f611525d393a42bc",
+    "type": "inject",
+    "z": "d0faaeed04ad4a5e",
+    "name": "Burst reads",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 160,
+    "y": 300,
+    "wires": [
+      [
+        "f1698a06c5874eea"
+      ]
+    ]
+  },
+  {
+    "id": "f1698a06c5874eea",
+    "type": "function",
+    "z": "d0faaeed04ad4a5e",
+    "name": "3 reads",
+    "func": "const out = [];\nfor (let i = 0; i < 3; i++) {\n  out.push({ payload: { fc: 3, unitid: 1, address: 0, quantity: 2 } });\n}\nreturn [out];\n",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 360,
+    "y": 300,
+    "wires": [
+      [
+        "a33e63a2c0114d1f"
+      ]
+    ]
+  },
+  {
+    "id": "a33e63a2c0114d1f",
+    "type": "modbus-flex-getter",
+    "z": "d0faaeed04ad4a5e",
+    "name": "",
+    "showStatusActivities": true,
+    "showErrors": true,
+    "showWarnings": true,
+    "logIOActivities": false,
+    "server": "6848b7b427b84837",
+    "useIOFile": false,
+    "ioFile": "",
+    "useIOForPayload": false,
+    "emptyMsgOnFail": false,
+    "keepMsgProperties": true,
+    "delayOnStart": false,
+    "startDelayTime": "",
+    "x": 580,
+    "y": 300,
+    "wires": [
+      [
+        "ef44edb50fea4123"
+      ],
+      [
+        "15bf96103161463f"
+      ]
+    ]
+  },
+  {
+    "id": "b70938f5c12343bc",
+    "type": "modbus-queue-info",
+    "z": "d0faaeed04ad4a5e",
+    "name": "Queue",
+    "topic": "",
+    "unitid": "1",
+    "queueReadIntervalTime": "500",
+    "lowLowLevel": 1,
+    "lowLevel": 5,
+    "highLevel": 20,
+    "highHighLevel": 50,
+    "server": "6848b7b427b84837",
+    "errorOnHighLevel": false,
+    "showStatusActivities": true,
+    "updateOnAllQueueChanges": true,
+    "updateOnAllUnitQueues": false,
+    "x": 560,
+    "y": 400,
+    "wires": [
+      [
+        "8b3356c0d17542eb"
+      ]
+    ]
+  },
+  {
+    "id": "15bf96103161463f",
+    "type": "modbus-response",
+    "z": "d0faaeed04ad4a5e",
+    "name": "",
+    "registerShowMax": 20,
+    "x": 800,
+    "y": 380,
+    "wires": []
+  },
+  {
+    "id": "ef44edb50fea4123",
+    "type": "debug",
+    "z": "d0faaeed04ad4a5e",
+    "name": "SEE: modbus-flex-getter",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "x": 800,
+    "y": 220,
+    "wires": []
+  },
+  {
+    "id": "8b3356c0d17542eb",
+    "type": "debug",
+    "z": "d0faaeed04ad4a5e",
+    "name": "SEE: Queue",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "x": 840,
+    "y": 449,
+    "wires": []
+  }
+]

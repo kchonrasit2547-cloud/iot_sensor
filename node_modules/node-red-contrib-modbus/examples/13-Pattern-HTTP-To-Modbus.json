@@ -1,0 +1,172 @@
+[
+  {
+    "id": "9c8e743a8fc74773",
+    "type": "tab",
+    "label": "13 HTTP \u2192 Modbus",
+    "disabled": false,
+    "info": "PATTERN: HTTP \u2192 Modbus\n\nFEATURES IN THIS FLOW\n- HTTP GET endpoint triggers a Modbus-Getter\n- JSON body returned via http response\n- Pattern for dashboards / external systems without Modbus stack\n\nWHAT THE CONFIG DOES\n- http in url /modbus/learn/hr \u2192 path clients call\n- Getter dataType/adr/quantity \u2192 which registers to read\n- keepMsgProperties=true \u2192 HTTP request context can survive if needed\n- Function builds { data, topic } JSON body + statusCode 200\n\nHOW TO RUN\n1) Deploy\n2) GET http://<node-red-host>:1880/modbus/learn/hr\n3) Expect JSON with Holding Register data\n\nDemo TCP port: 10515\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config."
+  },
+  {
+    "id": "e17ebba031f84478",
+    "type": "comment",
+    "z": "9c8e743a8fc74773",
+    "name": "PATTERN: HTTP \u2192 Modbus",
+    "info": "PATTERN: HTTP \u2192 Modbus\n\nFEATURES IN THIS FLOW\n- HTTP GET endpoint triggers a Modbus-Getter\n- JSON body returned via http response\n- Pattern for dashboards / external systems without Modbus stack\n\nWHAT THE CONFIG DOES\n- http in url /modbus/learn/hr \u2192 path clients call\n- Getter dataType/adr/quantity \u2192 which registers to read\n- keepMsgProperties=true \u2192 HTTP request context can survive if needed\n- Function builds { data, topic } JSON body + statusCode 200\n\nHOW TO RUN\n1) Deploy\n2) GET http://<node-red-host>:1880/modbus/learn/hr\n3) Expect JSON with Holding Register data\n\nDemo TCP port: 10515\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config.",
+    "x": 200,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "ab6ca077367a46fe",
+    "type": "modbus-server",
+    "z": "9c8e743a8fc74773",
+    "name": "",
+    "logEnabled": false,
+    "hostname": "127.0.0.1",
+    "serverPort": "10515",
+    "responseDelay": 100,
+    "delayUnit": "ms",
+    "coilsBufferSize": 10000,
+    "holdingBufferSize": 10000,
+    "inputBufferSize": 10000,
+    "discreteBufferSize": 10000,
+    "showErrors": false,
+    "showStatusActivities": false,
+    "x": 140,
+    "y": 180,
+    "wires": [
+      [],
+      [],
+      [],
+      [],
+      []
+    ]
+  },
+  {
+    "id": "e4d42fd62acf4730",
+    "type": "modbus-client",
+    "z": "9c8e743a8fc74773",
+    "name": "HTTP Client",
+    "clienttype": "tcp",
+    "bufferCommands": true,
+    "stateLogEnabled": false,
+    "queueLogEnabled": false,
+    "failureLogEnabled": true,
+    "tcpHost": "127.0.0.1",
+    "tcpPort": "10515",
+    "tcpType": "DEFAULT",
+    "serialPort": "/dev/ttyUSB0",
+    "serialType": "RTU-BUFFERD",
+    "serialBaudrate": "9600",
+    "serialDatabits": "8",
+    "serialStopbits": "1",
+    "serialParity": "none",
+    "serialConnectionDelay": "100",
+    "serialAsciiResponseStartDelimiter": "0x3A",
+    "unit_id": "1",
+    "commandDelay": "1",
+    "clientTimeout": "1000",
+    "reconnectOnTimeout": true,
+    "reconnectTimeout": "2000",
+    "parallelUnitIdsAllowed": true
+  },
+  {
+    "id": "c77d581657a14449",
+    "type": "http in",
+    "z": "9c8e743a8fc74773",
+    "name": "GET /modbus/learn/hr",
+    "url": "/modbus/learn/hr",
+    "method": "get",
+    "upload": false,
+    "swaggerDoc": "",
+    "x": 180,
+    "y": 320,
+    "wires": [
+      [
+        "52b52af9c75d4b72"
+      ]
+    ]
+  },
+  {
+    "id": "52b52af9c75d4b72",
+    "type": "modbus-getter",
+    "z": "9c8e743a8fc74773",
+    "name": "HR via HTTP",
+    "showStatusActivities": true,
+    "showErrors": true,
+    "showWarnings": true,
+    "logIOActivities": false,
+    "unitid": "1",
+    "dataType": "HoldingRegister",
+    "adr": "0",
+    "quantity": "4",
+    "server": "e4d42fd62acf4730",
+    "useIOFile": false,
+    "ioFile": "",
+    "useIOForPayload": false,
+    "emptyMsgOnFail": false,
+    "keepMsgProperties": true,
+    "x": 420,
+    "y": 320,
+    "wires": [
+      [
+        "fc002ec8c29e497f",
+        "c8cf71f5a0484872"
+      ],
+      [
+        "3764bd4ada0a452f"
+      ]
+    ]
+  },
+  {
+    "id": "fc002ec8c29e497f",
+    "type": "function",
+    "z": "9c8e743a8fc74773",
+    "name": "HTTP body",
+    "func": "msg.payload = { data: msg.payload, topic: msg.topic };\nmsg.statusCode = 200;\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 680,
+    "y": 280,
+    "wires": [
+      [
+        "c4cbcafa569a4e76"
+      ]
+    ]
+  },
+  {
+    "id": "c4cbcafa569a4e76",
+    "type": "http response",
+    "z": "9c8e743a8fc74773",
+    "name": "HTTP 200 JSON",
+    "statusCode": "",
+    "headers": {},
+    "x": 920,
+    "y": 280,
+    "wires": []
+  },
+  {
+    "id": "3764bd4ada0a452f",
+    "type": "modbus-response",
+    "z": "9c8e743a8fc74773",
+    "name": "Getter response",
+    "registerShowMax": 20,
+    "x": 680,
+    "y": 400,
+    "wires": []
+  },
+  {
+    "id": "c8cf71f5a0484872",
+    "type": "debug",
+    "z": "9c8e743a8fc74773",
+    "name": "SEE: HR via HTTP",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "x": 680,
+    "y": 240,
+    "wires": []
+  }
+]

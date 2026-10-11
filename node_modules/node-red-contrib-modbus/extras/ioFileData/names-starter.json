@@ -1,0 +1,12 @@
+{"name":"iTemperature","valueAddress":"%IW0"}
+{"name":"iSetpoint","valueAddress":"%IW1"}
+{"name":"iCounter","valueAddress":"%IW2"}
+{"name":"wStatusWord","valueAddress":"%IW3"}
+{"name":"iSpare4","valueAddress":"%IW4"}
+{"name":"iSpare5","valueAddress":"%IW5"}
+{"name":"iSpare6","valueAddress":"%IW6"}
+{"name":"iSpare7","valueAddress":"%IW7"}
+{"name":"iSpare8","valueAddress":"%IW8"}
+{"name":"iSpare9","valueAddress":"%IW9"}
+{"name":"iSpare10","valueAddress":"%IW10"}
+{"name":"iSpare11","valueAddress":"%IW11"}

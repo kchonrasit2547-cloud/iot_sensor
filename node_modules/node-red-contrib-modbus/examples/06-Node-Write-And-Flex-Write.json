@@ -1,0 +1,233 @@
+[
+  {
+    "id": "ea89253899964d7f",
+    "type": "tab",
+    "label": "06 Write / Flex-Write",
+    "disabled": false,
+    "info": "NODE: Modbus-Write and Modbus-Flex-Write\n\nFEATURES IN THIS FLOW\n- Modbus-Write: fixed FC in editor; msg.payload is the value\n- Modbus-Flex-Write: FC/address/quantity/value all from msg.payload\n- Separate Modbus-Response per writer\n\nWHAT THE CONFIG DOES\n- Write dataType HoldingRegister + quantity 1 \u2192 FC6 single register\n- Write Coil / multiple \u2192 FC5 / FC15 (payload bool or array)\n- Flex-Write payload: { value, fc, unitid, address, quantity }\n- FC16 with quantity 1 needs value: [n] (array), not a bare number\n- emptyMsgOnFail / keepMsgProperties \u2192 error and correlation behaviour\n\nHOW TO RUN\n1) Deploy\n2) Click Write 7 (FC6) \u2192 single Holding Register 0 = 7\n3) Click Flex FC16 \u2192 writes [10,20,30] starting at address 0\n4) Read back with example 03/05 or watch Response status\n\nDemo TCP port: 10507\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config."
+  },
+  {
+    "id": "67616c497afb4527",
+    "type": "comment",
+    "z": "ea89253899964d7f",
+    "name": "NODE: Modbus-Write and Modbus-Flex-Write",
+    "info": "NODE: Modbus-Write and Modbus-Flex-Write\n\nFEATURES IN THIS FLOW\n- Modbus-Write: fixed FC in editor; msg.payload is the value\n- Modbus-Flex-Write: FC/address/quantity/value all from msg.payload\n- Separate Modbus-Response per writer\n\nWHAT THE CONFIG DOES\n- Write dataType HoldingRegister + quantity 1 \u2192 FC6 single register\n- Write Coil / multiple \u2192 FC5 / FC15 (payload bool or array)\n- Flex-Write payload: { value, fc, unitid, address, quantity }\n- FC16 with quantity 1 needs value: [n] (array), not a bare number\n- emptyMsgOnFail / keepMsgProperties \u2192 error and correlation behaviour\n\nHOW TO RUN\n1) Deploy\n2) Click Write 7 (FC6) \u2192 single Holding Register 0 = 7\n3) Click Flex FC16 \u2192 writes [10,20,30] starting at address 0\n4) Read back with example 03/05 or watch Response status\n\nDemo TCP port: 10507\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config.",
+    "x": 200,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "7ff07f1e0158433f",
+    "type": "modbus-server",
+    "z": "ea89253899964d7f",
+    "name": "",
+    "logEnabled": false,
+    "hostname": "127.0.0.1",
+    "serverPort": "10507",
+    "responseDelay": 100,
+    "delayUnit": "ms",
+    "coilsBufferSize": 10000,
+    "holdingBufferSize": 10000,
+    "inputBufferSize": 10000,
+    "discreteBufferSize": 10000,
+    "showErrors": false,
+    "showStatusActivities": false,
+    "x": 120,
+    "y": 200,
+    "wires": [
+      [],
+      [],
+      [],
+      [],
+      []
+    ]
+  },
+  {
+    "id": "f212152e4e1844b5",
+    "type": "modbus-client",
+    "z": "ea89253899964d7f",
+    "name": "Write Client",
+    "clienttype": "tcp",
+    "bufferCommands": true,
+    "stateLogEnabled": false,
+    "queueLogEnabled": false,
+    "failureLogEnabled": true,
+    "tcpHost": "127.0.0.1",
+    "tcpPort": "10507",
+    "tcpType": "DEFAULT",
+    "serialPort": "/dev/ttyUSB0",
+    "serialType": "RTU-BUFFERD",
+    "serialBaudrate": "9600",
+    "serialDatabits": "8",
+    "serialStopbits": "1",
+    "serialParity": "none",
+    "serialConnectionDelay": "100",
+    "serialAsciiResponseStartDelimiter": "0x3A",
+    "unit_id": "1",
+    "commandDelay": "1",
+    "clientTimeout": "1000",
+    "reconnectOnTimeout": true,
+    "reconnectTimeout": "2000",
+    "parallelUnitIdsAllowed": true
+  },
+  {
+    "id": "868b2171f85542ec",
+    "type": "inject",
+    "z": "ea89253899964d7f",
+    "name": "Write 7 (FC6)",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "topic": "",
+    "payload": "7",
+    "payloadType": "num",
+    "x": 160,
+    "y": 280,
+    "wires": [
+      [
+        "51122c3b12aa4511"
+      ]
+    ]
+  },
+  {
+    "id": "51122c3b12aa4511",
+    "type": "modbus-write",
+    "z": "ea89253899964d7f",
+    "name": "FC6",
+    "showStatusActivities": true,
+    "showErrors": true,
+    "showWarnings": true,
+    "unitid": "1",
+    "dataType": "HoldingRegister",
+    "adr": "0",
+    "quantity": "1",
+    "server": "f212152e4e1844b5",
+    "emptyMsgOnFail": false,
+    "keepMsgProperties": false,
+    "x": 380,
+    "y": 280,
+    "wires": [
+      [
+        "86377816ef7e4cdc"
+      ],
+      [
+        "ffde29eb88ce4b8d"
+      ]
+    ]
+  },
+  {
+    "id": "560b000e60e04a51",
+    "type": "inject",
+    "z": "ea89253899964d7f",
+    "name": "Flex FC16",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 150,
+    "y": 400,
+    "wires": [
+      [
+        "6e63eafe7d334dc2"
+      ]
+    ]
+  },
+  {
+    "id": "6e63eafe7d334dc2",
+    "type": "function",
+    "z": "ea89253899964d7f",
+    "name": "Build FC16",
+    "func": "msg.payload = { value: [10, 20, 30], fc: 16, unitid: 1, address: 0, quantity: 3 };\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 360,
+    "y": 400,
+    "wires": [
+      [
+        "34278cb39a864a75"
+      ]
+    ]
+  },
+  {
+    "id": "34278cb39a864a75",
+    "type": "modbus-flex-write",
+    "z": "ea89253899964d7f",
+    "name": "",
+    "showStatusActivities": true,
+    "showErrors": true,
+    "showWarnings": true,
+    "server": "f212152e4e1844b5",
+    "emptyMsgOnFail": false,
+    "keepMsgProperties": true,
+    "x": 580,
+    "y": 400,
+    "wires": [
+      [
+        "f546251768ce4539"
+      ],
+      [
+        "8418b22518c04e5c"
+      ]
+    ]
+  },
+  {
+    "id": "ffde29eb88ce4b8d",
+    "type": "modbus-response",
+    "z": "ea89253899964d7f",
+    "name": "FC6 response",
+    "registerShowMax": 20,
+    "x": 640,
+    "y": 360,
+    "wires": []
+  },
+  {
+    "id": "8418b22518c04e5c",
+    "type": "modbus-response",
+    "z": "ea89253899964d7f",
+    "name": "FC16 response",
+    "registerShowMax": 20,
+    "x": 800,
+    "y": 480,
+    "wires": []
+  },
+  {
+    "id": "86377816ef7e4cdc",
+    "type": "debug",
+    "z": "ea89253899964d7f",
+    "name": "SEE: FC6",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "x": 640,
+    "y": 200,
+    "wires": []
+  },
+  {
+    "id": "f546251768ce4539",
+    "type": "debug",
+    "z": "ea89253899964d7f",
+    "name": "SEE: modbus-flex-write",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "x": 800,
+    "y": 320,
+    "wires": []
+  }
+]

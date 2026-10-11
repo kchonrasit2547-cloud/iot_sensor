@@ -1,0 +1,258 @@
+[
+  {
+    "id": "98f2926c35304635",
+    "type": "tab",
+    "label": "16 Shared-Client #423",
+    "disabled": false,
+    "info": "BUGFIX DEMO: shared Modbus-Client \u2014 disable one Flex-Getter (#423)\n\nFEATURES IN THIS FLOW\n- Two Modbus-Flex-Getter nodes share ONE Modbus-Client\n- Keeper Flex-Getter keeps polling while you disable the other\n- Shows fix for GitHub #423 / #487 (disable one must not STOP siblings)\n\nWHAT THE CONFIG DOES\n- Both Flex-Getters \u2192 same Client (tcpPort 10517)\n- showStatusActivities=true \u2192 you see connected / closed on the node\n- Keeper inject repeats every 2 s \u2192 continuous SEE: debug traffic\n- DISABLE ME inject is manual only (for optional compare)\n\nHOW TO RUN\n1) Deploy \u2014 wait until both Flex-Getters look active/connected\n2) Watch Debug SEE: KEEP \u2014 payload arrays every ~2 s\n3) Select node \u00abDISABLE ME (#423)\u00bb \u2192 Disable \u2192 Deploy (should finish quickly, not ~15 s)\n4) PASS: SEE: KEEP still receives data; KEEP node stays active (not closed)\n5) FAIL (old bug): KEEP goes closed / Debug stops when DISABLE ME is disabled\n6) Optional: re-enable DISABLE ME, or delete it \u2014 KEEP must still run\n\nDemo TCP port: 10517\n\nRelated: docs/p4nr/capabilities/shared-client-deregister-isolation.md\nConsumers on a *different* Client are unrelated \u2014 this tab uses one shared client on purpose.\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config."
+  },
+  {
+    "id": "3ab9fd5638364d28",
+    "type": "comment",
+    "z": "98f2926c35304635",
+    "name": "BUGFIX DEMO: shared Modbus-Client \u2014 disable one Flex-Getter ",
+    "info": "BUGFIX DEMO: shared Modbus-Client \u2014 disable one Flex-Getter (#423)\n\nFEATURES IN THIS FLOW\n- Two Modbus-Flex-Getter nodes share ONE Modbus-Client\n- Keeper Flex-Getter keeps polling while you disable the other\n- Shows fix for GitHub #423 / #487 (disable one must not STOP siblings)\n\nWHAT THE CONFIG DOES\n- Both Flex-Getters \u2192 same Client (tcpPort 10517)\n- showStatusActivities=true \u2192 you see connected / closed on the node\n- Keeper inject repeats every 2 s \u2192 continuous SEE: debug traffic\n- DISABLE ME inject is manual only (for optional compare)\n\nHOW TO RUN\n1) Deploy \u2014 wait until both Flex-Getters look active/connected\n2) Watch Debug SEE: KEEP \u2014 payload arrays every ~2 s\n3) Select node \u00abDISABLE ME (#423)\u00bb \u2192 Disable \u2192 Deploy (should finish quickly, not ~15 s)\n4) PASS: SEE: KEEP still receives data; KEEP node stays active (not closed)\n5) FAIL (old bug): KEEP goes closed / Debug stops when DISABLE ME is disabled\n6) Optional: re-enable DISABLE ME, or delete it \u2014 KEEP must still run\n\nDemo TCP port: 10517\n\nRelated: docs/p4nr/capabilities/shared-client-deregister-isolation.md\nConsumers on a *different* Client are unrelated \u2014 this tab uses one shared client on purpose.\n\nConfig nodes are flow-scoped: delete this tab to remove client/IO config.",
+    "x": 200,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "b0d038cf63b546b3",
+    "type": "modbus-server",
+    "z": "98f2926c35304635",
+    "name": "Shared-Client Demo Server",
+    "logEnabled": false,
+    "hostname": "127.0.0.1",
+    "serverPort": "10517",
+    "responseDelay": 100,
+    "delayUnit": "ms",
+    "coilsBufferSize": 10000,
+    "holdingBufferSize": 10000,
+    "inputBufferSize": 10000,
+    "discreteBufferSize": 10000,
+    "showErrors": false,
+    "showStatusActivities": false,
+    "x": 140,
+    "y": 200,
+    "wires": [
+      [],
+      [],
+      [],
+      [],
+      []
+    ]
+  },
+  {
+    "id": "66d38cf9e0204762",
+    "type": "modbus-client",
+    "z": "98f2926c35304635",
+    "name": "SHARED Client (both getters)",
+    "clienttype": "tcp",
+    "bufferCommands": true,
+    "stateLogEnabled": false,
+    "queueLogEnabled": false,
+    "failureLogEnabled": true,
+    "tcpHost": "127.0.0.1",
+    "tcpPort": "10517",
+    "tcpType": "DEFAULT",
+    "serialPort": "/dev/ttyUSB0",
+    "serialType": "RTU-BUFFERD",
+    "serialBaudrate": "9600",
+    "serialDatabits": "8",
+    "serialStopbits": "1",
+    "serialParity": "none",
+    "serialConnectionDelay": "100",
+    "serialAsciiResponseStartDelimiter": "0x3A",
+    "unit_id": "1",
+    "commandDelay": "1",
+    "clientTimeout": "1000",
+    "reconnectOnTimeout": true,
+    "reconnectTimeout": "2000",
+    "parallelUnitIdsAllowed": true
+  },
+  {
+    "id": "64028107bd9a48f8",
+    "type": "inject",
+    "z": "98f2926c35304635",
+    "name": "KEEP poll every 2s",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "2",
+    "crontab": "",
+    "once": true,
+    "onceDelay": 1.5,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 180,
+    "y": 320,
+    "wires": [
+      [
+        "1e9856a169a34820"
+      ]
+    ]
+  },
+  {
+    "id": "1e9856a169a34820",
+    "type": "function",
+    "z": "98f2926c35304635",
+    "name": "FC3 qty 2",
+    "func": "msg.payload = { fc: 3, unitid: 1, address: 0, quantity: 2 };\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 400,
+    "y": 320,
+    "wires": [
+      [
+        "c8b0aecd6a314926"
+      ]
+    ]
+  },
+  {
+    "id": "c8b0aecd6a314926",
+    "type": "modbus-flex-getter",
+    "z": "98f2926c35304635",
+    "name": "KEEP \u2014 leave enabled",
+    "showStatusActivities": true,
+    "showErrors": true,
+    "showWarnings": true,
+    "logIOActivities": false,
+    "server": "66d38cf9e0204762",
+    "useIOFile": false,
+    "ioFile": "",
+    "useIOForPayload": false,
+    "emptyMsgOnFail": false,
+    "keepMsgProperties": true,
+    "delayOnStart": true,
+    "startDelayTime": "1",
+    "x": 640,
+    "y": 320,
+    "wires": [
+      [
+        "5def1a7d94204e28"
+      ],
+      [
+        "5ab26a242d714a15"
+      ]
+    ]
+  },
+  {
+    "id": "5ab26a242d714a15",
+    "type": "modbus-response",
+    "z": "98f2926c35304635",
+    "name": "KEEP response",
+    "registerShowMax": 20,
+    "x": 920,
+    "y": 400,
+    "wires": []
+  },
+  {
+    "id": "4532469640d1474f",
+    "type": "inject",
+    "z": "98f2926c35304635",
+    "name": "Optional read (DISABLE ME path)",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 220,
+    "y": 500,
+    "wires": [
+      [
+        "200b334ea89e4f06"
+      ]
+    ]
+  },
+  {
+    "id": "200b334ea89e4f06",
+    "type": "function",
+    "z": "98f2926c35304635",
+    "name": "FC3 qty 4",
+    "func": "msg.payload = { fc: 3, unitid: 1, address: 0, quantity: 4 };\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 440,
+    "y": 500,
+    "wires": [
+      [
+        "2c6487c19acc4265"
+      ]
+    ]
+  },
+  {
+    "id": "2c6487c19acc4265",
+    "type": "modbus-flex-getter",
+    "z": "98f2926c35304635",
+    "name": "DISABLE ME (#423)",
+    "showStatusActivities": true,
+    "showErrors": true,
+    "showWarnings": true,
+    "logIOActivities": false,
+    "server": "66d38cf9e0204762",
+    "useIOFile": false,
+    "ioFile": "",
+    "useIOForPayload": false,
+    "emptyMsgOnFail": false,
+    "keepMsgProperties": true,
+    "delayOnStart": true,
+    "startDelayTime": "1",
+    "x": 680,
+    "y": 500,
+    "wires": [
+      [
+        "6e02bc6de0bf41fa"
+      ],
+      [
+        "95e2aaaebf9f4890"
+      ]
+    ]
+  },
+  {
+    "id": "95e2aaaebf9f4890",
+    "type": "modbus-response",
+    "z": "98f2926c35304635",
+    "name": "DISABLE ME response",
+    "registerShowMax": 20,
+    "x": 960,
+    "y": 580,
+    "wires": []
+  },
+  {
+    "id": "5def1a7d94204e28",
+    "type": "debug",
+    "z": "98f2926c35304635",
+    "name": "SEE: KEEP \u2014 leave enabled",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "x": 920,
+    "y": 240,
+    "wires": []
+  },
+  {
+    "id": "6e02bc6de0bf41fa",
+    "type": "debug",
+    "z": "98f2926c35304635",
+    "name": "SEE: DISABLE ME (#423)",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "x": 960,
+    "y": 469,
+    "wires": []
+  }
+]
