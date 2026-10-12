@@ -18,7 +18,7 @@
                     "v": 4,
                     "tabs": [],
                     "primary": {
-                        "width": 0,
+                        "width": 425,
                         "top": {
                             "tabs": [
                                 "info",
@@ -34,7 +34,7 @@
                             "tabs": [
                                 "debug"
                             ],
-                            "hidden": true,
+                            "hidden": false,
                             "active": "debug"
                         }
                     },
@@ -42,8 +42,8 @@
                         "width": 210,
                         "top": {
                             "tabs": [
-                                "explorer",
-                                "palette"
+                                "palette",
+                                "explorer"
                             ],
                             "height": 312.8,
                             "hidden": false,
@@ -61,7 +61,7 @@
                 "welcome": "5.0.7"
             }
         },
-        "menu-menu-item-right-sidebar": false,
+        "menu-menu-item-right-sidebar": true,
         "menu-menu-item-left-sidebar": true
     }
 }

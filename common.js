@@ -6,7 +6,9 @@
 // =========================================================================
 // 1. Shared State & Configurations
 // =========================================================================
-let ws = null;
+// เปลี่ยนจาก: let ws;  หรือ  const ws;
+// เป็น:
+var ws = window.ws || null;
 let reconnectTimer = null;
 
 // Get or initialize WebSocket URL
@@ -247,9 +249,8 @@ function handleIncomingTelemetry(data) {
   // ตรวจสอบการแจ้งเตือน
   const th = getThresholds();
   let isAlert = false;
-  if (temp !== null && temp > th.tempMax) {
-    isAlert = true;
-    showToast('danger', '🔥 อุณหภูมิสูงเกินเกณฑ์!', `ตรวจพบอุณหภูมิ ${temp.toFixed(1)} °C`);
+  if (temp < 20) {
+    showToast('warning', 'แจ้งเตือนอุณหภูมิ', 'อุณหภูมิสูงกว่ากำหนด');
   }
 
   const year = now.getFullYear();
@@ -327,7 +328,7 @@ async function fetchSensorLogs() {
 // ดึงข้อมูลไฟฟ้า 3 เฟส (power_db -> pzem_3phase_logs)
 async function fetchPowerLogs() {
   try {
-    const response = await fetch('/api/energy-data');
+    const response = await fetch("http://localhost:1880/api/energy-history");
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
 

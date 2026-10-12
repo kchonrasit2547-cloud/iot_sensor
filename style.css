@@ -1247,6 +1247,7 @@
         transform: translateX(120%);
         opacity: 0;
       }
+
       to {
         transform: translateX(0);
         opacity: 1;
@@ -1258,6 +1259,7 @@
         transform: translateX(0);
         opacity: 1;
       }
+
       to {
         transform: translateX(120%);
         opacity: 0;
@@ -1268,6 +1270,7 @@
       from {
         width: 100%;
       }
+
       to {
         width: 0%;
       }
@@ -1527,4 +1530,299 @@
       font-size: 11px;
       color: var(--text-muted);
       margin-top: 2px;
+    }
+
+    /* ซ่อนสัญลักษณ์ลูกศรและแถบเลื่อนใน Sidebar */
+    .sidebar,
+    .nav-list {
+      overflow: hidden !important;
+      /* ป้องกันไม่ให้เกิดแถบเลื่อนหรือสัญลักษณ์ปรับขนาด */
+      resize: none !important;
+      /* ปิดการปรับขนาดกรอบ */
+      -ms-overflow-style: none;
+      /* IE and Edge */
+      scrollbar-width: none;
+      /* Firefox */
+    }
+
+    /* ซ่อน Scrollbar สำหรับ Chrome, Safari และ Edge */
+    .sidebar::-webkit-scrollbar,
+    .nav-list::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+
+    /* =========================================================================
+   Fix Toast Notification Background & Overlay Stack (ซ่อมป๊อปอัพแจ้งเตือน)
+   ========================================================================= */
+    .toast-container {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 99999 !important;
+      /* ดันให้อยู่ชั้นบนสุดเหนือทุกองค์ประกอบ */
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 380px;
+      width: calc(100% - 48px);
+      pointer-events: none;
+    }
+
+    .toast {
+      pointer-events: auto;
+      background-color: #ffffff !important;
+      /* กำหนดสีพื้นหลังขาวทึบแสง */
+      color: #0f172a !important;
+      padding: 14px 18px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      /* เพิ่มเงาหนาแน่นเพื่อให้กล่องการแจ้งเตือนลอยแยกออกจากพื้นหลังชัดเจน */
+      box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.18), 0 4px 10px -2px rgba(15, 23, 42, 0.08);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+      animation: slideInToast 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* ไอคอนและปุ่มปิดภายใน Toast */
+    .toast .toast-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .toast .toast-content {
+      flex: 1;
+    }
+
+    .toast .toast-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: #0f172a;
+      margin-bottom: 2px;
+    }
+
+    .toast .toast-message {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.4;
+    }
+
+    .toast .toast-close {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 0 4px;
+      margin-left: 8px;
+      line-height: 1;
+    }
+
+    .toast .toast-close:hover {
+      color: #0f172a;
+    }
+
+    @keyframes slideInToast {
+      from {
+        opacity: 0;
+        transform: translateY(-12px) scale(0.96);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* =========================================================================
+   Fix Toast Notification Solid Background & High Z-Index
+   ========================================================================= */
+    #toastContainer,
+    .toast-container {
+      position: fixed !important;
+      top: 20px !important;
+      right: 20px !important;
+      z-index: 999999 !important;
+      pointer-events: none !important;
+    }
+
+    /* ครอบคลุมทุก Class และ Element ย่อยที่สร้างโดย common.js */
+    .toast-container>div,
+    .toast,
+    .toast-card,
+    .toast-item,
+    .toast-success,
+    .toast-danger,
+    .toast-warning,
+    .toast-info {
+      pointer-events: auto !important;
+      background: #ffffff !important;
+      background-color: #ffffff !important;
+      opacity: 1 !important;
+      border: 1px solid #cbd5e1 !important;
+      box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.25), 0 4px 10px -2px rgba(15, 23, 42, 0.1) !important;
+      backdrop-filter: none !important;
+    }
+
+    /* บังคับสีหัวข้อและข้อความภายในให้เข้มทึบ อ่านง่าย */
+    .toast-container *,
+    .toast * {
+      color: #0f172a !important;
+    }
+
+    .toast-container .toast-message,
+    .toast .toast-message,
+    .toast-container small,
+    .toast small {
+      color: #475569 !important;
+    }
+
+    /* =========================================================================
+   Modern Toast Notification UI Style Fix
+   ========================================================================= */
+    #toastContainer,
+    .toast-container {
+      position: fixed !important;
+      top: 24px !important;
+      right: 24px !important;
+      z-index: 999999 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 10px !important;
+      max-width: 360px !important;
+      width: calc(100% - 48px) !important;
+      pointer-events: none !important;
+    }
+
+    /* กรอบการแจ้งเตือน */
+    .toast-container>div,
+    .toast,
+    .toast-card,
+    .toast-item {
+      pointer-events: auto !important;
+      position: relative !important;
+      display: flex !important;
+      align-items: flex-start !important;
+      gap: 12px !important;
+      padding: 14px 38px 14px 16px !important;
+      /* เว้นพื้นที่ขวาไว้ให้ปุ่ม ✕ */
+      background: #ffffff !important;
+      border-radius: 14px !important;
+      border: 1px solid #e2e8f0 !important;
+      border-left: 5px solid #10b981 !important;
+      /* แถบสีเขียว (Success) */
+      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12),
+        0 8px 10px -6px rgba(15, 23, 42, 0.04) !important;
+      animation: slideInToast 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+      transition: all 0.2s ease !important;
+    }
+
+    /* แถบสีตามประเภทการแจ้งเตือน */
+    .toast-danger,
+    .toast-card.danger,
+    .toast.danger {
+      border-left-color: #ef4444 !important;
+      /* แดง */
+    }
+
+    .toast-warning,
+    .toast-card.warning,
+    .toast.warning {
+      border-left-color: #f59e0b !important;
+      /* เหลือง */
+    }
+
+    .toast-info,
+    .toast-card.info,
+    .toast.info {
+      border-left-color: #0284c7 !important;
+      /* ฟ้า */
+    }
+
+    /* ไอคอน */
+    .toast-container img,
+    .toast-container .toast-icon,
+    .toast-icon {
+      font-size: 20px !important;
+      line-height: 1 !important;
+      margin-top: 2px !important;
+      flex-shrink: 0 !important;
+    }
+
+    /* ข้อความด้านใน */
+    .toast-content,
+    .toast-body {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 2px !important;
+      flex: 1 !important;
+    }
+
+    .toast-title,
+    .toast-container strong,
+    .toast strong {
+      font-size: 14px !important;
+      font-weight: 700 !important;
+      color: #0f172a !important;
+      line-height: 1.3 !important;
+      margin: 0 !important;
+    }
+
+    .toast-message,
+    .toast-container p,
+    .toast-container span,
+    .toast p,
+    .toast span {
+      font-size: 12px !important;
+      color: #64748b !important;
+      line-height: 1.4 !important;
+      margin: 0 !important;
+    }
+
+    /* ย้ายปุ่มปิด (✕) ไปไว้มุมขวาบน */
+    .toast-close,
+    .toast-container button,
+    .toast button {
+      position: absolute !important;
+      top: 10px !important;
+      right: 10px !important;
+      background: transparent !important;
+      border: none !important;
+      color: #94a3b8 !important;
+      font-size: 15px !important;
+      font-weight: 600 !important;
+      width: 24px !important;
+      height: 24px !important;
+      border-radius: 50% !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      cursor: pointer !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      transition: all 0.15s ease !important;
+    }
+
+    .toast-close:hover,
+    .toast-container button:hover {
+      background: #f1f5f9 !important;
+      color: #0f172a !important;
+    }
+
+    /* แอนิเมชันตอนเลื่อนเข้ามาจากทางขวา */
+    @keyframes slideInToast {
+      from {
+        opacity: 0;
+        transform: translateX(30px) scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+      }
     }

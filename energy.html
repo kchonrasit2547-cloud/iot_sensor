@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>พลังงานไฟฟ้า PZEM L3 - Smart IoT Hub</title>
+  <title>พลังงานไฟฟ้า PZEM (3 Phase L1 L2 L3) - Smart IoT Hub</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -130,21 +130,6 @@
       margin-top: 8px;
     }
 
-    .pz-bar {
-      height: 6px;
-      background: #f1f5f9;
-      border-radius: 99px;
-      overflow: hidden;
-    }
-
-    .pz-bar i {
-      display: block;
-      height: 100%;
-      width: 0;
-      border-radius: 99px;
-      transition: width 0.3s;
-    }
-
     .phase-list {
       display: flex;
       flex-direction: column;
@@ -169,6 +154,17 @@
       font-size: 10px;
       font-weight: 700;
       color: #fff;
+    }
+
+    .badge-l1 {
+      background: #ef4444;
+    }
+
+    .badge-l2 {
+      background: #f59e0b;
+    }
+
+    .badge-l3 {
       background: #3b82f6;
     }
 
@@ -187,46 +183,6 @@
     .quick-unit-btn:hover {
       background: var(--primary, #0284c7);
       color: #fff;
-    }
-
-    .status-dot.connected {
-      background: #10b981;
-      box-shadow: 0 0 8px #10b98199;
-    }
-
-    .status-dot.disconnected {
-      background: #ef4444;
-      box-shadow: 0 0 8px #ef444499;
-    }
-
-    .formula-note-box {
-      background: #f0f9ff;
-      border: 1px solid #bae6fd;
-      border-radius: 14px;
-      padding: 18px 20px;
-      margin-bottom: 20px;
-      font-size: 13px;
-      color: #0c4a6e;
-    }
-
-    .formula-note-header {
-      font-weight: 700;
-      font-size: 15px;
-      color: #0284c7;
-      margin-bottom: 12px;
-      display: flex;
-      gap: 8px;
-    }
-
-    .formula-code-block {
-      background: #e0f2fe;
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-family: Inter, monospace;
-      color: #0369a1;
-      font-weight: 600;
-      margin: 6px 0;
-      display: inline-block;
     }
 
     .panel-header {
@@ -309,7 +265,6 @@
         <div class="brand-icon">⚡</div>
         <div>
           <div class="brand-title">Smart IoT Hub</div>
-          <div class="brand-sub">Node-RED API</div>
         </div>
       </a>
       <button class="sidebar-close-btn" onclick="closeSidebar()">✕</button>
@@ -319,41 +274,27 @@
     <ul class="nav-list">
       <li class="nav-item" id="nav-dashboard">
         <a href="dashboard.html">
-          <span class="nav-icon">📊</span>
           <span>แดชบอร์ดหลัก</span>
         </a>
       </li>
       <li class="nav-item" id="nav-analytics">
         <a href="analytics.html">
-          <span class="nav-icon">📈</span>
           <span>วิเคราะห์กราฟ</span>
-          <span class="nav-badge badge-teal">Live</span>
         </a>
       </li>
       <li class="nav-item active" id="nav-energy">
         <a href="energy.html">
-          <span class="nav-icon">⚡</span>
-          <span>พลังงานไฟฟ้า PZEM (L3)</span>
-          <span class="nav-badge badge-amber">L3</span>
+          <span>พลังงานไฟฟ้า</span>
         </a>
       </li>
       <li class="nav-item" id="nav-history">
         <a href="history.html">
-          <span class="nav-icon">📋</span>
           <span>ประวัติข้อมูล</span>
-          <span class="nav-badge badge-blue" id="logsCountBadge">0</span>
         </a>
       </li>
       <li class="nav-item" id="nav-energyhistory">
         <a href="./energy_history.html">
-          <span class="nav-icon">⚡</span>
           <span>ประวัติข้อมูลพลังงานไฟฟ้า</span>
-        </a>
-      </li>
-      <li class="nav-item" id="nav-settings">
-        <a href="settings.html">
-          <span class="nav-icon">⚙️</span>
-          <span>ตั้งค่าการเชื่อมต่อ</span>
         </a>
       </li>
     </ul>
@@ -362,26 +303,11 @@
     <ul class="nav-list" style="flex: 0; padding-bottom: 12px">
       <li class="nav-item">
         <a href="https://console.hivemq.cloud/" target="_blank" rel="noopener noreferrer">
-          <span class="nav-icon">☁️</span>
           <span>HiveMQ Console</span>
           <span class="nav-badge badge-green">Cloud</span>
         </a>
       </li>
     </ul>
-
-    <div class="sidebar-footer">
-      <div class="node-status-card">
-        <div class="status-dot disconnected" id="statusDot"></div>
-        <div style="overflow: hidden">
-          <div style="font-size: 12px; font-weight: 600" id="statusText">
-            กำลังเชื่อมต่อ Node-RED...
-          </div>
-          <div
-            style="font-size: 10px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap"
-            id="statusSub">http://localhost:1880/api/pzem-data</div>
-        </div>
-      </div>
-    </div>
   </aside>
 
   <div class="main-wrapper">
@@ -392,15 +318,10 @@
           <div class="breadcrumb">
             <span>หน้าหลัก</span>
             <span>/</span>
-            <span>พลังงานไฟฟ้า L3 PZEM</span>
+            <span>พลังงานไฟฟ้า PZEM 3 เฟส</span>
           </div>
-          <h1>ระบบตรวจวัดพลังงานไฟฟ้าเฟส 3 และบันทึกประวัติค่าไฟ (Node-RED Realtime)</h1>
+          <h1>ระบบตรวจวัดพลังงานไฟฟ้า 3 เฟส (L1, L2, L3) และบันทึกประวัติค่าไฟ (Node-RED Realtime)</h1>
         </div>
-      </div>
-      <div class="top-actions" style="display: flex; gap: 8px; flex-wrap: wrap">
-        <button class="btn btn-primary" onclick="reconnectMqtt()">
-          <span>🔄 รีเฟรชข้อมูล</span>
-        </button>
       </div>
     </header>
 
@@ -408,88 +329,119 @@
       <section id="view-energy" class="page-view active">
         <div class="pz-banner">
           <div>
-            <div class="pz-banner-lbl">ค่าไฟโดยประมาณจากพลังงานสะสมของ L3</div>
             <div class="pz-banner-val" id="bannerCurrentCost">-- บาท</div>
-            <div class="pz-banner-sub" id="bannerTariffLabel">
-              คำนวณตามอัตราค่าไฟที่ตั้งไว้ รวมค่า Ft ค่าบริการ และ VAT 7%
-            </div>
           </div>
           <div style="text-align: right">
-            <div class="pz-banner-lbl">กำลังไฟฟ้าปัจจุบัน (L3 Active Power)</div>
+            <div class="pz-banner-lbl">กำลังไฟฟ้ารวมปัจจุบัน (Total Active Power)</div>
             <div class="pz-banner-state" id="bannerTotalPower">-- W</div>
-            <div style="font-size: 11px; color: #94a3b8; margin-top: 2px" id="bannerLoadStatus">
-              รอข้อมูลเซ็นเซอร์...
-            </div>
+            <div style="font-size: 11px; color: #94a3b8; margin-top: 2px" id="bannerLoadStatus"></div>
           </div>
         </div>
 
-        <!-- ค่าหลักของ PZEM เฟส L3 -->
+        <!-- ค่าหลักของ PZEM ครบทั้ง 3 เฟส -->
         <div class="pz-grid">
+          <!-- แรงดันไฟฟ้า -->
           <div class="pz-card">
             <div class="pz-top">
-              <span class="pz-lbl">🔌 แรงดันไฟฟ้า (Voltage L3)</span>
-              <span class="stat-badge badge-blue" id="voltStatus">--</span>
+              <span class="pz-lbl">แรงดันไฟฟ้าเฉลี่ย (Avg Voltage)</span>
             </div>
             <div class="pz-val"><span id="valVoltAvg">--</span><small>V</small></div>
             <div class="phase-list">
               <div class="phase-item">
-                <span><span class="phase-badge">L3</span> แรงดันเฟส 3</span>
+                <span><span class="phase-badge badge-l1">L1</span> แรงดันเฟส 1</span>
+                <strong id="valVoltL1">-- V</strong>
+              </div>
+              <div class="phase-item">
+                <span><span class="phase-badge badge-l2">L2</span> แรงดันเฟส 2</span>
+                <strong id="valVoltL2">-- V</strong>
+              </div>
+              <div class="phase-item">
+                <span><span class="phase-badge badge-l3">L3</span> แรงดันเฟส 3</span>
                 <strong id="valVoltL3">-- V</strong>
               </div>
             </div>
           </div>
 
+          <!-- กระแสไฟฟ้า -->
           <div class="pz-card">
             <div class="pz-top">
-              <span class="pz-lbl">🔋 กระแสไฟฟ้า (Current L3)</span>
-              <span class="stat-badge badge-green" id="ampStatus">--</span>
+              <span class="pz-lbl">กระแสไฟฟ้ารวม (Total Current)</span>
             </div>
             <div class="pz-val"><span id="valAmpTotal">--</span><small>A</small></div>
             <div class="phase-list">
               <div class="phase-item">
-                <span><span class="phase-badge">L3</span> กระแสเฟส 3</span>
+                <span><span class="phase-badge badge-l1">L1</span> กระแสเฟส 1</span>
+                <strong id="valAmpL1">-- A</strong>
+              </div>
+              <div class="phase-item">
+                <span><span class="phase-badge badge-l2">L2</span> กระแสเฟส 2</span>
+                <strong id="valAmpL2">-- A</strong>
+              </div>
+              <div class="phase-item">
+                <span><span class="phase-badge badge-l3">L3</span> กระแสเฟส 3</span>
                 <strong id="valAmpL3">-- A</strong>
               </div>
             </div>
           </div>
 
+          <!-- กำลังไฟฟ้า -->
           <div class="pz-card">
             <div class="pz-top">
-              <span class="pz-lbl">⚡ กำลังไฟฟ้า (Active Power L3)</span>
-              <span class="stat-badge badge-amber" id="wattCostRate">-- ฿/ชม.</span>
+              <span class="pz-lbl">กำลังไฟฟ้ารวม (Total Active Power)</span>
             </div>
             <div class="pz-val"><span id="valWattTotal">--</span><small>W</small></div>
             <div class="phase-list">
               <div class="phase-item">
-                <span><span class="phase-badge">L3</span> กำลังไฟเฟส 3</span>
+                <span><span class="phase-badge badge-l1">L1</span> กำลังไฟเฟส 1</span>
+                <strong id="valWattL1">-- W</strong>
+              </div>
+              <div class="phase-item">
+                <span><span class="phase-badge badge-l2">L2</span> กำลังไฟเฟส 2</span>
+                <strong id="valWattL2">-- W</strong>
+              </div>
+              <div class="phase-item">
+                <span><span class="phase-badge badge-l3">L3</span> กำลังไฟเฟส 3</span>
                 <strong id="valWattL3">-- W</strong>
               </div>
             </div>
           </div>
 
+          <!-- พลังงานสะสม -->
           <div class="pz-card">
             <div class="pz-top">
-              <span class="pz-lbl">📟 พลังงานสะสม (L3 Energy)</span>
-              <span class="stat-badge badge-blue">kWh</span>
+              <span class="pz-lbl">พลังงานสะสมรวม (Total Energy)</span>
             </div>
             <div class="pz-val"><span id="valKwh" class="pz-odo">--</span><small>kWh</small></div>
             <div class="pz-sub" id="kwhCostEstimate">คิดเป็นค่าไฟ ≈ -- ฿</div>
-            <div class="muted">ค่าพลังงานสะสมจาก Node-RED API</div>
+            <div class="phase-list">
+              <div class="phase-item">
+                <span><span class="phase-badge badge-l1">L1</span> พลังงานเฟส 1</span>
+                <strong id="valKwhL1">-- kWh</strong>
+              </div>
+              <div class="phase-item">
+                <span><span class="phase-badge badge-l2">L2</span> พลังงานเฟส 2</span>
+                <strong id="valKwhL2">-- kWh</strong>
+              </div>
+              <div class="phase-item">
+                <span><span class="phase-badge badge-l3">L3</span> พลังงานเฟส 3</span>
+                <strong id="valKwhL3">-- kWh</strong>
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- ค่าพลังงานเพิ่มเติม -->
         <div class="pz-grid-sm">
           <div class="pz-card">
-            <div class="pz-lbl">กำลังไฟปรากฏ (L3)</div>
+            <div class="pz-lbl">กำลังไฟปรากฏรวม (Apparent Power)</div>
             <div class="pz-kpi" id="valVa">-- VA</div>
           </div>
           <div class="pz-card">
-            <div class="pz-lbl">กำลังไฟรีแอคทีฟ (L3)</div>
+            <div class="pz-lbl">กำลังไฟรีแอคทีฟรวม (Reactive Power)</div>
             <div class="pz-kpi" id="valVar">-- VAR</div>
           </div>
           <div class="pz-card">
-            <div class="pz-lbl">วัตต์สูงสุดตั้งแต่เปิดหน้า</div>
+            <div class="pz-lbl">วัตต์สูงสุดรวมตั้งแต่เปิดหน้า</div>
             <div class="pz-kpi" id="valPeakWatt">-- W</div>
           </div>
           <div class="pz-card">
@@ -502,15 +454,15 @@
           style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 20px">
           <div class="card-panel">
             <div class="panel-header">
-              <div class="panel-title">📈 กำลังไฟฟ้า L3 (W)</div>
-              <span class="stat-badge badge-amber">L3 Power</span>
+              <div class="panel-title">กำลังไฟฟ้าทั้ง 3 เฟส (W)</div>
+              <span class="stat-badge badge-amber">3P Power</span>
             </div>
             <div class="chart-container"><canvas id="pzemPowerChart"></canvas></div>
           </div>
 
           <div class="card-panel">
             <div class="panel-header">
-              <div class="panel-title">🔌 แรงดันไฟฟ้า L3 (V)</div>
+              <div class="panel-title">แรงดันไฟฟ้าทั้ง 3 เฟส (V)</div>
               <button class="btn btn-outline btn-sm" onclick="clearPzemCharts()">รีเซ็ตกราฟ</button>
             </div>
             <div class="chart-container"><canvas id="pzemVoltageChart"></canvas></div>
@@ -520,12 +472,12 @@
         <div class="card-panel" style="margin-bottom: 20px">
           <div class="panel-header">
             <div>
-              <div class="panel-title">⏱️ ประมาณการค่าไฟตามช่วงเวลา (L3)</div>
+              <div class="panel-title">ประมาณการค่าไฟตามช่วงเวลา (3 Phase)</div>
               <p class="muted">
-                ประมาณการจากกำลังไฟปัจจุบัน โดยใช้อัตราต่อหน่วย 4.20 บาทเพื่อประเมินโหลด
+                ประมาณการจากกำลังไฟรวมปัจจุบัน โดยใช้อัตราต่อหน่วย 4.20 บาทเพื่อประเมินโหลด
               </p>
             </div>
-            <span class="stat-badge badge-amber" id="projWattBadge">อิงตามโหลด: -- W</span>
+            <span class="stat-badge badge-amber" id="projWattBadge">อิงตามโหลดรวม: -- W</span>
           </div>
 
           <div class="stats-grid">
@@ -552,39 +504,62 @@
           </div>
         </div>
 
-        <div class="formula-note-box">
-          <div class="formula-note-header">📘 วิธีคำนวณพลังงานและค่าไฟ</div>
-          <div style="margin-bottom: 12px">
-            <strong>พลังงานไฟฟ้า:</strong><br>
-            <div class="formula-code-block">ใช้ค่าพลังงานสะสม (kWh) ที่อ่านได้จาก PZEM โดยตรง</div>
-            <div class="muted">ไม่คำนวณบวกพลังงานซ้ำในหน้าเว็บ</div>
+        <!-- กล่องอธิบายสูตรแบบกดเปิด/ปิด (Accordion) -->
+        <div class="card-panel" style="margin-bottom: 20px;">
+          <div onclick="toggleFormulaBox()"
+            style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+            <span style="font-weight: 600; font-size: 14px; color: #0284c7;">
+              📘 ดูสูตรและวิธีคำนวณพลังงาน/ค่าไฟ (วัดไฟย่อยห้องเรียน)
+            </span>
+            <span id="formulaChevron" style="font-size: 12px; color: #0284c7; transition: transform 0.2s ease;">▼</span>
           </div>
-          <strong>สูตรค่าไฟโดยประมาณ:</strong><br>
-          <div class="formula-code-block">ค่าไฟรวม = (ค่าไฟฟ้าฐาน + ค่า Ft + ค่าบริการ) + VAT 7%</div>
-          <div style="margin-top: 6px; line-height: 1.7">
-            • ค่า Ft ที่ตั้งไว้ในโค้ด: 0.1623 บาท/หน่วย<br>
-            • ค่าบริการที่ตั้งไว้ในโค้ด: 8.19 บาท<br>
-            <span class="muted">โปรดตรวจสอบอัตราค่าไฟปัจจุบันก่อนใช้เป็นตัวเลขอ้างอิงในรายงาน</span>
+
+          <div id="formulaContentBox"
+            style="display: none; border-top: 1px solid #f1f5f9; margin-top: 12px; padding-top: 12px; font-size: 13px; color: #334155; line-height: 1.7;">
+            <div style="margin-bottom: 10px;">
+              <strong>พลังงานไฟฟ้า:</strong><br>
+              <code
+                style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 6px; font-family: monospace; font-size: 12px; display: inline-block; margin-top: 4px; color: #0f172a;">
+                ใช้ค่าพลังงานสะสมรวม 3 เฟส (kWh) ที่อ่านได้ตรงจาก PZEM / Node-RED
+              </code>
+            </div>
+
+            <div style="margin-bottom: 10px;">
+              <strong>สูตรค่าไฟประมาณการ:</strong><br>
+              <code
+                style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 6px; font-family: monospace; font-size: 12px; display: inline-block; margin-top: 4px; color: #0f172a;">
+                ค่าไฟประมาณการ = หน่วยไฟฟ้า (kWh) × 4.20 บาท
+              </code>
+            </div>
+
+            <ul style="padding-left: 18px; margin: 8px 0 0 0; color: #64748b; font-size: 12px;">
+              <li style="margin-bottom: 4px;">อ้างอิงอัตราค่าไฟฟ้าประเภท 3 (กิจการขนาดกลาง/สถานศึกษา) เฉลี่ย ~4.18 -
+                4.20 บาท/หน่วย (รวมค่าไฟฐาน, Ft และ VAT 7%)</li>
+              <li style="margin-bottom: 4px;">ไม่นำค่าบริการรายเดือนของการไฟฟ้ารวมมาคิดทบ
+                เนื่องจากเป็นการวัดไฟย่อยรายห้องภายในอาคาร</li>
+              <li>การประมาณการรายวัน/เดือน/ปี คำนวณจากกำลังไฟรวม ณ ปัจจุบันหากเปิดใช้งานต่อเนื่อง</li>
+            </ul>
           </div>
         </div>
 
         <div class="card-panel" style="margin-bottom: 20px">
           <div class="panel-header">
             <div>
-              <div class="panel-title">📊 กราฟค่าไฟสะสม L3 รายวัน / รายสัปดาห์ / รายปี</div>
+              <div class="panel-title">กราฟค่าไฟสะสม 3 เฟส รายวัน / รายสัปดาห์ / รายปี</div>
               <p class="muted">กด “บันทึกวันนี้” เพื่อบันทึกค่าพลังงานสะสมและค่าไฟไว้ในเบราว์เซอร์</p>
             </div>
             <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center">
-              <button class="quick-unit-btn active" id="btnCostViewDaily" onclick="setCostChartView('daily')">รายวัน</button>
-              <button class="quick-unit-btn" id="btnCostViewWeekly" onclick="setCostChartView('weekly')">รายสัปดาห์</button>
+              <button class="quick-unit-btn active" id="btnCostViewDaily"
+                onclick="setCostChartView('daily')">รายวัน</button>
+              <button class="quick-unit-btn" id="btnCostViewWeekly"
+                onclick="setCostChartView('weekly')">รายสัปดาห์</button>
               <button class="quick-unit-btn" id="btnCostViewYearly" onclick="setCostChartView('yearly')">รายปี</button>
               <label
                 style="display: flex; align-items: center; gap: 6px; padding: 5px 8px; border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; font-size: 11px">
-                📅
                 <input type="date" id="costChartDatePicker" aria-label="เลือกวันที่สำหรับกราฟ"
                   style="border: 0; outline: none; background: transparent; font: inherit">
               </label>
-              <button class="btn btn-primary btn-sm" onclick="recordDailyCostSnapshot()">📸 บันทึกวันนี้</button>
+              <button class="btn btn-primary btn-sm" onclick="recordDailyCostSnapshot()">บันทึกวันนี้</button>
             </div>
           </div>
           <div class="chart-container" style="height: 280px">
@@ -595,12 +570,12 @@
         <div class="card-panel">
           <div class="panel-header">
             <div>
-              <div class="panel-title">🗓️ ประวัติค่าไฟรายเดือน (L3)</div>
+              <div class="panel-title">ประวัติค่าไฟรายเดือน (3 Phase)</div>
               <p class="muted">บันทึกบิลค่าไฟเดือนนี้เพื่อเปรียบเทียบย้อนหลัง</p>
             </div>
             <div style="display: flex; gap: 8px">
-              <button class="btn btn-primary btn-sm" onclick="saveCurrentMonthBill()">💾 บันทึกบิลเดือนนี้</button>
-              <button class="btn btn-outline btn-sm" onclick="clearMonthlyHistory()">🗑️ ล้างประวัติ</button>
+
+              <button class="btn btn-outline btn-sm" onclick="clearMonthlyHistory()">ล้างประวัติ</button>
             </div>
           </div>
           <div id="monthlyHistoryContainer"
@@ -611,6 +586,53 @@
   </div>
 
   <script>
+    // ฟังก์ชันบันทึกบิลเดือนนี้อัตโนมัติแบบ Silent (ไม่ขึ้น Alert)
+    function autoSaveCurrentMonthBill() {
+      if (state.totalEnergyKwh === null || state.totalEnergyKwh <= 0) return;
+
+      const now = new Date();
+      const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const monthLabel = now.toLocaleDateString('th-TH', {
+        year: 'numeric',
+        month: 'long',
+      });
+      const bill = calculateElectricityBill(state.totalEnergyKwh);
+
+      const record = {
+        monthKey,
+        monthLabel,
+        units: state.totalEnergyKwh,
+        totalBill: bill.totalBill,
+        createdAt: now.getTime(),
+      };
+
+      const index = monthlyBillHistory.findIndex((entry) => entry.monthKey === monthKey);
+
+      if (index >= 0) {
+        // อัปเดตยอดสะสมของเดือนปัจจุบันให้สดใหม่อยู่ตลอดเวลา
+        monthlyBillHistory[index] = record;
+      } else {
+        // เมื่อเข้าสู่เดือนใหม่ ระบบจะขึ้นการ์ดเดือนใหม่ให้อัตโนมัติ
+        monthlyBillHistory.push(record);
+      }
+
+      localStorage.setItem('monthly_bill_history_3phase', JSON.stringify(monthlyBillHistory));
+      renderMonthlyHistory();
+    }
+    function toggleFormulaBox() {
+      const content = document.getElementById('formulaContentBox');
+      const chevron = document.getElementById('formulaChevron');
+      if (!content || !chevron) return;
+
+      if (content.style.display === 'none') {
+        content.style.display = 'block';
+        chevron.style.transform = 'rotate(180deg)';
+      } else {
+        content.style.display = 'none';
+        chevron.style.transform = 'rotate(0deg)';
+      }
+    }
+
     if (typeof toggleSidebar !== 'function') {
       window.toggleSidebar = () => {
         document.getElementById('sidebar')?.classList.toggle('open');
@@ -629,7 +651,6 @@
   <script src="common.js" onerror="console.log('common.js not found; standalone mode')"></script>
 
   <script>
-    // หน้านี้ใช้ข้อมูล PZEM เฟส L3 เท่านั้น และอ่านพลังงานสะสมจาก Node-RED API
     const PZEM_API_URL = 'http://localhost:1880/api/pzem-data';
     const FT_RATE = 0.1623;
     const SERVICE_FEE = 8.19;
@@ -643,10 +664,13 @@
     };
 
     const state = {
-      voltage: null,
-      current: null,
-      power: null,
-      energyKwh: null,
+      l1: { voltage: null, current: null, power: null, energyKwh: null },
+      l2: { voltage: null, current: null, power: null, energyKwh: null },
+      l3: { voltage: null, current: null, power: null, energyKwh: null },
+      avgVoltage: null,
+      totalCurrent: null,
+      totalPower: null,
+      totalEnergyKwh: null,
       peakPower: 0,
       lastTimestamp: null,
       hasData: false,
@@ -657,8 +681,8 @@
 
     const history = {
       labels: [],
-      power: [],
-      voltage: [],
+      pL1: [], pL2: [], pL3: [],
+      vL1: [], vL2: [], vL3: [],
     };
 
     const numberOrNull = (value) => {
@@ -672,36 +696,9 @@
 
     function calculateElectricityBill(units) {
       units = Math.max(0, Number(units) || 0);
-
-      let remaining = units;
-      let baseCharge = 0;
-
-      const tiers = [
-        { size: 150, rate: 3.2484 },
-        { size: 250, rate: 4.2218 },
-        { size: Infinity, rate: 4.4217 },
-      ];
-
-      for (const tier of tiers) {
-        if (remaining <= 0) break;
-
-        const unitsInTier = Math.min(remaining, tier.size);
-        baseCharge += unitsInTier * tier.rate;
-        remaining -= unitsInTier;
-      }
-
-      const ftCharge = units * FT_RATE;
-      const subtotal = Math.max(0, baseCharge + ftCharge + SERVICE_FEE);
-      const vatAmount = subtotal * 0.07;
-
       return {
         units,
-        baseCharge,
-        ftCharge,
-        serviceFee: SERVICE_FEE,
-        subtotal,
-        vatAmount,
-        totalBill: subtotal + vatAmount,
+        totalBill: units * AVG_UNIT_COST,
       };
     }
 
@@ -731,16 +728,38 @@
       type: 'line',
       data: {
         labels: history.labels,
-        datasets: [{
-          label: 'L3 Power (W)',
-          data: history.power,
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59,130,246,.1)',
-          borderWidth: 2,
-          tension: 0.3,
-          pointRadius: 2,
-          spanGaps: false,
-        }],
+        datasets: [
+          {
+            label: 'L1 Power (W)',
+            data: history.pL1,
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239,68,68,.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            pointRadius: 2,
+            spanGaps: false,
+          },
+          {
+            label: 'L2 Power (W)',
+            data: history.pL2,
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245,158,11,.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            pointRadius: 2,
+            spanGaps: false,
+          },
+          {
+            label: 'L3 Power (W)',
+            data: history.pL3,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59,130,246,.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            pointRadius: 2,
+            spanGaps: false,
+          },
+        ],
       },
       options: {
         ...chartCommon,
@@ -758,16 +777,38 @@
       type: 'line',
       data: {
         labels: history.labels,
-        datasets: [{
-          label: 'L3 Voltage (V)',
-          data: history.voltage,
-          borderColor: '#0ea5e9',
-          backgroundColor: 'rgba(14,165,233,.1)',
-          borderWidth: 2,
-          tension: 0.3,
-          pointRadius: 2,
-          spanGaps: false,
-        }],
+        datasets: [
+          {
+            label: 'L1 Voltage (V)',
+            data: history.vL1,
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239,68,68,.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            pointRadius: 2,
+            spanGaps: false,
+          },
+          {
+            label: 'L2 Voltage (V)',
+            data: history.vL2,
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245,158,11,.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            pointRadius: 2,
+            spanGaps: false,
+          },
+          {
+            label: 'L3 Voltage (V)',
+            data: history.vL3,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59,130,246,.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            pointRadius: 2,
+            spanGaps: false,
+          },
+        ],
       },
       options: {
         ...chartCommon,
@@ -784,57 +825,74 @@
 
     function clearPzemCharts() {
       history.labels.length = 0;
-      history.power.length = 0;
-      history.voltage.length = 0;
+      history.pL1.length = 0; history.pL2.length = 0; history.pL3.length = 0;
+      history.vL1.length = 0; history.vL2.length = 0; history.vL3.length = 0;
 
       powerChart.update();
       voltageChart.update();
     }
 
+    function extractPhase(raw, phaseKey, num) {
+      if (!raw || typeof raw !== 'object') return { voltage: null, current: null, power: null, energyKwh: null };
+
+      const pObj = (raw.phases && raw.phases[phaseKey]) || raw[phaseKey] || raw[`phase${num}`] || raw;
+
+      const v = numberOrNull(pObj.voltage ?? pObj.volt ?? raw[`v${num}`] ?? raw[`voltage_l${num}`] ?? raw[`voltage${num}`]);
+      const i = numberOrNull(pObj.current ?? pObj.amp ?? raw[`i${num}`] ?? raw[`current_l${num}`] ?? raw[`current${num}`]);
+      const p = numberOrNull(pObj.power ?? pObj.watt ?? raw[`p${num}`] ?? raw[`power_l${num}`] ?? raw[`power${num}`]);
+
+      let e = numberOrNull(pObj.energyKwh ?? pObj.energy_kwh ?? raw[`e${num}`] ?? raw[`energy_l${num}`] ?? raw[`energy${num}`]);
+      if (e === null) {
+        const eWh = numberOrNull(pObj.energyWh ?? pObj.energy_wh ?? pObj.energy);
+        if (eWh !== null) e = eWh > 10000 ? eWh / 1000 : eWh;
+      }
+
+      return { voltage: v, current: i, power: p, energyKwh: e };
+    }
+
     function updatePzemDataValues(raw) {
       if (!raw || typeof raw !== 'object') return;
 
-      const phase = (raw.phases && raw.phases.l3) || raw.l3 || raw;
+      state.l1 = extractPhase(raw, 'l1', 1);
+      state.l2 = extractPhase(raw, 'l2', 2);
+      state.l3 = extractPhase(raw, 'l3', 3);
 
-      const voltage = numberOrNull(phase.voltage ?? phase.volt);
-      const current = numberOrNull(phase.current ?? phase.amp);
-      const power = numberOrNull(phase.power ?? phase.watt);
+      const activeVolts = [state.l1.voltage, state.l2.voltage, state.l3.voltage].filter(v => v !== null && v > 0);
+      state.avgVoltage = activeVolts.length ? (activeVolts.reduce((a, b) => a + b, 0) / activeVolts.length) : null;
 
-      let energy = numberOrNull(raw.totalEnergy);
+      const validAmps = [state.l1.current, state.l2.current, state.l3.current].filter(i => i !== null);
+      state.totalCurrent = validAmps.length ? validAmps.reduce((a, b) => a + b, 0) : null;
 
-      if (energy === null) {
-        energy = numberOrNull(phase.energyKwh ?? phase.energy_kwh);
+      const validWatts = [state.l1.power, state.l2.power, state.l3.power].filter(p => p !== null);
+      state.totalPower = numberOrNull(raw.totalPower ?? raw.total_power) ??
+        (validWatts.length ? validWatts.reduce((a, b) => a + b, 0) : null);
+
+      const validEnergies = [state.l1.energyKwh, state.l2.energyKwh, state.l3.energyKwh].filter(e => e !== null);
+      state.totalEnergyKwh = numberOrNull(raw.totalEnergy ?? raw.total_energy) ??
+        (validEnergies.length ? validEnergies.reduce((a, b) => a + b, 0) : null);
+
+      state.lastTimestamp = raw.timestamp || new Date().toLocaleTimeString('th-TH');
+
+      if (state.totalPower !== null) {
+        state.peakPower = Math.max(state.peakPower, state.totalPower);
       }
 
-      if (energy === null) {
-        const energyWh = numberOrNull(phase.energyWh ?? phase.energy_wh);
-        if (energyWh !== null) energy = energyWh / 1000;
-      }
-
-      state.voltage = voltage;
-      state.current = current;
-      state.power = power;
-      state.lastTimestamp = raw.timestamp || phase.timestamp || new Date().toLocaleTimeString('th-TH');
-
-      if (energy !== null) {
-        state.energyKwh = energy;
-      }
-
-      if (power !== null) {
-        state.peakPower = Math.max(state.peakPower, power);
-      }
-
-      state.hasData = [voltage, current, power, state.energyKwh].some((value) => value !== null);
+      state.hasData = activeVolts.length > 0 || validWatts.length > 0;
 
       if (state.hasData) {
         history.labels.push(state.lastTimestamp);
-        history.power.push(power);
-        history.voltage.push(voltage);
+        history.pL1.push(state.l1.power);
+        history.pL2.push(state.l2.power);
+        history.pL3.push(state.l3.power);
+
+        history.vL1.push(state.l1.voltage);
+        history.vL2.push(state.l2.voltage);
+        history.vL3.push(state.l3.voltage);
 
         while (history.labels.length > MAX_POINTS) {
           history.labels.shift();
-          history.power.shift();
-          history.voltage.shift();
+          history.pL1.shift(); history.pL2.shift(); history.pL3.shift();
+          history.vL1.shift(); history.vL2.shift(); history.vL3.shift();
         }
 
         powerChart.update();
@@ -843,6 +901,7 @@
 
       updatePzemDisplay();
       updateBillCalculation();
+      autoSaveCurrentMonthBill();
     }
 
     function fmt(value, digits = 2, unit = '') {
@@ -850,59 +909,74 @@
     }
 
     function updatePzemDisplay() {
-      setText('valVoltAvg', fmt(state.voltage, 1));
-      setText('valVoltL3', fmt(state.voltage, 1, ' V'));
-      setText('valAmpTotal', fmt(state.current, 3));
-      setText('valAmpL3', fmt(state.current, 3, ' A'));
-      setText('valWattTotal', fmt(state.power, 1));
-      setText('valWattL3', fmt(state.power, 1, ' W'));
-      setText('bannerTotalPower', fmt(state.power, 1, ' W'));
+      setText('valVoltAvg', fmt(state.avgVoltage, 1));
+      setText('valVoltL1', fmt(state.l1.voltage, 1, ' V'));
+      setText('valVoltL2', fmt(state.l2.voltage, 1, ' V'));
+      setText('valVoltL3', fmt(state.l3.voltage, 1, ' V'));
+
+      setText('valAmpTotal', fmt(state.totalCurrent, 3));
+      setText('valAmpL1', fmt(state.l1.current, 3, ' A'));
+      setText('valAmpL2', fmt(state.l2.current, 3, ' A'));
+      setText('valAmpL3', fmt(state.l3.current, 3, ' A'));
+
+      setText('valWattTotal', fmt(state.totalPower, 1));
+      setText('valWattL1', fmt(state.l1.power, 1, ' W'));
+      setText('valWattL2', fmt(state.l2.power, 1, ' W'));
+      setText('valWattL3', fmt(state.l3.power, 1, ' W'));
+      setText('bannerTotalPower', fmt(state.totalPower, 1, ' W'));
 
       setText(
         'valKwh',
-        state.energyKwh === null
+        state.totalEnergyKwh === null
           ? '--'
-          : state.energyKwh.toFixed(3).padStart(7, '0')
+          : state.totalEnergyKwh.toFixed(3).padStart(7, '0')
       );
+      setText('valKwhL1', fmt(state.l1.energyKwh, 3, ' kWh'));
+      setText('valKwhL2', fmt(state.l2.energyKwh, 3, ' kWh'));
+      setText('valKwhL3', fmt(state.l3.energyKwh, 3, ' kWh'));
 
-      setText(
-        'valVa',
-        state.voltage !== null && state.current !== null
-          ? `${(state.voltage * state.current).toFixed(1)} VA`
-          : '-- VA'
-      );
+      let totalVa = 0;
+      let totalVar = 0;
+      let hasVa = false;
 
-      setText(
-        'valVar',
-        state.voltage !== null && state.current !== null && state.power !== null
-          ? `${Math.sqrt(Math.max(0, (state.voltage * state.current) ** 2 - state.power ** 2)).toFixed(1)} VAR`
-          : '-- VAR'
-      );
+      [state.l1, state.l2, state.l3].forEach(p => {
+        if (p.voltage !== null && p.current !== null) {
+          const va = p.voltage * p.current;
+          totalVa += va;
+          hasVa = true;
+          if (p.power !== null) {
+            totalVar += Math.sqrt(Math.max(0, va ** 2 - p.power ** 2));
+          }
+        }
+      });
+
+      setText('valVa', hasVa ? `${totalVa.toFixed(1)} VA` : '-- VA');
+      setText('valVar', hasVa ? `${totalVar.toFixed(1)} VAR` : '-- VAR');
 
       setText(
         'valPeakWatt',
-        state.power === null ? '-- W' : `${state.peakPower.toFixed(1)} W`
+        state.totalPower === null ? '-- W' : `${state.peakPower.toFixed(1)} W`
       );
 
-      setText('voltStatus', state.voltage === null ? 'ไม่มีข้อมูล' : 'ได้รับข้อมูล');
-      setText('ampStatus', state.current === null ? 'ไม่มีข้อมูล' : 'ได้รับข้อมูล');
+      setText('voltStatus', state.avgVoltage === null ? 'ไม่มีข้อมูล' : 'ได้รับข้อมูล');
+      setText('ampStatus', state.totalCurrent === null ? 'ไม่มีข้อมูล' : 'ได้รับข้อมูล');
       setText(
         'bannerLoadStatus',
-        state.hasData ? 'ได้รับข้อมูล L3 จาก Node-RED' : 'รอข้อมูลเซ็นเซอร์...'
+        state.hasData ? 'ได้รับข้อมูล 3 เฟสจาก Node-RED' : 'รอข้อมูลเซ็นเซอร์...'
       );
     }
 
     function updateBillCalculation() {
-      if (state.energyKwh === null) {
+      if (state.totalEnergyKwh === null) {
         setText('bannerCurrentCost', '-- บาท');
         setText('kwhCostEstimate', 'คิดเป็นค่าไฟ ≈ -- ฿');
       } else {
-        const bill = calculateElectricityBill(state.energyKwh);
+        const bill = calculateElectricityBill(state.totalEnergyKwh);
         setText('bannerCurrentCost', `${bill.totalBill.toFixed(2)} บาท`);
         setText('kwhCostEstimate', `คิดเป็นค่าไฟ ≈ ${bill.totalBill.toFixed(2)} ฿`);
       }
 
-      const kw = state.power === null ? null : Math.max(0, state.power) / 1000;
+      const kw = state.totalPower === null ? null : Math.max(0, state.totalPower) / 1000;
       const cost = kw === null ? null : kw * AVG_UNIT_COST;
 
       setText(
@@ -915,7 +989,7 @@
       );
       setText(
         'projWattBadge',
-        `อิงตามโหลด: ${state.power === null ? '--' : state.power.toFixed(1)} W`
+        `อิงตามโหลดรวม: ${state.totalPower === null ? '--' : state.totalPower.toFixed(1)} W`
       );
 
       setText('projCostHour', cost === null ? '-- ฿' : `${cost.toFixed(3)} ฿`);
@@ -971,35 +1045,19 @@
         }
 
         updatePzemDataValues(data);
-
-        setText('statusText', 'เชื่อมต่อ Node-RED สำเร็จ');
-        setText('statusSub', PZEM_API_URL);
-
-        if ($('statusDot')) {
-          $('statusDot').className = 'status-dot connected';
-        }
       } catch (error) {
         console.error('ดึงข้อมูล PZEM ไม่สำเร็จ:', error);
-
-        setText('statusText', 'เชื่อมต่อ Node-RED ไม่สำเร็จ');
-        setText('statusSub', error.message);
-
-        if ($('statusDot')) {
-          $('statusDot').className = 'status-dot disconnected';
-        }
-
         setText('bannerLoadStatus', 'ไม่สามารถรับข้อมูลจาก Node-RED');
       } finally {
         fetchBusy = false;
       }
     }
 
-    // ประวัติการบันทึกค่าไฟรายวันเก็บไว้ใน localStorage ของเบราว์เซอร์นี้
     let costChartView = 'daily';
     let dailyCostHistory = [];
 
     try {
-      dailyCostHistory = JSON.parse(localStorage.getItem('daily_cost_history_l3') || '[]');
+      dailyCostHistory = JSON.parse(localStorage.getItem('daily_cost_history_3phase') || '[]');
     } catch (error) {
       console.warn('อ่านประวัติค่าไฟรายวันไม่สำเร็จ:', error);
     }
@@ -1033,7 +1091,7 @@
             yAxisID: 'yCost',
           },
           {
-            label: 'พลังงานสะสม (kWh)',
+            label: 'พลังงานสะสมรวม (kWh)',
             data: [],
             type: 'line',
             borderColor: '#10b981',
@@ -1147,14 +1205,14 @@
     }
 
     function recordDailyCostSnapshot() {
-      if (state.energyKwh === null) {
+      if (state.totalEnergyKwh === null) {
         alert('ยังไม่มีค่าพลังงานจาก Node-RED จึงยังบันทึกไม่ได้');
         return;
       }
 
       const now = new Date();
       const key = dateKey(now);
-      const bill = calculateElectricityBill(state.energyKwh);
+      const bill = calculateElectricityBill(state.totalEnergyKwh);
       const label = now.toLocaleDateString('th-TH', {
         day: '2-digit',
         month: 'short',
@@ -1164,7 +1222,7 @@
       const item = {
         dateKey: key,
         label,
-        kwh: state.energyKwh,
+        kwh: state.totalEnergyKwh,
         cost: bill.totalBill,
         timestamp: now.getTime(),
       };
@@ -1177,25 +1235,24 @@
         dailyCostHistory.push(item);
       }
 
-      localStorage.setItem('daily_cost_history_l3', JSON.stringify(dailyCostHistory));
+      localStorage.setItem('daily_cost_history_3phase', JSON.stringify(dailyCostHistory));
       refreshCostChart();
 
       alert(
-        `บันทึกวันนี้แล้ว\nพลังงานสะสม L3: ${state.energyKwh.toFixed(3)} kWh\nค่าไฟโดยประมาณ: ${bill.totalBill.toFixed(2)} บาท`
+        `บันทึกวันนี้แล้ว\nพลังงานสะสมรวม 3 เฟส: ${state.totalEnergyKwh.toFixed(3)} kWh\nค่าไฟโดยประมาณ: ${bill.totalBill.toFixed(2)} บาท`
       );
     }
 
-    // ประวัติบิลรายเดือนเก็บไว้ใน localStorage ของเบราว์เซอร์นี้
     let monthlyBillHistory = [];
 
     try {
-      monthlyBillHistory = JSON.parse(localStorage.getItem('monthly_bill_history_l3') || '[]');
+      monthlyBillHistory = JSON.parse(localStorage.getItem('monthly_bill_history_3phase') || '[]');
     } catch (error) {
       console.warn('อ่านประวัติบิลรายเดือนไม่สำเร็จ:', error);
     }
 
     function saveCurrentMonthBill() {
-      if (state.energyKwh === null) {
+      if (state.totalEnergyKwh === null) {
         alert('ยังไม่มีค่าพลังงานจาก Node-RED');
         return;
       }
@@ -1206,12 +1263,12 @@
         year: 'numeric',
         month: 'long',
       });
-      const bill = calculateElectricityBill(state.energyKwh);
+      const bill = calculateElectricityBill(state.totalEnergyKwh);
 
       const record = {
         monthKey,
         monthLabel,
-        units: state.energyKwh,
+        units: state.totalEnergyKwh,
         totalBill: bill.totalBill,
         createdAt: now.getTime(),
       };
@@ -1224,7 +1281,7 @@
         monthlyBillHistory.push(record);
       }
 
-      localStorage.setItem('monthly_bill_history_l3', JSON.stringify(monthlyBillHistory));
+      localStorage.setItem('monthly_bill_history_3phase', JSON.stringify(monthlyBillHistory));
       renderMonthlyHistory();
       alert(`บันทึกบิลเดือน ${monthLabel} แล้ว`);
     }
@@ -1233,7 +1290,7 @@
       if (!confirm('ต้องการล้างประวัติบิลรายเดือนทั้งหมดหรือไม่?')) return;
 
       monthlyBillHistory = [];
-      localStorage.removeItem('monthly_bill_history_l3');
+      localStorage.removeItem('monthly_bill_history_3phase');
       renderMonthlyHistory();
     }
 
@@ -1244,7 +1301,7 @@
       if (!monthlyBillHistory.length) {
         container.innerHTML = `
           <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 20px">
-            📭 ยังไม่มีประวัติบิลรายเดือน
+            ยังไม่มีประวัติบิลรายเดือน
           </div>
         `;
         return;
@@ -1252,10 +1309,10 @@
 
       container.innerHTML = monthlyBillHistory.map((item) => `
         <div class="month-card">
-          <div class="month-card-period">📅 ${item.monthLabel}</div>
+          <div class="month-card-period">${item.monthLabel}</div>
           <div class="month-card-total">฿ ${Number(item.totalBill).toFixed(2)}</div>
           <div class="muted" style="margin-top: 4px">
-            พลังงานสะสม L3: ${Number(item.units).toFixed(3)} kWh
+            พลังงานสะสมรวม 3 เฟส: ${Number(item.units).toFixed(3)} kWh
           </div>
         </div>
       `).join('');
