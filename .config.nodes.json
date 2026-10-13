@@ -429,7 +429,7 @@
     },
     "@flowfuse/node-red-dashboard": {
         "name": "@flowfuse/node-red-dashboard",
-        "version": "1.31.0",
+        "version": "1.33.0",
         "local": true,
         "user": true,
         "nodes": {
@@ -734,7 +734,7 @@
     },
     "node-red-contrib-telegrambot": {
         "name": "node-red-contrib-telegrambot",
-        "version": "19.0.2",
+        "version": "19.0.3",
         "local": true,
         "user": true,
         "nodes": {

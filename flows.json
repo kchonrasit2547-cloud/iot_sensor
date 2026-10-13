@@ -8,30 +8,6 @@
         "env": []
     },
     {
-        "id": "ebbddd4fdda1e542",
-        "type": "tab",
-        "label": "Flow 2",
-        "disabled": false,
-        "info": "",
-        "env": []
-    },
-    {
-        "id": "5a4e6e3ec32cc259",
-        "type": "tab",
-        "label": "Flow 3",
-        "disabled": false,
-        "info": "",
-        "env": []
-    },
-    {
-        "id": "62db16a6b585cb57",
-        "type": "tab",
-        "label": "Flow 4",
-        "disabled": false,
-        "info": "",
-        "env": []
-    },
-    {
         "id": "1a40247d654a6712",
         "type": "mqtt-broker",
         "name": "IP",
@@ -337,8 +313,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 400,
-        "y": 220,
+        "x": 300,
+        "y": 420,
         "wires": [
             [
                 "379fa4d3ddf23aae",
@@ -402,8 +378,8 @@
         "styleRounded": true,
         "styleGlow": false,
         "className": "",
-        "x": 810,
-        "y": 260,
+        "x": 490,
+        "y": 360,
         "wires": [
             []
         ]
@@ -464,8 +440,8 @@
         "height": 8,
         "className": "",
         "interpolation": "linear",
-        "x": 830,
-        "y": 200,
+        "x": 510,
+        "y": 300,
         "wires": [
             []
         ]
@@ -518,8 +494,8 @@
         "styleRounded": true,
         "styleGlow": false,
         "className": "",
-        "x": 810,
-        "y": 480,
+        "x": 490,
+        "y": 580,
         "wires": [
             []
         ]
@@ -572,8 +548,8 @@
         "styleRounded": true,
         "styleGlow": false,
         "className": "",
-        "x": 820,
-        "y": 360,
+        "x": 500,
+        "y": 460,
         "wires": [
             []
         ]
@@ -634,8 +610,8 @@
         "height": 8,
         "className": "",
         "interpolation": "linear",
-        "x": 860,
-        "y": 320,
+        "x": 540,
+        "y": 420,
         "wires": [
             []
         ]
@@ -696,8 +672,8 @@
         "height": 8,
         "className": "",
         "interpolation": "linear",
-        "x": 850,
-        "y": 440,
+        "x": 530,
+        "y": 540,
         "wires": [
             []
         ]
@@ -710,8 +686,8 @@
         "bot": "fd503ab695e9eed7",
         "haserroroutput": false,
         "outputs": 1,
-        "x": 530,
-        "y": 420,
+        "x": 850,
+        "y": 220,
         "wires": [
             []
         ]
@@ -749,16 +725,16 @@
         "id": "1457a55b2ef1fcb4",
         "type": "function",
         "z": "746e438bb151500f",
-        "name": "function 2",
-        "func": "const now = Date.now();\nconst TIMEOUT = 30000; // ข้อมูลหายเกิน 30 วินาที ถือว่า Disconnect\n\nconst p = msg.payload || {};\nlet alerts = [];\n\n// ⚙️ เกณฑ์แจ้งเตือนระบบไฟฟ้า 3 เฟส\nconst VOLT_MIN = 198.0;       // ไฟตก (< 198V)\nconst VOLT_MAX = 242.0;       // ไฟเกิน (> 242V)\nconst CURRENT_MAX = 15.0;     // กระแสเกินต่อเฟส (> 15A)\nconst TOTAL_POWER_MAX = 5000; // กำลังไฟฟ้ารวมเกิน (> 5000W)\n\n// ใช้เวลาไทย (Asia/Bangkok)\nconst thaiHour = Number(\n    new Intl.DateTimeFormat(\"en-GB\", {\n        timeZone: \"Asia/Bangkok\",\n        hour: \"2-digit\",\n        hourCycle: \"h23\"\n    }).format(new Date(now))\n);\n\n// 🟢 จุดที่ 1: เปลี่ยนเงื่อนไขช่วงเวลาเป็น 18:00 น. ถึง 06:00 น. (thaiHour >= 19 หรือ < 8)\nconst isNightWindow = thaiHour >= 18 || thaiHour < 6;\n\n// สถานะเริ่มต้นของ Function Node\nlet startedAt = context.get(\"startedAt\");\nif (!startedAt) {\n    startedAt = now;\n    context.set(\"startedAt\", startedAt);\n}\n\n// เช็กว่ามีข้อมูล PZEM 3 เฟส เข้ามาหรือไม่\nconst hasPzemData =\n    typeof p.totalPower === \"number\" ||\n    typeof p.voltage === \"number\" ||\n    [p.l1, p.l2, p.l3].some(phase => phase && typeof phase.voltage === \"number\");\n\n// ใช้ชื่อ Key ภาษาอังกฤษที่ไม่มีเว้นวรรคหรือวงเล็บ\nconst devices = {\n    DHT11: typeof p.temperature === \"number\",\n    LDR: typeof p.light === \"number\",\n    PZEM_3Phase: hasPzemData\n};\n\n// ==========================================\n// 1. WATCHDOG CHECK (เรียกจาก Inject Node ด้วย msg.topic = \"watchdog\")\n// ==========================================\nif (msg.topic === \"watchdog\") {\n    for (const device of Object.keys(devices)) {\n        const lastSeen = context.get(\"lastSeen_\" + device);\n        const previous = context.get(\"disconnected_\" + device);\n\n        const referenceTime = lastSeen || startedAt;\n        const disconnected = now - referenceTime > TIMEOUT;\n\n        // ชื่อแสดงผลในไลน์/โทรเลข\n        const displayName = device === \"PZEM_3Phase\" ? \"PZEM-004T (3-Phase)\" : device;\n\n        // แจ้งเตือนครั้งเดียวเมื่อ Disconnect\n        if (disconnected && previous !== true) {\n            alerts.push(`🔴 ${displayName} Disconnect: ไม่พบข้อมูลเกิน 30 วินาที`);\n        }\n\n        // แจ้งเตือนเมื่อกลับมาเชื่อมต่อ\n        if (!disconnected && previous === true) {\n            alerts.push(`🟢 ${displayName} กลับมาเชื่อมต่อแล้ว`);\n        }\n\n        context.set(\"disconnected_\" + device, disconnected);\n    }\n\n    if (alerts.length === 0) return null;\n\n    msg.payload = {\n        chatId: 8602127088,\n        type: \"message\",\n        content: \"🚨 แจ้งเตือน IoT Watchdog\\n\\n\" + alerts.join(\"\\n\")\n    };\n\n    return msg;\n}\n\n// ==========================================\n// 2. บันทึกเวลาที่ได้รับข้อมูล & อัปเดตการกลับมาเชื่อมต่อ\n// ==========================================\nfor (const device of Object.keys(devices)) {\n    if (devices[device]) {\n        context.set(\"lastSeen_\" + device, now);\n\n        const displayName = device === \"PZEM_3Phase\" ? \"PZEM-004T (3-Phase)\" : device;\n\n        if (context.get(\"disconnected_\" + device) === true) {\n            context.set(\"disconnected_\" + device, false);\n            alerts.push(`🟢 ${displayName} กลับมาเชื่อมต่อแล้ว`);\n        }\n    }\n}\n\n// ==========================================\n// 3. ตรวจสอบความผิดปกติระบบไฟฟ้า 3 เฟส (L1, L2, L3)\n// ==========================================\nif (hasPzemData) {\n    const phases = [\n        { name: \"L1\", data: p.l1 },\n        { name: \"L2\", data: p.l2 },\n        { name: \"L3\", data: p.l3 }\n    ];\n\n    // 3.1 ตรวจสอบไฟตก / ไฟเกิน / กระแสเกิน แยกตามเฟส\n    phases.forEach(ph => {\n        if (!ph.data) return;\n        const v = Number(ph.data.voltage || 0);\n        const i = Number(ph.data.current || 0);\n        const keyPrefix = \"pzem_alert_\" + ph.name;\n\n        // ไฟตก\n        const isVoltLow = v > 0 && v < VOLT_MIN;\n        if (isVoltLow && context.get(keyPrefix + \"_vlow\") !== true) {\n            alerts.push(`⚠️ [${ph.name}] ไฟตก: ${v.toFixed(1)} V`);\n        }\n        context.set(keyPrefix + \"_vlow\", isVoltLow);\n\n        // ไฟเกิน\n        const isVoltHigh = v > VOLT_MAX;\n        if (isVoltHigh && context.get(keyPrefix + \"_vhigh\") !== true) {\n            alerts.push(`🚨 [${ph.name}] ไฟเกิน: ${v.toFixed(1)} V`);\n        }\n        context.set(keyPrefix + \"_vhigh\", isVoltHigh);\n\n        // กระแสเกิน\n        const isCurrentHigh = i > CURRENT_MAX;\n        if (isCurrentHigh && context.get(keyPrefix + \"_ihigh\") !== true) {\n            alerts.push(`🔥 [${ph.name}] กระแสเกิน: ${i.toFixed(2)} A`);\n        }\n        context.set(keyPrefix + \"_ihigh\", isCurrentHigh);\n        \n        // ตรวจสอบกระแสต่ำกว่า 2.00 A\n        // แจ้งเตือนเมื่อมีกระแสไหลมากกว่า 0 A แต่น้อยกว่า 2.00 A\n        const isCurrentLow = i > 0 && i > 2.00;\n\n        if (\n            isCurrentLow &&\n            context.get(keyPrefix + \"_ilow\") !== true\n        ) {\n            alerts.push(\n                `⚡ [${ph.name}] กระแสสูงกว่า 2.00 A: ${i.toFixed(2)} A\\nมีคนใช้ไฟอยู่`\n            );\n        }\n\n        context.set(keyPrefix + \"_ilow\", isCurrentLow);\n\n    });\n\n    // 3.2 ตรวจสอบไฟขาดเฟส (Phase Loss)\n    const activeVolts = phases.map(ph => ph.data ? Number(ph.data.voltage || 0) : 0);\n    if (activeVolts.some(v => v > 100)) {\n        phases.forEach(ph => {\n            const v = ph.data ? Number(ph.data.voltage || 0) : 0;\n            const key = \"pzem_alert_\" + ph.name + \"_loss\";\n            const isLoss = v < 50;\n\n            if (isLoss && context.get(key) !== true) {\n                alerts.push(`❌ [${ph.name}] ไฟขาดเฟส! (0 V)`);\n            }\n            context.set(key, isLoss);\n        });\n    }\n\n    // 3.3 ตรวจสอบกำลังไฟฟ้ารวมเกิน (Total Power Overload)\n    const totalPower = Number(p.totalPower || 0);\n    const isPowerOverload = totalPower > TOTAL_POWER_MAX;\n    if (isPowerOverload && context.get(\"pzem_alert_power_overload\") !== true) {\n        alerts.push(`💥 โหลดไฟฟ้ารวมเกินกำหนด: ${totalPower.toFixed(1)} W`);\n    }\n    context.set(\"pzem_alert_power_overload\", isPowerOverload);\n}\n\n// ==========================================\n// 4. ตรวจสอบอุณหภูมิและแสง (เฉพาะช่วง 19:00 น. ถึง 08:00 น.)\n// ==========================================\n// 🟢 จุดที่ 2: ใช้เงื่อนไข isNightWindow ในการตรวจจับ\n// ==========================================\n// 4. ตรวจสอบอุณหภูมิและแสง (เฉพาะช่วง 19:00 น. ถึง 08:00 น.)\n// ==========================================\nif (isNightWindow) {\n    // 🟢 ดึงค่าโดยรองรับทั้งชื่อเต็มและชื่อย่อจากเซ็นเซอร์จริง\n    const temp = p.temperature ?? p.temp;\n    const light = p.light ?? p.lux ?? p.ldr;\n\n    // ⚙️ ตั้งเกณฑ์: อุณหภูมิสูงเกิน 30°C หรือ แสงเกิน 300 lx\n    const tempAlert = typeof temp === \"number\" && temp >= 30; // ปรับเตือนเมื่อร้อน >= 30°C\n    const lightAlert = typeof light === \"number\" && light > 300;\n\n    if (tempAlert && context.get(\"tempAlert\") !== true) {\n        alerts.push(`🌡️ อุณหภูมิสูงเกินเกณฑ์: ${temp} °C`);\n    }\n\n    if (lightAlert && context.get(\"lightAlert\") !== true) {\n        alerts.push(`💡 เปิดไฟทิ้งไว้ (ความสว่าง: ${light} lx)`);\n    }\n\n    context.set(\"tempAlert\", tempAlert);\n    context.set(\"lightAlert\", lightAlert);\n} else {\n    // ช่วงกลางวัน รีเซ็ตสถานะ\n    context.set(\"tempAlert\", false);\n    context.set(\"lightAlert\", false);\n}\n\n// ==========================================\n// 5. ส่งข้อความออกไปยัง Telegram Bot Node\n// ==========================================\nif (alerts.length === 0) return null;\n\nmsg.payload = {\n    chatId: 8602127088,\n    type: \"message\",\n    content: \"🚨 แจ้งเตือนระบบ IoT\\n\\n\" + alerts.join(\"\\n\")\n};\n\nreturn msg;",
+        "name": "notifications",
+        "func": "const now = Date.now();\nconst TIMEOUT = 30000; // ข้อมูลหายเกิน 30 วินาที ถือว่า Disconnect\n\nconst p = msg.payload || {};\nlet alerts = [];\n\n// ⚙️ เกณฑ์แจ้งเตือนระบบไฟฟ้า 3 เฟส\nconst VOLT_MIN = 198.0;       // ไฟตก (< 198V)\nconst VOLT_MAX = 242.0;       // ไฟเกิน (> 242V)\nconst CURRENT_MAX = 15.0;     // กระแสเกินต่อเฟส (> 15A)\nconst TOTAL_POWER_MAX = 5000; // กำลังไฟฟ้ารวมเกิน (> 5000W)\n\n// ใช้เวลาไทย (Asia/Bangkok)\nconst thaiHour = Number(\n    new Intl.DateTimeFormat(\"en-GB\", {\n        timeZone: \"Asia/Bangkok\",\n        hour: \"2-digit\",\n        hourCycle: \"h23\"\n    }).format(new Date(now))\n);\n\n// ช่วงเวลา 19:00 น. ถึง 06:00 น.\nconst isNightWindow = thaiHour >= 19 || thaiHour < 6;\n\n// สถานะเริ่มต้นของ Function Node\nlet startedAt = context.get(\"startedAt\");\nif (!startedAt) {\n    startedAt = now;\n    context.set(\"startedAt\", startedAt);\n}\n\n// เช็กว่ามีข้อมูล PZEM 3 เฟส เข้ามาหรือไม่\nconst hasPzemData =\n    typeof p.totalPower === \"number\" ||\n    typeof p.voltage === \"number\" ||\n    [p.l1, p.l2, p.l3].some(phase => phase && typeof phase.voltage === \"number\");\n\nconst devices = {\n    DHT11: typeof p.temperature === \"number\" || typeof p.temp === \"number\",\n    LDR: typeof p.light === \"number\" || typeof p.lux === \"number\" || typeof p.ldr === \"number\",\n    PZEM_3Phase: hasPzemData\n};\n\n// ==========================================\n// 1. WATCHDOG CHECK (เรียกจาก Inject Node ด้วย msg.topic = \"watchdog\")\n// ==========================================\nif (msg.topic === \"watchdog\") {\n    for (const device of Object.keys(devices)) {\n        const lastSeen = context.get(\"lastSeen_\" + device);\n        const previous = context.get(\"disconnected_\" + device);\n\n        const referenceTime = lastSeen || startedAt;\n        const disconnected = now - referenceTime > TIMEOUT;\n\n        const displayName = device === \"PZEM_3Phase\" ? \"PZEM-004T (3-Phase)\" : device;\n\n        if (disconnected && previous !== true) {\n            alerts.push(`🔴 ${displayName} Disconnect: ไม่พบข้อมูลเกิน 30 วินาที`);\n        }\n\n        if (!disconnected && previous === true) {\n            alerts.push(`🟢 ${displayName} กลับมาเชื่อมต่อแล้ว`);\n        }\n\n        context.set(\"disconnected_\" + device, disconnected);\n    }\n\n    if (alerts.length === 0) return null;\n\n    msg.payload = {\n        chatId: 8602127088,\n        type: \"message\",\n        content: \"🚨 แจ้งเตือน IoT Watchdog\\n\\n\" + alerts.join(\"\\n\")\n    };\n\n    return msg;\n}\n\n// ==========================================\n// 2. บันทึกเวลาที่ได้รับข้อมูล & อัปเดตการกลับมาเชื่อมต่อ\n// ==========================================\nfor (const device of Object.keys(devices)) {\n    if (devices[device]) {\n        context.set(\"lastSeen_\" + device, now);\n\n        const displayName = device === \"PZEM_3Phase\" ? \"PZEM-004T (3-Phase)\" : device;\n\n        if (context.get(\"disconnected_\" + device) === true) {\n            context.set(\"disconnected_\" + device, false);\n            alerts.push(`🟢 ${displayName} กลับมาเชื่อมต่อแล้ว`);\n        }\n    }\n}\n\n// ==========================================\n// 3. ตรวจสอบความผิดปกติระบบไฟฟ้า 3 เฟส (L1, L2, L3)\n// ==========================================\nif (hasPzemData) {\n    const phases = [\n        { name: \"L1\", data: p.l1 },\n        { name: \"L2\", data: p.l2 },\n        { name: \"L3\", data: p.l3 }\n    ];\n\n    phases.forEach(ph => {\n        if (!ph.data) return;\n        const v = Number(ph.data.voltage || 0);\n        const i = Number(ph.data.current || 0);\n        const keyPrefix = \"pzem_alert_\" + ph.name;\n\n        // ไฟตก\n        const isVoltLow = v > 0 && v < VOLT_MIN;\n        if (isVoltLow && context.get(keyPrefix + \"_vlow\") !== true) {\n            alerts.push(`⚠️ [${ph.name}] ไฟตก: ${v.toFixed(1)} V`);\n        }\n        context.set(keyPrefix + \"_vlow\", isVoltLow);\n\n        // ไฟเกิน\n        const isVoltHigh = v > VOLT_MAX;\n        if (isVoltHigh && context.get(keyPrefix + \"_vhigh\") !== true) {\n            alerts.push(`🚨 [${ph.name}] ไฟเกิน: ${v.toFixed(1)} V`);\n        }\n        context.set(keyPrefix + \"_vhigh\", isVoltHigh);\n\n        // กระแสเกิน\n        const isCurrentHigh = i > CURRENT_MAX;\n        if (isCurrentHigh && context.get(keyPrefix + \"_ihigh\") !== true) {\n            alerts.push(`🔥 [${ph.name}] กระแสเกิน: ${i.toFixed(2)} A`);\n        }\n        context.set(keyPrefix + \"_ihigh\", isCurrentHigh);\n        \n        // ตรวจสอบกระแสใช้งาน\n        const isCurrentLow = i > 0 && i < 2.00;\n        if (isCurrentLow && context.get(keyPrefix + \"_ilow\") !== true) {\n            alerts.push(`⚡ [${ph.name}] มีการใช้ไฟ: ${i.toFixed(2)} A`);\n        }\n        context.set(keyPrefix + \"_ilow\", isCurrentLow);\n    });\n\n    // ตรวจสอบไฟขาดเฟส (Phase Loss)\n    const activeVolts = phases.map(ph => ph.data ? Number(ph.data.voltage || 0) : 0);\n    if (activeVolts.some(v => v > 100)) {\n        phases.forEach(ph => {\n            const v = ph.data ? Number(ph.data.voltage || 0) : 0;\n            const key = \"pzem_alert_\" + ph.name + \"_loss\";\n            const isLoss = v < 50;\n\n            if (isLoss && context.get(key) !== true) {\n                alerts.push(`❌ [${ph.name}] ไฟขาดเฟส! (0 V)`);\n            }\n            context.set(key, isLoss);\n        });\n    }\n\n    // ตรวจสอบกำลังไฟฟ้ารวมเกิน (Total Power Overload)\n    const totalPower = Number(p.totalPower || 0);\n    const isPowerOverload = totalPower > TOTAL_POWER_MAX;\n    if (isPowerOverload && context.get(\"pzem_alert_power_overload\") !== true) {\n        alerts.push(`💥 โหลดไฟฟ้ารวมเกินกำหนด: ${totalPower.toFixed(1)} W`);\n    }\n    context.set(\"pzem_alert_power_overload\", isPowerOverload);\n}\n\n// ==========================================\n// 4. ตรวจสอบอุณหภูมิและแสง\n// ==========================================\nconst temp = p.temperature ?? p.temp;\nconst light = p.light ?? p.lux ?? p.ldr;\n\n// ตรวจสอบอุณหภูมิ\nif (typeof temp === \"number\") {\n    // 4.1 ตรวจสอบอุณหภูมิสูงเกินเกณฑ์ (ทำงานตลอด 24 ชม.)\n    if (temp >= 30 && context.get(\"tempAlert\") !== true) {\n        alerts.push(`🌡️ อุณหภูมิสูงเกินเกณฑ์: ${temp} °C`);\n        context.set(\"tempAlert\", true);\n    } else if (temp < 27 && context.get(\"tempAlert\") === true) {\n        alerts.push(`🟢 อุณหภูมิกลับสู่สภาวะปกติ: ${temp} °C`);\n        context.set(\"tempAlert\", false);\n    }\n\n    // 4.2 ตรวจสอบการลืมปิดแอร์ (เฉพาะช่วง 19:00 - 06:00 น. และอุณหภูมิ < 25 °C)\n    if (isNightWindow) {\n        if (temp < 25 && context.get(\"acAlert\") !== true) {\n            alerts.push(`❄️ ลืมปิดแอร์! มีคนเปิดแอร์ทิ้งไว้ (อุณหภูมิ: ${temp} °C)`);\n            context.set(\"acAlert\", true);\n        } else if (temp >= 25 && context.get(\"acAlert\") === true) {\n            alerts.push(`🟢 อุณหภูมิห้องกลับสู่ระดับปกติ/ปิดแอร์แล้ว: ${temp} °C`);\n            context.set(\"acAlert\", false);\n        }\n    } else {\n        context.set(\"acAlert\", false);\n    }\n}\n\n// ตรวจสอบแสง (เฉพาะช่วง 19:00 น. ถึง 06:00 น.)\nif (isNightWindow && typeof light === \"number\") {\n    if (light > 300 && context.get(\"lightAlert\") !== true) {\n        alerts.push(`💡 เปิดไฟทิ้งไว้ (ความสว่าง: ${light} lx)`);\n        context.set(\"lightAlert\", true);\n    } else if (light <= 300) {\n        context.set(\"lightAlert\", false);\n    }\n} else if (!isNightWindow) {\n    context.set(\"lightAlert\", false);\n}\n\n// ==========================================\n// 5. จัดรูปแบบเพื่อส่ง Telegram (ถ้าไม่มีแจ้งเตือนจะส่ง null)\n// ==========================================\nif (alerts.length === 0) return null;\n\nmsg.payload = {\n    chatId: 8602127088,\n    type: \"message\",\n    content: \"🚨 แจ้งเตือนระบบ IoT\\n\\n\" + alerts.join(\"\\n\")\n};\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 300,
-        "y": 420,
+        "x": 450,
+        "y": 200,
         "wires": [
             [
                 "f79c6f4318e5037e"
@@ -777,8 +753,8 @@
         "inputs": 0,
         "handleallupdates": false,
         "handleprocessupdates": false,
-        "x": 150,
-        "y": 600,
+        "x": 850,
+        "y": 300,
         "wires": [
             [],
             []
@@ -815,8 +791,8 @@
         "name": "WS Receive Control",
         "server": "ws_server_01",
         "client": "",
-        "x": 160,
-        "y": 720,
+        "x": 1100,
+        "y": 240,
         "wires": [
             [
                 "ws_debug_01"
@@ -836,8 +812,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 380,
-        "y": 720,
+        "x": 1320,
+        "y": 240,
         "wires": []
     },
     {
@@ -893,15 +869,15 @@
         "id": "90805ce04b77a3ce",
         "type": "function",
         "z": "746e438bb151500f",
-        "name": "function 3",
-        "func": "let d = msg.payload;\n\nmsg.topic = `\nINSERT INTO sensor_data\n(\n    temperature,\n    humidity,\n    light\n)\nVALUES (?, ?, ?)\n`;\n\nmsg.payload = [\n    d.temperature,\n    d.humidity,\n    d.light\n];\n\nreturn msg;",
+        "name": "format for database",
+        "func": "let d = msg.payload;\n\n// แปลง JSON String เป็น Object หากโหนด MQTT In ยังส่งมาเป็นข้อความ\nif (typeof d === 'string') {\n    try {\n        d = JSON.parse(d);\n    } catch (e) {\n        node.error(\"Invalid JSON format\", msg);\n        return null;\n    }\n}\n\nmsg.topic = `\nINSERT INTO sensor_data\n(\n    temperature,\n    humidity,\n    light\n)\nVALUES (?, ?, ?)\n`;\n\nmsg.payload = [\n    d.temperature !== undefined ? d.temperature : 0,\n    d.humidity !== undefined ? d.humidity : 0,\n    d.light !== undefined ? d.light : 0\n];\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 500,
+        "x": 540,
         "y": 120,
         "wires": [
             [
@@ -975,8 +951,8 @@
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 1700,
-        "y": 900,
+        "x": 1600,
+        "y": 420,
         "wires": [
             [
                 "c377364895c086a1"
@@ -996,8 +972,8 @@
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 1660,
-        "y": 980,
+        "x": 1560,
+        "y": 500,
         "wires": [
             [
                 "daf3bfac10176ff6"
@@ -1017,8 +993,8 @@
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 1740,
-        "y": 1080,
+        "x": 1640,
+        "y": 600,
         "wires": [
             [
                 "09283dd1d9f844c4"
@@ -1038,8 +1014,8 @@
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 1740,
-        "y": 1200,
+        "x": 1640,
+        "y": 720,
         "wires": [
             [
                 "e239fdbca286a433"
@@ -1094,8 +1070,8 @@
         "styleRounded": true,
         "styleGlow": false,
         "className": "",
-        "x": 2120,
-        "y": 980,
+        "x": 2020,
+        "y": 500,
         "wires": [
             []
         ]
@@ -1148,8 +1124,8 @@
         "styleRounded": true,
         "styleGlow": false,
         "className": "",
-        "x": 2120,
-        "y": 1080,
+        "x": 2020,
+        "y": 600,
         "wires": [
             []
         ]
@@ -1202,8 +1178,8 @@
         "styleRounded": true,
         "styleGlow": false,
         "className": "",
-        "x": 2160,
-        "y": 1160,
+        "x": 2060,
+        "y": 680,
         "wires": [
             []
         ]
@@ -1256,8 +1232,8 @@
         "styleRounded": true,
         "styleGlow": false,
         "className": "",
-        "x": 2120,
-        "y": 900,
+        "x": 2020,
+        "y": 420,
         "wires": [
             []
         ]
@@ -1275,11 +1251,13 @@
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 1630,
-        "y": 80,
+        "x": 1130,
+        "y": 120,
         "wires": [
             [
-                "58eb1fde93acfb25"
+                "58eb1fde93acfb25",
+                "1457a55b2ef1fcb4",
+                "f5db39a9b7c0a377"
             ]
         ]
     },
@@ -1287,15 +1265,15 @@
         "id": "58eb1fde93acfb25",
         "type": "function",
         "z": "746e438bb151500f",
-        "name": "function 4",
-        "func": "// ดึง topic เช่น ku/engineering/power3phase/data/1/volt\nvar parts = msg.topic.split('/');\nvar phaseId = parts[4];   // \"1\", \"2\", หรือ \"3\"\nvar metric  = parts[5];   // \"volt\", \"amp\", \"watt\", \"energy_wh\", \"timestamp\"\nvar val     = msg.payload;\n\n// 🟢 ฟังก์ชันสร้างเวลาปัจจุบันของ Node-RED Server (รูปแบบ YYYY-MM-DD HH:mm:ss)\nfunction getServerTime() {\n    var now = new Date();\n    var pad = function(n) { return String(n).padStart(2, '0'); };\n    return now.getFullYear() + '-' +\n           pad(now.getMonth() + 1) + '-' +\n           pad(now.getDate()) + ' ' +\n           pad(now.getHours()) + ':' +\n           pad(now.getMinutes()) + ':' +\n           pad(now.getSeconds());\n}\n\n// ใช้งาน memory ของ flow เพื่อรวมค่าต่อเฟส\nvar storeKey = \"phase_\" + phaseId;\nvar data = flow.get(storeKey) || {\n    phase: parseInt(phaseId),\n    timestamp: null,\n    volt: null,\n    amp: null,\n    watt: null,\n    energy_wh: null\n};\n\n// 🟢 ปรับแก้จุดนี้: หาก metric เป็น \"timestamp\" ให้เขียนเวลา Server ปัจจุบันทับค่าที่ค้างมาจากบอร์ด\nif (metric === \"timestamp\") data.timestamp = getServerTime();\n\nif (metric === \"volt\")      data.volt = parseFloat(val);\nif (metric === \"amp\")       data.amp = parseFloat(val);\nif (metric === \"watt\")      data.watt = parseFloat(val);\nif (metric === \"energy_wh\") data.energy_wh = parseFloat(val);\n\nflow.set(storeKey, data);\n\n/* เก็บค่าล่าสุดของแต่ละเฟสไว้ให้ API อ่าน */\nflow.set(\"pzem_latest_phase_\" + phaseId, {\n    phase: parseInt(phaseId),\n    timestamp: data.timestamp,\n    volt: data.volt,\n    amp: data.amp,\n    watt: data.watt,\n    energy_wh: data.energy_wh\n});\n\n// เมื่อได้รับข้อมูลครบทั้ง 5 พารามิเตอร์ จึงประกอบคำสั่ง SQL\nif (data.timestamp && data.volt !== null && data.amp !== null && data.watt !== null && data.energy_wh !== null) {\n    var sql = \"INSERT INTO pzem_3phase_logs (device_time, phase_id, voltage, current, power, energy) VALUES ('\"\n              + data.timestamp + \"', \" \n              + data.phase + \", \" \n              + data.volt + \", \" \n              + data.amp + \", \" \n              + data.watt + \", \" \n              + data.energy_wh + \");\";\n    \n    // รีเซ็ตค่าเพื่อรอรอบถัดไป\n    flow.set(storeKey, null);\n    \n    return { topic: sql };\n}\n\nreturn null; // ยังไม่ครบทุกค่า ให้รอข้อความถัดไป",
+        "name": "format for database",
+        "func": "// ดึง topic เช่น ku/engineering/power3phase/data/1/volt\nvar parts = msg.topic.split('/');\nif (parts.length < 6) return null;\n\nvar phaseId = parts[4];   // \"1\", \"2\", หรือ \"3\"\nvar metric  = parts[5];   // \"volt\", \"amp\", \"watt\", \"energy_wh\"\nvar val     = parseFloat(msg.payload);\n\nif (isNaN(val)) return null;\n\n// ฟังก์ชันดึงเวลาปัจจุบันของ Node-RED Server (YYYY-MM-DD HH:mm:ss)\nfunction getServerTime() {\n    var now = new Date();\n    var pad = function(n) { return String(n).padStart(2, '0'); };\n    return now.getFullYear() + '-' +\n           pad(now.getMonth() + 1) + '-' +\n           pad(now.getDate()) + ' ' +\n           pad(now.getHours()) + ':' +\n           pad(now.getMinutes()) + ':' +\n           pad(now.getSeconds());\n}\n\n// ใช้งาน memory ของ flow เพื่อเก็บค่าและสถานะการรับข้อมูลต่อเฟส\nvar storeKey = \"phase_\" + phaseId;\nvar data = flow.get(storeKey) || {\n    phase: parseInt(phaseId),\n    volt: null,\n    amp: null,\n    watt: null,\n    energy_wh: null,\n    updated: { volt: false, amp: false, watt: false, energy_wh: false }\n};\n\n// 🟢 เพิ่มสแกนป้องกัน Error: สร้างวัตถุ updated ทันทีถ้าข้อมูลใน Memory ยังเป็นโครงสร้างรุ่นเก่า\nif (!data.updated) {\n    data.updated = { volt: false, amp: false, watt: false, energy_wh: false };\n}\n\n// อัปเดตค่าและปัก Flag ว่าได้รับค่านั้นแล้ว\nif (metric === \"volt\")      { data.volt = val;      data.updated.volt = true; }\nif (metric === \"amp\")       { data.amp = val;       data.updated.amp = true; }\nif (metric === \"watt\")      { data.watt = val;      data.updated.watt = true; }\nif (metric === \"energy_wh\") { data.energy_wh = val; data.updated.energy_wh = true; }\n\nflow.set(storeKey, data);\n\n// ตรวจสอบว่าเฟสนี้ได้รับค่าครบทั้ง 4 พารามิเตอร์ของรอบปัจจุบันแล้วหรือยัง\nif (data.updated.volt && data.updated.amp && data.updated.watt && data.updated.energy_wh) {\n    var currentTimestamp = getServerTime();\n\n    /* เก็บค่าล่าสุดของแต่ละเฟสไว้ให้หน้าเว็บ / API อ่าน */\n    flow.set(\"pzem_latest_phase_\" + phaseId, {\n        phase: data.phase,\n        timestamp: currentTimestamp,\n        volt: data.volt,\n        amp: data.amp,\n        watt: data.watt,\n        energy_wh: data.energy_wh\n    });\n\n    // ประกอบคำสั่ง SQL INSERT\n    var sql = \"INSERT INTO pzem_3phase_logs (device_time, phase_id, voltage, current, power, energy) VALUES ('\"\n              + currentTimestamp + \"', \" \n              + data.phase + \", \" \n              + data.volt + \", \" \n              + data.amp + \", \" \n              + data.watt + \", \" \n              + data.energy_wh + \");\";\n\n    // รีเซ็ต Flag การรับค่าของเฟสนี้ เพื่อเตรียมพร้อมรับข้อมูลในรอบถัดไป\n    data.updated = { volt: false, amp: false, watt: false, energy_wh: false };\n    flow.set(storeKey, data);\n    \n    return { \n        topic: sql, \n        payload: sql \n    };\n}\n\nreturn null; // รอข้อความถัดไป",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1940,
+        "x": 1520,
         "y": 80,
         "wires": [
             [
@@ -1309,7 +1287,7 @@
         "z": "746e438bb151500f",
         "mydb": "c7c7ac6af60dbc9b",
         "name": "",
-        "x": 2180,
+        "x": 1800,
         "y": 80,
         "wires": [
             []
@@ -1320,14 +1298,14 @@
         "type": "function",
         "z": "746e438bb151500f",
         "name": "Format for Web",
-        "func": "let p = msg.payload;\nif (typeof p === 'string') {\n    try { p = JSON.parse(p); } catch(e) {}\n}\nif (!p || typeof p !== 'object') {\n    p = {};\n}\n\nlet out = {\n    // Environmental\n    temperature: p.temperature !== undefined ? p.temperature : p.temp,\n    humidity: p.humidity !== undefined ? p.humidity : p.humi,\n    light: p.light !== undefined ? p.light : p.ldr,\n\n    // PZEM-004T Electrical parameters\n    voltage: p.voltage !== undefined ? p.voltage : (p.volt !== undefined ? p.volt : p.v),\n    current: p.current !== undefined ? p.current : (p.current_a !== undefined ? p.current_a : (p.amp !== undefined ? p.amp : p.i)),\n    power: p.power !== undefined ? p.power : (p.watt !== undefined ? p.watt : (p.power_w !== undefined ? p.power_w : p.p)),\n    energy: p.energy !== undefined ? p.energy : (p.kwh !== undefined ? p.kwh : (p.energy_kwh !== undefined ? p.energy_kwh : p.e)),\n    frequency: p.frequency !== undefined ? p.frequency : (p.freq !== undefined ? p.freq : (p.hz !== undefined ? p.hz : p.f)),\n    pf: p.pf !== undefined ? p.pf : (p.power_factor !== undefined ? p.power_factor : p.powerFactor),\n\n    topic: msg.topic || p.topic,\n    timestamp: Date.now()\n};\n\nmsg.payload = JSON.stringify(out);\nreturn msg;",
+        "func": "let p = msg.payload;\nif (typeof p === 'string') {\n    try { p = JSON.parse(p); } catch(e) {}\n}\nif (!p || typeof p !== 'object') {\n    p = {};\n}\n\nlet out = {\n    // Environmental\n    temperature: p.temperature !== undefined ? p.temperature : p.temp,\n    humidity: p.humidity !== undefined ? p.humidity : p.humi,\n    light: p.light !== undefined ? p.light : p.ldr,\n\n\n    topic: msg.topic || p.topic,\n    timestamp: Date.now()\n};\n\nmsg.payload = JSON.stringify(out);\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 540,
+        "x": 600,
         "y": 40,
         "wires": [
             [
@@ -1369,7 +1347,7 @@
         "type": "function",
         "z": "746e438bb151500f",
         "name": "function 5",
-        "func": "msg.topic = `\nSELECT\n    id,\n    device_time,\n    phase_id,\n    voltage,\n    current,\n    power,\n    energy,\n    recorded_at\nFROM pzem_3phase_logs\nORDER BY recorded_at DESC\nLIMIT 500\n`;\nreturn msg;",
+        "func": "msg.topic = `\nSELECT\n    id,\n    device_time,\n    phase_id,\n    voltage,\n    current,\n    power,\n    energy,\n    recorded_at\nFROM pzem_3phase_logs\nORDER BY recorded_at DESC\nLIMIT 10000\n`;\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -1623,7 +1601,7 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "payload": " {   \"l1\": {     \"voltage\": 220,     \"current\": 3.25   },   \"l2\": {     \"voltage\": 220,     \"current\": 5.00   },   \"l3\": {     \"voltage\": 220,     \"current\": 0.00   },   \"totalPower\": 1200 }",
+        "payload": "{   \"l1\": { \"voltage\": 220, \"current\": 16.50 } }",
         "payloadType": "json",
         "x": 70,
         "y": 280,
@@ -1634,603 +1612,34 @@
         ]
     },
     {
-        "id": "04be06dda1d28c75",
-        "type": "mqtt in",
+        "id": "f5db39a9b7c0a377",
+        "type": "function",
         "z": "746e438bb151500f",
-        "name": "",
-        "topic": "ku/engineering/power3phase/data/1/energy_wh",
-        "qos": "0",
-        "datatype": "auto-detect",
-        "broker": "56f173cb94846bf2",
-        "nl": false,
-        "rap": true,
-        "rh": 0,
-        "inputs": 0,
-        "x": 1660,
-        "y": 140,
+        "name": "Format for Web",
+        "func": "// ดึงเวลาปัจจุบันในรูปแบบ YYYY-MM-DD HH:mm:ss\nconst now = new Date().toISOString().slice(0, 19).replace('T', ' ');\nconst data = msg.payload;\n\n// กรณีที่ 1: รับข้อมูลพร้อมกัน 3 เฟส { l1: {...}, l2: {...}, l3: {...} }\nif (data.l1 || data.l2 || data.l3) {\n    let inserts = [];\n    [1, 2, 3].forEach(phaseId => {\n        const p = data[`l${phaseId}`];\n        if (p) {\n            const volt = p.v ?? p.voltage ?? 0;\n            const curr = p.i ?? p.current ?? 0;\n            const watt = p.p ?? p.power ?? 0;\n            const kwh = p.e ?? p.energy ?? 0;\n            \n            inserts.push(`('${now}', '${now}', ${phaseId}, ${volt}, ${curr}, ${watt}, ${kwh})`);\n        }\n    });\n\n    if (inserts.length > 0) {\n        msg.topic = `INSERT INTO pzem_telemetry (device_time, recorded_at, phase_id, voltage, current, power, energy) VALUES ${inserts.join(', ')}`;\n    }\n} \n// กรณีที่ 2: รับข้อมูลมาทีละเฟสแบบเดี่ยว { phase_id: 1, voltage: 230, ... }\nelse {\n    const phaseId = data.phase_id || data.phase || 1;\n    const volt = data.voltage ?? data.v ?? 0;\n    const curr = data.current ?? data.i ?? 0;\n    const watt = data.power ?? data.p ?? 0;\n    const kwh = data.energy ?? data.e ?? 0;\n\n    msg.topic = `INSERT INTO pzem_telemetry (device_time, recorded_at, phase_id, voltage, current, power, energy) VALUES ('${now}', '${now}', ${phaseId}, ${volt}, ${curr}, ${watt}, ${kwh})`;\n}\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1480,
+        "y": 160,
         "wires": [
             [
-                "b1b60338d03802d6"
+                "165258d8a4275e75"
             ]
         ]
     },
     {
-        "id": "c32f84b549f2ddad",
-        "type": "mqtt in",
+        "id": "165258d8a4275e75",
+        "type": "websocket out",
         "z": "746e438bb151500f",
-        "name": "",
-        "topic": "ku/engineering/power3phase/data/1/amp",
-        "qos": "0",
-        "datatype": "auto-detect",
-        "broker": "56f173cb94846bf2",
-        "nl": false,
-        "rap": true,
-        "rh": 0,
-        "inputs": 0,
-        "x": 1640,
-        "y": 220,
-        "wires": [
-            [
-                "b8e6eb93ae965dbb"
-            ]
-        ]
-    },
-    {
-        "id": "da58a5f1ac885be9",
-        "type": "mqtt in",
-        "z": "746e438bb151500f",
-        "name": "",
-        "topic": "ku/engineering/power3phase/data/1/volt",
-        "qos": "0",
-        "datatype": "auto-detect",
-        "broker": "56f173cb94846bf2",
-        "nl": false,
-        "rap": true,
-        "rh": 0,
-        "inputs": 0,
-        "x": 1660,
-        "y": 320,
-        "wires": [
-            [
-                "d6bb97a8b60f82bf"
-            ]
-        ]
-    },
-    {
-        "id": "6ee73bd79f660c3e",
-        "type": "mqtt in",
-        "z": "746e438bb151500f",
-        "name": "",
-        "topic": "ku/engineering/power3phase/data/1/watt",
-        "qos": "0",
-        "datatype": "auto-detect",
-        "broker": "56f173cb94846bf2",
-        "nl": false,
-        "rap": true,
-        "rh": 0,
-        "inputs": 0,
-        "x": 1700,
-        "y": 420,
-        "wires": [
-            [
-                "e0af3457189d3e02"
-            ]
-        ]
-    },
-    {
-        "id": "b8e6eb93ae965dbb",
-        "type": "ui-gauge",
-        "z": "746e438bb151500f",
-        "name": "",
-        "group": "338a290118d7092e",
-        "order": 0,
-        "value": "payload",
-        "valueType": "msg",
-        "width": 3,
-        "height": 3,
-        "gtype": "gauge-half",
-        "gstyle": "needle",
-        "title": "gauge1",
-        "alwaysShowTitle": false,
-        "floatingTitlePosition": "top-left",
-        "units": "units",
-        "icon": "",
-        "prefix": "",
-        "suffix": "",
-        "segments": [
-            {
-                "from": "0",
-                "color": "#5cd65c",
-                "text": "",
-                "textType": "label"
-            },
-            {
-                "from": "4",
-                "color": "#ffc800",
-                "text": "",
-                "textType": "label"
-            },
-            {
-                "from": "7",
-                "color": "#ea5353",
-                "text": "",
-                "textType": "label"
-            }
-        ],
-        "min": 0,
-        "max": "50",
-        "sizeThickness": 16,
-        "sizeGap": 4,
-        "sizeKeyThickness": 8,
-        "styleRounded": true,
-        "styleGlow": false,
-        "className": "",
-        "x": 2060,
-        "y": 220,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "d6bb97a8b60f82bf",
-        "type": "ui-gauge",
-        "z": "746e438bb151500f",
-        "name": "",
-        "group": "338a290118d7092e",
-        "order": 0,
-        "value": "payload",
-        "valueType": "msg",
-        "width": 3,
-        "height": 3,
-        "gtype": "gauge-half",
-        "gstyle": "needle",
-        "title": "gauge1",
-        "alwaysShowTitle": false,
-        "floatingTitlePosition": "top-left",
-        "units": "units",
-        "icon": "",
-        "prefix": "",
-        "suffix": "",
-        "segments": [
-            {
-                "from": "0",
-                "color": "#5cd65c",
-                "text": "",
-                "textType": "label"
-            },
-            {
-                "from": "4",
-                "color": "#ffc800",
-                "text": "",
-                "textType": "label"
-            },
-            {
-                "from": "7",
-                "color": "#ea5353",
-                "text": "",
-                "textType": "label"
-            }
-        ],
-        "min": 0,
-        "max": "300",
-        "sizeThickness": 16,
-        "sizeGap": 4,
-        "sizeKeyThickness": 8,
-        "styleRounded": true,
-        "styleGlow": false,
-        "className": "",
-        "x": 2060,
-        "y": 320,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "e0af3457189d3e02",
-        "type": "ui-gauge",
-        "z": "746e438bb151500f",
-        "name": "",
-        "group": "338a290118d7092e",
-        "order": 0,
-        "value": "payload",
-        "valueType": "msg",
-        "width": 3,
-        "height": 3,
-        "gtype": "gauge-half",
-        "gstyle": "needle",
-        "title": "gauge1",
-        "alwaysShowTitle": false,
-        "floatingTitlePosition": "top-left",
-        "units": "units",
-        "icon": "",
-        "prefix": "",
-        "suffix": "",
-        "segments": [
-            {
-                "from": "0",
-                "color": "#5cd65c",
-                "text": "",
-                "textType": "label"
-            },
-            {
-                "from": "4",
-                "color": "#ffc800",
-                "text": "",
-                "textType": "label"
-            },
-            {
-                "from": "7",
-                "color": "#ea5353",
-                "text": "",
-                "textType": "label"
-            }
-        ],
-        "min": 0,
-        "max": "2000",
-        "sizeThickness": 16,
-        "sizeGap": 4,
-        "sizeKeyThickness": 8,
-        "styleRounded": true,
-        "styleGlow": false,
-        "className": "",
-        "x": 2080,
-        "y": 420,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "b1b60338d03802d6",
-        "type": "ui-gauge",
-        "z": "746e438bb151500f",
-        "name": "",
-        "group": "338a290118d7092e",
-        "order": 0,
-        "value": "payload",
-        "valueType": "msg",
-        "width": 3,
-        "height": 3,
-        "gtype": "gauge-half",
-        "gstyle": "needle",
-        "title": "gauge1",
-        "alwaysShowTitle": false,
-        "floatingTitlePosition": "top-left",
-        "units": "units",
-        "icon": "",
-        "prefix": "",
-        "suffix": "",
-        "segments": [
-            {
-                "from": "0",
-                "color": "#5cd65c",
-                "text": "",
-                "textType": "label"
-            },
-            {
-                "from": "4",
-                "color": "#ffc800",
-                "text": "",
-                "textType": "label"
-            },
-            {
-                "from": "7",
-                "color": "#ea5353",
-                "text": "",
-                "textType": "label"
-            }
-        ],
-        "min": 0,
-        "max": "10000",
-        "sizeThickness": 16,
-        "sizeGap": 4,
-        "sizeKeyThickness": 8,
-        "styleRounded": true,
-        "styleGlow": false,
-        "className": "",
-        "x": 2060,
-        "y": 140,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "34902d2895f6aa79",
-        "type": "mqtt in",
-        "z": "746e438bb151500f",
-        "name": "",
-        "topic": "ku/engineering/power3phase/data/2/volt",
-        "qos": "0",
-        "datatype": "auto-detect",
-        "broker": "56f173cb94846bf2",
-        "nl": false,
-        "rap": true,
-        "rh": 0,
-        "inputs": 0,
-        "x": 1720,
-        "y": 500,
-        "wires": [
-            [
-                "f6dc9ad973ee7596"
-            ]
-        ]
-    },
-    {
-        "id": "de27075e514bec30",
-        "type": "mqtt in",
-        "z": "746e438bb151500f",
-        "name": "",
-        "topic": "ku/engineering/power3phase/data/2/amp",
-        "qos": "0",
-        "datatype": "auto-detect",
-        "broker": "56f173cb94846bf2",
-        "nl": false,
-        "rap": true,
-        "rh": 0,
-        "inputs": 0,
-        "x": 1720,
-        "y": 580,
-        "wires": [
-            [
-                "c0ac7ad744fc3607"
-            ]
-        ]
-    },
-    {
-        "id": "0d74e252f0305480",
-        "type": "mqtt in",
-        "z": "746e438bb151500f",
-        "name": "",
-        "topic": "ku/engineering/power3phase/data/2/watt",
-        "qos": "0",
-        "datatype": "auto-detect",
-        "broker": "56f173cb94846bf2",
-        "nl": false,
-        "rap": true,
-        "rh": 0,
-        "inputs": 0,
-        "x": 1700,
-        "y": 680,
-        "wires": [
-            [
-                "e0abf2ce5b9e994a"
-            ]
-        ]
-    },
-    {
-        "id": "ec90bf76adbe06cc",
-        "type": "mqtt in",
-        "z": "746e438bb151500f",
-        "name": "",
-        "topic": "ku/engineering/power3phase/data/2/energy_wh",
-        "qos": "0",
-        "datatype": "auto-detect",
-        "broker": "56f173cb94846bf2",
-        "nl": false,
-        "rap": true,
-        "rh": 0,
-        "inputs": 0,
-        "x": 1740,
-        "y": 780,
-        "wires": [
-            [
-                "578ad0d36db4e9f5"
-            ]
-        ]
-    },
-    {
-        "id": "f6dc9ad973ee7596",
-        "type": "ui-gauge",
-        "z": "746e438bb151500f",
-        "name": "",
-        "group": "338a290118d7092e",
-        "order": 0,
-        "value": "payload",
-        "valueType": "msg",
-        "width": 3,
-        "height": 3,
-        "gtype": "gauge-half",
-        "gstyle": "needle",
-        "title": "gauge2",
-        "alwaysShowTitle": false,
-        "floatingTitlePosition": "top-left",
-        "units": "units",
-        "icon": "",
-        "prefix": "",
-        "suffix": "",
-        "segments": [
-            {
-                "from": "0",
-                "color": "#5cd65c",
-                "text": "",
-                "textType": "label"
-            },
-            {
-                "from": "4",
-                "color": "#ffc800",
-                "text": "",
-                "textType": "label"
-            },
-            {
-                "from": "7",
-                "color": "#ea5353",
-                "text": "",
-                "textType": "label"
-            }
-        ],
-        "min": 0,
-        "max": "300",
-        "sizeThickness": 16,
-        "sizeGap": 4,
-        "sizeKeyThickness": 8,
-        "styleRounded": true,
-        "styleGlow": false,
-        "className": "",
-        "x": 2080,
-        "y": 500,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "c0ac7ad744fc3607",
-        "type": "ui-gauge",
-        "z": "746e438bb151500f",
-        "name": "",
-        "group": "338a290118d7092e",
-        "order": 0,
-        "value": "payload",
-        "valueType": "msg",
-        "width": 3,
-        "height": 3,
-        "gtype": "gauge-half",
-        "gstyle": "needle",
-        "title": "gauge2",
-        "alwaysShowTitle": false,
-        "floatingTitlePosition": "top-left",
-        "units": "units",
-        "icon": "",
-        "prefix": "",
-        "suffix": "",
-        "segments": [
-            {
-                "from": "0",
-                "color": "#5cd65c",
-                "text": "",
-                "textType": "label"
-            },
-            {
-                "from": "4",
-                "color": "#ffc800",
-                "text": "",
-                "textType": "label"
-            },
-            {
-                "from": "7",
-                "color": "#ea5353",
-                "text": "",
-                "textType": "label"
-            }
-        ],
-        "min": 0,
-        "max": "50",
-        "sizeThickness": 16,
-        "sizeGap": 4,
-        "sizeKeyThickness": 8,
-        "styleRounded": true,
-        "styleGlow": false,
-        "className": "",
-        "x": 2080,
-        "y": 580,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "e0abf2ce5b9e994a",
-        "type": "ui-gauge",
-        "z": "746e438bb151500f",
-        "name": "",
-        "group": "338a290118d7092e",
-        "order": 0,
-        "value": "payload",
-        "valueType": "msg",
-        "width": 3,
-        "height": 3,
-        "gtype": "gauge-half",
-        "gstyle": "needle",
-        "title": "gauge2",
-        "alwaysShowTitle": false,
-        "floatingTitlePosition": "top-left",
-        "units": "units",
-        "icon": "",
-        "prefix": "",
-        "suffix": "",
-        "segments": [
-            {
-                "from": "0",
-                "color": "#5cd65c",
-                "text": "",
-                "textType": "label"
-            },
-            {
-                "from": "4",
-                "color": "#ffc800",
-                "text": "",
-                "textType": "label"
-            },
-            {
-                "from": "7",
-                "color": "#ea5353",
-                "text": "",
-                "textType": "label"
-            }
-        ],
-        "min": 0,
-        "max": "2000",
-        "sizeThickness": 16,
-        "sizeGap": 4,
-        "sizeKeyThickness": 8,
-        "styleRounded": true,
-        "styleGlow": false,
-        "className": "",
-        "x": 2100,
-        "y": 680,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "578ad0d36db4e9f5",
-        "type": "ui-gauge",
-        "z": "746e438bb151500f",
-        "name": "",
-        "group": "338a290118d7092e",
-        "order": 0,
-        "value": "payload",
-        "valueType": "msg",
-        "width": 3,
-        "height": 3,
-        "gtype": "gauge-half",
-        "gstyle": "needle",
-        "title": "gauge2",
-        "alwaysShowTitle": false,
-        "floatingTitlePosition": "top-left",
-        "units": "units",
-        "icon": "",
-        "prefix": "",
-        "suffix": "",
-        "segments": [
-            {
-                "from": "0",
-                "color": "#5cd65c",
-                "text": "",
-                "textType": "label"
-            },
-            {
-                "from": "4",
-                "color": "#ffc800",
-                "text": "",
-                "textType": "label"
-            },
-            {
-                "from": "7",
-                "color": "#ea5353",
-                "text": "",
-                "textType": "label"
-            }
-        ],
-        "min": 0,
-        "max": "10000",
-        "sizeThickness": 16,
-        "sizeGap": 4,
-        "sizeKeyThickness": 8,
-        "styleRounded": true,
-        "styleGlow": false,
-        "className": "",
-        "x": 2140,
-        "y": 780,
-        "wires": [
-            []
-        ]
+        "name": "WS Send Sensors",
+        "server": "ws_server_01",
+        "client": "",
+        "x": 1770,
+        "y": 160,
+        "wires": []
     }
 ]

@@ -6,10 +6,11 @@
 // =========================================================================
 // 1. Shared State & Configurations
 // =========================================================================
-// เปลี่ยนจาก: let ws;  หรือ  const ws;
-// เป็น:
 var ws = window.ws || null;
 let reconnectTimer = null;
+
+// 🟢 ตัวแปรเก็บสถานะการแจ้งเตือนอุณหภูมิฝั่ง Web (ป้องกันป๊อปอัปเด้งซ้ำรัวๆ)
+let isWebTempAlertShown = false;
 
 // Get or initialize WebSocket URL
 function getWsUrl() {
@@ -190,10 +191,15 @@ function connectWebSocket() {
 
     ws.onmessage = function (event) {
       try {
+        // หากข้อมูลที่ส่งมาไม่ใช่ JSON (ไม่ได้ขึ้นต้นด้วย { ) ให้ข้ามทันที ไม่ต้องพ่น console.warn
+        if (typeof event.data === 'string' && !event.data.trim().startsWith('{')) {
+          return;
+        }
+
         const data = JSON.parse(event.data);
         handleIncomingTelemetry(data);
       } catch (err) {
-        console.warn('Non-JSON message received:', event.data);
+        // ข้ามข้อความที่แปลง JSON ไม่ได้เงียบๆ ไม่ให้รก Console
       }
     };
 
@@ -246,11 +252,22 @@ function handleIncomingTelemetry(data) {
   pzemData.updatedAt = timeStr;
   localStorage.setItem('pzem_cached_data', JSON.stringify(pzemData));
 
-  // ตรวจสอบการแจ้งเตือน
+  // 🟢 ตรวจสอบการแจ้งเตือนอุณหภูมิ (ป้องกันการเด้งซ้ำรัวๆ)
   const th = getThresholds();
   let isAlert = false;
-  if (temp < 20) {
-    showToast('warning', 'แจ้งเตือนอุณหภูมิ', 'อุณหภูมิสูงกว่ากำหนด');
+
+  if (temp !== null && !isNaN(temp)) {
+    // 1. แจ้งเตือนครั้งเดียวเมื่ออุณหภูมิสูง >= 30°C
+    if (temp >= 30 && !isWebTempAlertShown) {
+      showToast('warning', 'แจ้งเตือนอุณหภูมิ', `อุณหภูมิสูงกว่ากำหนด (${temp.toFixed(1)} °C)`);
+      isWebTempAlertShown = true; // ล็อคสถานะไว้ ไม่ให้เด้งป๊อปอัปซ้ำ
+      isAlert = true;
+    }
+    // 2. ปลดล็อคสถานะเมื่ออุณหภูมิลดลงมาต่ำกว่า 28°C
+    else if (temp < 28 && isWebTempAlertShown) {
+      showToast('success', 'อุณหภูมิปกติ', `อุณหภูมิกลับสู่สภาวะปกติ (${temp.toFixed(1)} °C)`);
+      isWebTempAlertShown = false; // ปลดล็อค พร้อมแจ้งเตือนรอบถัดไป
+    }
   }
 
   const year = now.getFullYear();

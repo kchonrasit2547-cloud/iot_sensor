@@ -1,309 +1,292 @@
 #include <WiFi.h>
+#include <WiFiManager.h>
+#include <WiFiClientSecure.h>
 #include <PubSubClient.h>
+#include <HTTPClient.h>
 #include <DHT.h>
-#include <math.h>
+#include <PZEM004Tv30.h>
+#include <time.h>
+#include <sys/time.h>
 
-// =========================
-// WiFi Config
-// =========================
-const char* ssid = "SSB206";
-const char* password = "650603F9";
+// ==========================================
+// 1. CONFIGURATION & PINS
+// ==========================================
+#define DHTPIN       4
+#define DHTTYPE      DHT11
+#define LDRPIN       34
+#define PZEM_RX_PIN  16
+#define PZEM_TX_PIN  17
 
-// =========================
-// MQTT Config
-// =========================
-const char* mqtt_server = "192.168.1.5";
-const int mqtt_port = 1883;
-const char* mqtt_topic = "iot/sensor";
+// สลับโหมด: true = จำลองค่า PZEM (ทดสอบหอพัก), false = อ่านค่า PZEM จริง
+#define USE_MOCK_PZEM true  
 
-// =========================
-// DHT11 Config
-// =========================
-#define DHTPIN 4
-#define DHTTYPE DHT11
+// Local MQTT Broker Settings
+const char* LOCAL_MQTT_SERVER = "192.168.1.5";
+const int   LOCAL_MQTT_PORT   = 1883;
+const char* LOCAL_TOPIC       = "iot/sensor";
 
+// HiveMQ Cloud MQTT Broker Settings (TLS)
+const char* CLOUD_MQTT_SERVER = "b1846ae35bad4e6f83b3e0bf47e1e724.s1.eu.hivemq.cloud";
+const int   CLOUD_MQTT_PORT   = 8883;
+const char* CLOUD_MQTT_USER   = "esp32_pzem01";
+const char* CLOUD_MQTT_PASS   = "1qazxsw2";
+
+// ==========================================
+// 2. OBJECTS & GLOBALS
+// ==========================================
 DHT dht(DHTPIN, DHTTYPE);
+HardwareSerial pzemSerial(2); // Hardware UART2
 
-// =========================
-// LDR Config
-// =========================
-#define LIGHT_PIN 34
+PZEM004Tv30 pzem1(pzemSerial, PZEM_RX_PIN, PZEM_TX_PIN, 0x01);
+PZEM004Tv30 pzem2(pzemSerial, PZEM_RX_PIN, PZEM_TX_PIN, 0x02);
+PZEM004Tv30 pzem3(pzemSerial, PZEM_RX_PIN, PZEM_TX_PIN, 0x03);
 
-// =========================
-// WiFi & MQTT
-// =========================
-WiFiClient espClient;
-PubSubClient client(espClient);
+WiFiClient espLocalClient;
+PubSubClient localMqtt(espLocalClient);
 
-// =========================
-// Timers
-// =========================
-unsigned long lastRead = 0;
-unsigned long lastMQTT = 0;
+WiFiClientSecure espCloudClient;
+PubSubClient cloudMqtt(espCloudClient);
 
-const unsigned long readInterval = 2000;
-const unsigned long mqttInterval = 60000;
-
-// =========================
 // Sensor Variables
-// =========================
-float temperature = NAN;
-float humidity = NAN;
+float temperature = 0.0;
+float humidity    = 0.0;
+int   lightADC    = 0;
+float lightLux    = 0.0;
 
-int lightADC = 0;
-float lightLux = NAN;
+// Timers
+unsigned long lastSensorRead = 0;
+unsigned long lastLocalPub   = 0;
+unsigned long lastCloudPub   = 0;
 
-// =========================
-// LDR Calibration Table
-// หมายเหตุ: ค่า Lux เป็นค่าประมาณ
-// ต้องปรับเทียบกับเครื่องวัด Lux จริง
-// =========================
-struct CalibrationPoint {
-  int adc;
-  float lux;
-};
+const unsigned long readInterval  = 2000;  // อ่านเซ็นเซอร์และอัปเดต Serial Monitor ทุก 2 วินาที
+const unsigned long localInterval = 60000; // ส่ง Local MQTT ทุก 1 นาที
+const unsigned long cloudInterval = 60000; // ส่ง HiveMQ Cloud ทุก 1 นาที (ใช้ millis จับเวลา)
 
-const CalibrationPoint CALIBRATION[] = {
-  {500,  800.0},
-  {1000, 500.0},
-  {2000, 200.0},
-  {3000,  50.0},
-  {4000,   5.0}
-};
+// ==========================================
+// 3. HELPER FUNCTIONS
+// ==========================================
 
-const int CAL_SIZE =
-  sizeof(CALIBRATION) / sizeof(CALIBRATION[0]);
-
-// =========================
-// Convert ADC to Lux
-// Linear Interpolation
-// =========================
-float adcToLux(int adc) {
-
-  if (adc <= CALIBRATION[0].adc) {
-    return CALIBRATION[0].lux;
-  }
-
-  if (adc >= CALIBRATION[CAL_SIZE - 1].adc) {
-    return CALIBRATION[CAL_SIZE - 1].lux;
-  }
-
-  for (int i = 0; i < CAL_SIZE - 1; i++) {
-
-    int adc1 = CALIBRATION[i].adc;
-    int adc2 = CALIBRATION[i + 1].adc;
-
-    if (adc >= adc1 && adc <= adc2) {
-
-      float lux1 = CALIBRATION[i].lux;
-      float lux2 = CALIBRATION[i + 1].lux;
-
-      return lux1 +
-        ((float)(adc - adc1) / (adc2 - adc1))
-        * (lux2 - lux1);
-    }
-  }
-
-  return NAN;
+// แปลงค่า ADC ของ LDR เป็น Lux แบบ Inverted Logic (4095 = 0 Lux)
+float adcToLux(int adcVal) {
+  if (adcVal >= 4090) return 0.0; // มืดสนิท
+  float invADC = 4095.0 - adcVal;
+  float lux = (invADC / 4095.0) * 1000.0;
+  return (lux < 0.0) ? 0.0 : lux;
 }
 
-// =========================
-// Read LDR
-// =========================
-int readLDR() {
+// ดึงเวลาปัจจุบันผ่าน HTTP (WorldTimeAPI)
+void syncTimeHTTP() {
+  Serial.println("\n[HTTP Time] Starting Time Synchronization...");
+  delay(2000); // หน่วงเวลาให้ Wi-Fi / DNS ตั้งตัว
 
-  long total = 0;
+  HTTPClient http;
+  http.setTimeout(5000);
 
-  for (int i = 0; i < 16; i++) {
-    total += analogRead(LIGHT_PIN);
-    delay(2);
-  }
-
-  return total / 16;
-}
-
-// =========================
-// WiFi Connection
-// =========================
-void setup_wifi() {
-
-  Serial.print("Connecting WiFi");
-
-  WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("\nWiFi connected");
-
-  Serial.print("ESP32 IP: ");
-  Serial.println(WiFi.localIP());
-}
-
-// =========================
-// MQTT Reconnect
-// =========================
-void reconnectMQTT() {
-
-  while (!client.connected()) {
-
-    Serial.print("Connecting MQTT...");
-
-    if (client.connect("ESP32_Sensor_Client")) {
-
-      Serial.println("Connected");
-
+  for (int attempt = 1; attempt <= 3; attempt++) {
+    Serial.printf(" Attempt %d/3: Connecting to WorldTimeAPI...", attempt);
+    http.begin("http://worldtimeapi.org/api/timezone/Asia/Bangkok");
+    int httpCode = http.GET();
+    
+    if (httpCode == 200) {
+      String payload = http.getString();
+      int idx = payload.indexOf("\"unixtime\":");
+      if (idx != -1) {
+        String timeStr = payload.substring(idx + 11);
+        time_t epoch = (time_t)timeStr.toInt();
+        if (epoch > 1700000000) {
+          struct timeval tv = { epoch, 0 };
+          settimeofday(&tv, NULL);
+          setenv("TZ", "ICT-7", 1); // UTC+7 Thailand
+          tzset();
+          Serial.println(" SUCCESS!");
+          http.end();
+          return;
+        }
+      }
     } else {
+      Serial.printf(" Failed (HTTP Code: %d)\n", httpCode);
+    }
+    http.end();
+    if (attempt < 3) delay(2000);
+  }
+  Serial.println(">>> HTTP Time Sync FAILED! (Using internal clock)");
+}
 
-      Serial.print("Failed, rc=");
-      Serial.println(client.state());
+String tsYMD_HMS() {
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo)) {
+    return "1970-01-01 00:00:00";
+  }
+  char buf[25];
+  strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &timeinfo);
+  return String(buf);
+}
 
-      delay(2000);
+// อ่านค่าสภาพแวดล้อมเข้าตัวแปร
+void updateEnvironmentalSensors() {
+  temperature = dht.readTemperature();
+  humidity    = dht.readHumidity();
+  lightADC    = analogRead(LDRPIN);
+  lightLux    = adcToLux(lightADC);
+}
+
+// ==========================================
+// 4. MQTT RECONNECT & PUBLISH
+// ==========================================
+void reconnectLocalMQTT() {
+  if (!localMqtt.connected()) {
+    Serial.print("Connecting Local MQTT (192.168.1.5)... ");
+    if (localMqtt.connect("ESP32_Local_Env")) {
+      Serial.println("Connected!");
+    } else {
+      Serial.printf("Failed (rc=%d)\n", localMqtt.state());
     }
   }
 }
 
-// =========================
-// Setup
-// =========================
+void reconnectCloudMQTT() {
+  if (!cloudMqtt.connected()) {
+    Serial.print("Connecting HiveMQ Cloud... ");
+    if (cloudMqtt.connect("ESP32_PZEM_Hub", CLOUD_MQTT_USER, CLOUD_MQTT_PASS)) {
+      Serial.println("Connected!");
+    } else {
+      Serial.printf("Failed (rc=%d)\n", cloudMqtt.state());
+    }
+  }
+}
+
+void publishCloudNumber(uint8_t id, const char* metric, float val) {
+  if (isnan(val)) val = -1.0;
+  char topic[100];
+  snprintf(topic, sizeof(topic), "ku/engineering/power3phase/data/%u/%s", id, metric);
+  char buf[32];
+  dtostrf(val, 1, 3, buf);
+  cloudMqtt.publish(topic, buf);
+}
+
+void publishCloudTimestamp(uint8_t id, const String& ts) {
+  char topic[100];
+  snprintf(topic, sizeof(topic), "ku/engineering/power3phase/data/%u/timestamp", id);
+  cloudMqtt.publish(topic, ts.c_str());
+}
+
+void readAndSendPZEM(PZEM004Tv30& p, uint8_t id, const String& ts) {
+  float v, i, w, e;
+
+  if (USE_MOCK_PZEM) {
+    v = 220.0 + (random(-30, 30) / 10.0);   
+    i = 1.000 + (random(0, 4000) / 1000.0); 
+    w = v * i * 0.95;                       
+    e = 150.25 + (id * 10.5);               
+    Serial.printf("[MOCK] PZEM%u -> V=%.2f I=%.3f P=%.1f E=%.2f\n", id, v, i, w, e);
+  } else {
+    v = p.voltage(); delay(60);
+    i = p.current(); delay(60);
+    w = p.power();   delay(60);
+    e = p.energy();  delay(60);
+    Serial.printf("[REAL] PZEM%u -> V=%.2f I=%.3f P=%.1f E=%.2f\n", 
+                  id, isnan(v)?-1:v, isnan(i)?-1:i, isnan(w)?-1:w, isnan(e)?-1:e);
+  }
+
+  publishCloudTimestamp(id, ts);
+  publishCloudNumber(id, "volt", v);
+  publishCloudNumber(id, "amp", i);
+  publishCloudNumber(id, "watt", w);
+  publishCloudNumber(id, "energy_wh", e);
+}
+
+// ==========================================
+// 5. SETUP
+// ==========================================
 void setup() {
-
   Serial.begin(115200);
+  delay(1000);
+  Serial.println("\n=== ESP32 Multi-Node IoT Hub Starting ===");
 
-  analogReadResolution(12);
-  pinMode(LIGHT_PIN, INPUT);
-
+  // Initialize Hardware
   dht.begin();
+  pinMode(LDRPIN, INPUT);
 
-  setup_wifi();
+  // WiFiManager Provisioning
+  WiFiManager wm;
+  wm.setConfigPortalTimeout(180); 
+  if (!wm.autoConnect("PZEM-Setup")) {
+    Serial.println("Failed to connect Wi-Fi, restarting...");
+    ESP.restart();
+  }
+  Serial.print(">>> WiFi Connected! IP: ");
+  Serial.println(WiFi.localIP());
 
-  client.setServer(mqtt_server, mqtt_port);
+  // HTTP Time Sync
+  syncTimeHTTP();
+  Serial.print(">>> Current Time (UTC+7): ");
+  Serial.println(tsYMD_HMS());
 
-  Serial.println("==============================");
-  Serial.println("ESP32 + DHT11 + LDR");
-  Serial.println("==============================");
+  // อ่านค่าเซ็นเซอร์ตั้งต้นทันที 1 ครั้ง (ป้องกันการส่งค่า 0.0)
+  delay(1000);
+  updateEnvironmentalSensors();
+
+  // MQTT Server Configurations
+  localMqtt.setServer(LOCAL_MQTT_SERVER, LOCAL_MQTT_PORT);
+  
+  espCloudClient.setInsecure(); // Skip TLS Cert Validation for HiveMQ
+  cloudMqtt.setServer(CLOUD_MQTT_SERVER, CLOUD_MQTT_PORT);
 }
 
-// =========================
-// Read All Sensors
-// =========================
-void readSensors() {
-
-  humidity = dht.readHumidity();
-  temperature = dht.readTemperature();
-
-  lightADC = readLDR();
-  lightLux = adcToLux(lightADC);
-
-  Serial.println("\n--- SENSOR READINGS ---");
-
-  if (isnan(temperature) || isnan(humidity)) {
-    Serial.println("DHT11: Read Error!");
-  } else {
-    Serial.printf(
-      "Temp: %.1f C | Humi: %.1f %%\n",
-      temperature,
-      humidity
-    );
-  }
-
-  Serial.printf("LDR ADC: %d\n", lightADC);
-
-  if (isnan(lightLux)) {
-    Serial.println("LDR Lux: Calibration Error");
-  } else {
-    Serial.printf(
-      "LDR Lux (estimated): %.1f lx\n",
-      lightLux
-    );
-  }
-
-  Serial.println("-----------------------");
-}
-
-// =========================
-// Float to JSON Number
-// =========================
-String jsonNumber(float value, int decimals) {
-
-  if (isnan(value) || isinf(value)) {
-    return "null";
-  }
-
-  return String(value, decimals);
-}
-
-// =========================
-// Send MQTT JSON
-// =========================
-void sendMQTT() {
-
-  String payload = "{";
-
-  payload += "\"temperature\":";
-  payload += jsonNumber(temperature, 1);
-  payload += ",";
-
-  payload += "\"humidity\":";
-  payload += jsonNumber(humidity, 1);
-  payload += ",";
-
-  payload += "\"light\":";
-  payload += jsonNumber(lightLux, 1);
-  payload += ",";
-
-  payload += "\"light_adc\":";
-  payload += String(lightADC);
-
-  payload += "}";
-
-  Serial.println("\n========== MQTT PUBLISH ==========");
-
-  Serial.print("Topic: ");
-  Serial.println(mqtt_topic);
-
-  Serial.print("Payload: ");
-  Serial.println(payload);
-
-  if (client.publish(mqtt_topic, payload.c_str())) {
-    Serial.println("Status: SUCCESS");
-  } else {
-    Serial.println("Status: FAILED");
-  }
-
-  Serial.println("==================================");
-}
-
-// =========================
-// Main Loop
-// =========================
+// ==========================================
+// 6. MAIN LOOP
+// ==========================================
 void loop() {
-
-  if (WiFi.status() != WL_CONNECTED) {
-    setup_wifi();
-  }
-
-  if (!client.connected()) {
-    reconnectMQTT();
-  }
-
-  client.loop();
-
   unsigned long currentMillis = millis();
 
-  // Read sensors every 2 seconds
-  if (currentMillis - lastRead >= readInterval) {
+  // Maintain MQTT Connections
+  if (WiFi.status() == WL_CONNECTED) {
+    if (!localMqtt.connected()) reconnectLocalMQTT();
+    if (!cloudMqtt.connected()) reconnectCloudMQTT();
+  }
+  localMqtt.loop();
+  cloudMqtt.loop();
 
-    lastRead = currentMillis;
-    readSensors();
+  // Task A: อ่านค่าเซ็นเซอร์และแสดงผล Serial Monitor ทุก 2 วินาที
+  if (currentMillis - lastSensorRead >= readInterval) {
+    lastSensorRead = currentMillis;
+    updateEnvironmentalSensors();
+
+    Serial.printf("[ENV] Temp: %.1f °C | Hum: %.1f %% | Light ADC: %d (%.1f Lux)\n",
+                  isnan(temperature) ? -1 : temperature,
+                  isnan(humidity) ? -1 : humidity,
+                  lightADC, lightLux);
   }
 
-  // Publish MQTT every 60 seconds
-  if (currentMillis - lastMQTT >= mqttInterval) {
+  // Task B: ส่งค่าสภาพแวดล้อมเข้า Local MQTT -> Topic: "iot/sensor" ทุก 1 นาที
+  if (currentMillis - lastLocalPub >= localInterval) {
+    lastLocalPub = currentMillis;
+    if (localMqtt.connected()) {
+      char payload[128];
+      snprintf(payload, sizeof(payload), 
+               "{\"temperature\":%.1f,\"humidity\":%.1f,\"light\":%.1f}", 
+               isnan(temperature) ? -1 : temperature, 
+               isnan(humidity) ? -1 : humidity, 
+               lightLux);
+      
+      localMqtt.publish(LOCAL_TOPIC, payload);
+      Serial.println(">>> Published to Local MQTT (iot/sensor) OK");
+    }
+  }
 
-    lastMQTT = currentMillis;
-    sendMQTT();
+  // Task C: ส่งข้อมูลไฟฟ้า 3 เฟสเข้า HiveMQ Cloud ทุก 1 นาที (ใช้ millis จับเวลา)
+  if (currentMillis - lastCloudPub >= cloudInterval) {
+    lastCloudPub = currentMillis;
+    String ts = tsYMD_HMS();
+    
+    Serial.printf("\n[%s] Trigger Periodic Cloud Publish...\n", ts.c_str());
+    if (cloudMqtt.connected()) {
+      readAndSendPZEM(pzem1, 1, ts);
+      readAndSendPZEM(pzem2, 2, ts);
+      readAndSendPZEM(pzem3, 3, ts);
+      Serial.println(">>> HiveMQ Cloud Publish Complete!\n");
+    } else {
+      Serial.println(">>> HiveMQ Cloud Publish Skipped: Disconnected!\n");
+    }
   }
 }

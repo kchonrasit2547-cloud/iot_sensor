@@ -16,22 +16,12 @@ const pool = mysql.createPool({
   connectionLimit: 5
 });
 
-// คอลัมน์ที่ energy_history.html ใช้ (1 แถว = 1 เฟส)
+// คอลัมน์ที่ใช้งาน
 const REQUIRED = ['id', 'device_time', 'recorded_at', 'phase_id', 'voltage', 'current', 'power', 'energy'];
 
 const num = v => (v === null || v === undefined || v === '' || !Number.isFinite(Number(v))) ? null : Number(v);
 
-// ---- เดิม: ไม่แก้พฤติกรรม ----
-app.get('/api/energy-data', async (req, res) => {
-  try {
-    const [rows] = await pool.query(`SELECT * FROM \`${TABLE}\` ORDER BY id DESC LIMIT 100`);
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ---- ตรวจว่าตารางมีคอลัมน์ครบหรือไม่ ----
+// API เช็ค Schema
 app.get('/api/schema', async (req, res) => {
   try {
     const [cols] = await pool.query(`SHOW COLUMNS FROM \`${TABLE}\``);
@@ -42,27 +32,60 @@ app.get('/api/schema', async (req, res) => {
   }
 });
 
-// ---- ใหม่: GET /api/energy-history?limit=1000&phase=1|2|3&from=YYYY-MM-DD&to=YYYY-MM-DD ----
-// คืน "array" ตรง ๆ ตามที่ energy_history.html ตรวจด้วย Array.isArray
+// ---- [ปรับใหม่] GET /api/energy-history (Server-side Search & Pagination) ----
 app.get('/api/energy-history', async (req, res) => {
   try {
-    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 1000, 1), 5000);
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 5000);
+    const offset = (page - 1) * limit;
+
     const where = [];
     const params = [];
 
+    // 1. กรอง Phase
     const phase = parseInt(req.query.phase, 10);
-    if ([1, 2, 3].includes(phase)) { where.push('phase_id = ?'); params.push(phase); }
-    if (/^\d{4}-\d{2}-\d{2}$/.test(req.query.from || '')) { where.push('recorded_at >= ?'); params.push(`${req.query.from} 00:00:00`); }
-    if (/^\d{4}-\d{2}-\d{2}$/.test(req.query.to || '')) { where.push('recorded_at <= ?'); params.push(`${req.query.to} 23:59:59`); }
+    if ([1, 2, 3].includes(phase)) {
+      where.push('phase_id = ?');
+      params.push(phase);
+    }
 
-    const sql = `SELECT ${REQUIRED.map(c => `\`${c}\``).join(', ')} FROM \`${TABLE}\`` +
-      (where.length ? ` WHERE ${where.join(' AND ')}` : '') +
-      ' ORDER BY id DESC LIMIT ?';
-    params.push(limit);
+    // 2. กรองช่วงวันที่ (from - to)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(req.query.from || '')) {
+      where.push('recorded_at >= ?');
+      params.push(`${req.query.from} 00:00:00`);
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(req.query.to || '')) {
+      where.push('recorded_at <= ?');
+      params.push(`${req.query.to} 23:59:59`);
+    }
 
-    const [rows] = await pool.query(sql, params);
-    // แรงดัน/ค่าอื่นที่เป็น NULL ส่งเป็น null (ไม่แปลงเป็น 0) หน้าเว็บจะแสดง "--"
-    res.json(rows.map(r => ({
+    // 3. กรองคำค้นหา (Search Query) ค้นหาทุกฟิลด์ในฐานข้อมูล
+    const search = (req.query.search || '').trim();
+    if (search) {
+      where.push(`(
+        CAST(id AS CHAR) LIKE ? OR
+        CAST(device_time AS CHAR) LIKE ? OR
+        CAST(recorded_at AS CHAR) LIKE ? OR
+        CAST(voltage AS CHAR) LIKE ? OR
+        CAST(current AS CHAR) LIKE ? OR
+        CAST(power AS CHAR) LIKE ? OR
+        CAST(energy AS CHAR) LIKE ?
+      )`);
+      const sParam = `%${search}%`;
+      params.push(sParam, sParam, sParam, sParam, sParam, sParam, sParam);
+    }
+
+    const whereClause = where.length ? ` WHERE ${where.join(' AND ')}` : '';
+
+    // นับจำนวนทั้งหมดที่ตรงเงื่อนไข
+    const countSql = `SELECT COUNT(*) AS total FROM \`${TABLE}\`${whereClause}`;
+    const [[{ total }]] = await pool.query(countSql, params);
+
+    // ดึงข้อมูลเฉพาะหน้าที่เลือก
+    const dataSql = `SELECT ${REQUIRED.map(c => `\`${c}\``).join(', ')} FROM \`${TABLE}\`${whereClause} ORDER BY id DESC LIMIT ? OFFSET ?`;
+    const [rows] = await pool.query(dataSql, [...params, limit, offset]);
+
+    const formattedRows = rows.map(r => ({
       id: r.id,
       device_time: r.device_time,
       recorded_at: r.recorded_at,
@@ -71,14 +94,28 @@ app.get('/api/energy-history', async (req, res) => {
       current: num(r.current),
       power: num(r.power),
       energy: num(r.energy)
-    })));
+    }));
+
+    // กรณีขอแบบ raw array (สำหรับดึงข้อมูลทำกราฟรายวัน/ส่งออก CSV)
+    if (req.query.raw === 'true') {
+      return res.json(formattedRows);
+    }
+
+    // ตอบกลับโครงสร้างข้อมูลพร้อม Metadata สำหรับทำ Pagination
+    res.json({
+      total: Number(total),
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit) || 1,
+      data: formattedRows
+    });
   } catch (err) {
     console.error('History Query Error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-// ---- ใหม่: ค่าล่าสุดของแต่ละเฟส ในรูปแบบที่ energy.html ใช้ (phases/totalPower/totalEnergy) ----
+// GET /api/energy-latest (ดึงค่าล่าสุดของแต่ละเฟสสำหรับ KPI Bar)
 app.get('/api/energy-latest', async (req, res) => {
   try {
     const [rows] = await pool.query(
@@ -92,13 +129,14 @@ app.get('/api/energy-latest', async (req, res) => {
         voltage: num(r.voltage),
         current: num(r.current),
         power: num(r.power),
-        pf: num(r.pf) // ถ้าตารางไม่มีคอลัมน์ pf จะเป็น null
+        energy: num(r.energy),
+        pf: num(r.pf)
       };
       totalPower += num(r.power) ?? 0;
       totalEnergy += num(r.energy) ?? 0;
       if (!latestTime || new Date(r.recorded_at) > new Date(latestTime)) latestTime = r.recorded_at;
     });
-    res.json({ phases, totalPower, totalEnergy, frequency: null, timestamp: latestTime });
+    res.json({ phases, totalPower, totalEnergy, frequency: null, timestamp: latestTime, rawRows: rows });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

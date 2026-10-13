@@ -29,7 +29,6 @@
                 <div class="brand-icon">⚡</div>
                 <div>
                     <div class="brand-title">Smart IoT Hub</div>
-
                 </div>
             </a>
             <button class="sidebar-close-btn" onclick="closeSidebar()">✕</button>
@@ -62,10 +61,8 @@
                     <span>ประวัติข้อมูลพลังงานไฟฟ้า</span>
                 </a>
             </li>
-
         </ul>
 
-        <div class="nav-label" style="padding-top: 8px;">บริการภายนอก (Node-RED)</div>
         <ul class="nav-list" style="flex: 0; padding-bottom: 12px;">
             <li class="nav-item">
                 <a href="http://localhost:1880/dashboard/page1" target="_blank" rel="noopener noreferrer">
@@ -99,8 +96,6 @@
                     <h1 id="pageHeadingTitle">ประวัติการใช้พลังงานไฟฟ้า (PZEM-004T API)</h1>
                 </div>
             </div>
-
-
         </header>
 
         <!-- Content Area -->
@@ -160,7 +155,7 @@
                     <div>
                         <div class="panel-title"><span>คำนวณค่าไฟฟ้า และกราฟประวัติรายวัน</span></div>
                         <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
-                            เลือกวันที่จากปฏิทินเพื่อสรุปยอดหน่วยไฟฟ้า ค่าไฟฐาน ค่า Ft ภาษี VAT และค่าไฟรวมสุทธิ
+                            เลือกวันที่จากปฏิทินเพื่อสรุปยอดหน่วยไฟฟ้า ค่าไฟฐาน ค่า Ft ภาษี VAT
                         </p>
                     </div>
                     <!-- Calendar & Rate Selector Toolbar -->
@@ -241,8 +236,9 @@
                             กำลังโหลดข้อมูล...
                         </p>
                     </div>
+
                     <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                        <button class="btn btn-outline btn-sm" onclick="exportEnergyCSV()">
+                        <button id="exportBtn" class="btn btn-outline btn-sm" onclick="exportEnergyCSV()">
                             <span>ส่งออก CSV</span>
                         </button>
                     </div>
@@ -252,7 +248,7 @@
                 <div class="table-toolbar">
                     <div class="search-input-box">
                         <input type="text" id="searchInput" placeholder="ค้นหาตามเวลา, Phase, หรือตัวเลข..."
-                            oninput="renderTable()">
+                            oninput="onSearchInput()">
                     </div>
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <label for="phase" style="font-size: 13px; font-weight: 600; color: var(--text-muted);">เลือก
@@ -291,6 +287,30 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Table Pagination Controls -->
+                <div class="pagination-wrapper"
+                    style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-top: 1px solid #e2e8f0; flex-wrap: wrap; gap: 10px;">
+                    <div style="font-size: 13px; color: var(--text-muted);" id="paginationInfo">
+                        กำลังคำนวณจำนวนรายการ...
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        <label for="rowsPerPage" style="font-size: 13px; color: var(--text-muted);">แสดงหน้าละ:</label>
+                        <select id="rowsPerPage" class="input-field" style="width: auto; padding: 4px 8px;"
+                            onchange="changeRowsPerPage(this.value)">
+                            <option value="10" selected>10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <button class="btn btn-outline btn-sm" id="prevPageBtn"
+                            onclick="changePage(currentPage - 1)">ก่อนหน้า</button>
+                        <div id="pageNumbers" style="display: flex; gap: 4px;"></div>
+                        <button class="btn btn-outline btn-sm" id="nextPageBtn"
+                            onclick="changePage(currentPage + 1)">ถัดไป</button>
+                    </div>
+                </div>
+
             </div>
 
         </main>
@@ -301,6 +321,10 @@
         const API_URL = "http://localhost:1880/api/energy-history";
         let records = [];
         let dailyChart = null;
+
+        // Pagination State Variable
+        let currentPage = 1;
+        let rowsPerPage = 10;
 
         function localDateKey(value) {
             if (!value) return "";
@@ -317,14 +341,38 @@
             return localDateKey(row.device_time || row.recorded_at);
         }
 
+        function onSearchInput() {
+            currentPage = 1;
+            renderTable();
+        }
+
         function onPhaseChange() {
+            currentPage = 1;
             renderTable();
             renderDailyChart();
         }
 
+        function changeRowsPerPage(limit) {
+            rowsPerPage = parseInt(limit, 10);
+            currentPage = 1;
+            renderTable();
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            renderTable();
+        }
+
+        function formatChartTime(value) {
+            if (!value) return "";
+            const d = new Date(value);
+            return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleTimeString("th-TH", {
+                timeZone: "Asia/Bangkok", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23"
+            });
+        }
+
         function renderDailyChart() {
-            const dateInput = document.getElementById("historyDate");
-            const selectedDate = dateInput.value;
+            const selectedDate = document.getElementById("historyDate").value;
             const currentPhase = document.getElementById("phase")?.value || "all";
 
             const daily = records
@@ -337,34 +385,25 @@
 
             document.getElementById("dailyCount").textContent = daily.length.toLocaleString("th-TH");
 
+            // คำนวณหน่วยไฟ (kWh)
             let dailyUsedKwh = 0;
-
             if (currentPhase !== "all") {
                 const energyVals = daily.map(r => Number(r.energy) / 1000).filter(n => Number.isFinite(n) && n >= 0);
-                if (energyVals.length >= 2) {
-                    dailyUsedKwh = Math.max(...energyVals) - Math.min(...energyVals);
-                }
+                if (energyVals.length >= 2) dailyUsedKwh = Math.max(...energyVals) - Math.min(...energyVals);
             } else {
                 const phaseList = [...new Set(daily.map(r => r.phase_id).filter(Boolean))];
                 if (phaseList.length > 0) {
                     phaseList.forEach(p => {
                         const pLogs = daily.filter(r => String(r.phase_id) === String(p));
                         const eVals = pLogs.map(r => Number(r.energy) / 1000).filter(n => Number.isFinite(n) && n >= 0);
-                        if (eVals.length >= 2) {
-                            dailyUsedKwh += (Math.max(...eVals) - Math.min(...eVals));
-                        }
+                        if (eVals.length >= 2) dailyUsedKwh += (Math.max(...eVals) - Math.min(...eVals));
                     });
-                } else {
-                    const energyVals = daily.map(r => Number(r.energy) / 1000).filter(n => Number.isFinite(n) && n >= 0);
-                    if (energyVals.length >= 2) {
-                        dailyUsedKwh = Math.max(...energyVals) - Math.min(...energyVals);
-                    }
                 }
             }
 
+            // คำนวณค่าไฟฟ้า
             const baseRate = parseFloat(document.getElementById("baseRate")?.value) || 0;
             const ftRate = parseFloat(document.getElementById("ftRate")?.value) || 0;
-
             const baseCost = dailyUsedKwh * baseRate;
             const ftCost = dailyUsedKwh * ftRate;
             const subtotal = baseCost + ftCost;
@@ -387,41 +426,113 @@
 
             message.textContent = `แสดงข้อมูล ${daily.length.toLocaleString("th-TH")} รายการ ประจำวันที่ ${selectedDate} (การใช้ไฟรวม ${number(dailyUsedKwh, 3)} kWh)`;
             const ctx = document.getElementById("dailyEnergyChart").getContext("2d");
+
+            let datasets = [];
+            let labels = [];
+
+            if (currentPhase === "all") {
+                // --- กรณีเลือก ทุก Phase (All): แยก 3 เส้น Phase 1, 2, 3 ---
+                const p1Logs = daily.filter(r => String(r.phase_id) === "1");
+                const p2Logs = daily.filter(r => String(r.phase_id) === "2");
+                const p3Logs = daily.filter(r => String(r.phase_id) === "3");
+
+                labels = (p1Logs.length ? p1Logs : daily).map(r => formatChartTime(r.device_time || r.recorded_at));
+
+                datasets = [
+                    {
+                        label: "Phase 1 (W)",
+                        data: p1Logs.map(r => r.power == null ? null : Number(r.power)),
+                        borderColor: "#3b82f6",
+                        backgroundColor: "transparent",
+                        borderWidth: 1.8,
+                        pointRadius: 0,
+                        tension: 0.2,
+                        yAxisID: "y"
+                    },
+                    {
+                        label: "Phase 2 (W)",
+                        data: p2Logs.map(r => r.power == null ? null : Number(r.power)),
+                        borderColor: "#10b981",
+                        backgroundColor: "transparent",
+                        borderWidth: 1.8,
+                        pointRadius: 0,
+                        tension: 0.2,
+                        yAxisID: "y"
+                    },
+                    {
+                        label: "Phase 3 (W)",
+                        data: p3Logs.map(r => r.power == null ? null : Number(r.power)),
+                        borderColor: "#f59e0b",
+                        backgroundColor: "transparent",
+                        borderWidth: 1.8,
+                        pointRadius: 0,
+                        tension: 0.2,
+                        yAxisID: "y"
+                    }
+                ];
+            } else {
+                // --- กรณีเลือก Phase ใด Phase หนึ่ง ---
+                labels = daily.map(r => formatChartTime(r.device_time || r.recorded_at));
+                datasets = [
+                    {
+                        label: `กำลังไฟฟ้า Phase ${currentPhase} (W)`,
+                        data: daily.map(r => r.power == null ? null : Number(r.power)),
+                        borderColor: "#f59e0b",
+                        backgroundColor: "rgba(245,158,11,.12)",
+                        borderWidth: 2,
+                        pointRadius: 1,
+                        tension: 0.2,
+                        yAxisID: "y"
+                    },
+                    {
+                        label: "พลังงานสะสม (kWh)",
+                        data: daily.map(r => r.energy == null ? null : Number(r.energy) / 1000),
+                        borderColor: "#7c3aed",
+                        backgroundColor: "rgba(124,58,237,.10)",
+                        borderWidth: 2,
+                        pointRadius: 1,
+                        tension: 0.2,
+                        yAxisID: "y1"
+                    }
+                ];
+            }
+
             dailyChart = new Chart(ctx, {
                 type: "line",
                 data: {
-                    labels: daily.map(row => {
-                        const value = row.device_time || row.recorded_at;
-                        const d = new Date(value);
-                        return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleTimeString("th-TH", {
-                            timeZone: "Asia/Bangkok", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23"
-                        });
-                    }),
-                    datasets: [
-                        {
-                            label: "กำลังไฟฟ้า (W)",
-                            data: daily.map(row => row.power == null ? null : Number(row.power)),
-                            borderColor: "#f59e0b", backgroundColor: "rgba(245,158,11,.12)",
-                            borderWidth: 2, pointRadius: 2, pointHoverRadius: 5, tension: .25,
-                            yAxisID: "y"
-                        },
-                        {
-                            label: "พลังงานสะสม (kWh)",
-                            data: daily.map(row => row.energy == null ? null : Number(row.energy) / 1000),
-                            borderColor: "#7c3aed", backgroundColor: "rgba(124,58,237,.10)",
-                            borderWidth: 2, pointRadius: 2, pointHoverRadius: 5, tension: .25,
-                            yAxisID: "y1"
-                        }
-                    ]
+                    labels: labels,
+                    datasets: datasets
                 },
                 options: {
-                    responsive: true, maintainAspectRatio: false,
+                    responsive: true,
+                    maintainAspectRatio: false,
                     interaction: { mode: "index", intersect: false },
-                    plugins: { legend: { position: "top" } },
+                    plugins: {
+                        legend: { position: "top" },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return `${context.dataset.label}: ${context.raw !== null ? context.raw.toLocaleString('th-TH') : '--'}`;
+                                }
+                            }
+                        }
+                    },
                     scales: {
-                        x: { title: { display: true, text: "เวลา" }, ticks: { maxTicksLimit: 12, maxRotation: 0 } },
-                        y: { beginAtZero: true, title: { display: true, text: "กำลังไฟฟ้า (W)" } },
-                        y1: { beginAtZero: true, position: "right", title: { display: true, text: "พลังงานสะสม (kWh)" }, grid: { drawOnChartArea: false } }
+                        x: {
+                            title: { display: true, text: "เวลา" },
+                            ticks: { maxTicksLimit: 12, maxRotation: 0 }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: "กำลังไฟฟ้า (W)" }
+                        },
+                        y1: {
+                            display: currentPhase !== "all",
+                            beginAtZero: true,
+                            position: "right",
+                            title: { display: true, text: "พลังงานสะสม (kWh)" },
+                            grid: { drawOnChartArea: false }
+                        }
                     }
                 }
             });
@@ -535,6 +646,7 @@
             const phase = document.getElementById("phase").value;
             const search = (document.getElementById("searchInput").value || "").toLowerCase().trim();
 
+            // 1. กรองข้อมูลตาม Phase และ คำค้นหา
             const filtered = records.filter(row => {
                 const matchPhase = phase === "all" || String(row.phase_id) === phase;
                 if (!matchPhase) return false;
@@ -543,6 +655,8 @@
 
                 const devTime = formatTime(row.device_time).toLowerCase();
                 const recTime = formatTime(row.recorded_at).toLowerCase();
+                const rawDevTime = String(row.device_time || "").toLowerCase();
+                const rawRecTime = String(row.recorded_at || "").toLowerCase();
                 const idStr = String(row.id);
                 const voltStr = String(row.voltage || "");
                 const currStr = String(row.current || "");
@@ -551,15 +665,65 @@
                 return idStr.includes(search) ||
                     devTime.includes(search) ||
                     recTime.includes(search) ||
+                    rawDevTime.includes(search) ||
+                    rawRecTime.includes(search) ||
                     voltStr.includes(search) ||
                     currStr.includes(search) ||
                     powStr.includes(search);
             });
 
+            // 2. คำนวณขอบเขตของ Pagination
+            const totalItems = filtered.length;
+            const totalPages = Math.ceil(totalItems / rowsPerPage) || 1;
+
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = Math.min(startIndex + rowsPerPage, totalItems);
+            const pageData = filtered.slice(startIndex, endIndex);
+
+            // 3. อัปเดตข้อความแสดงจำนวนรายการ
+            const infoEl = document.getElementById("paginationInfo");
+            if (infoEl) {
+                if (totalItems === 0) {
+                    infoEl.textContent = "แสดง 0 ถึง 0 จาก 0 รายการ";
+                } else {
+                    infoEl.textContent = `แสดง ${startIndex + 1} ถึง ${endIndex} จาก ${totalItems.toLocaleString("th-TH")} รายการ`;
+                }
+            }
+
+            // 4. อัปเดตสถานะปุ่ม ก่อนหน้า / ถัดไป และ ปุ่มเลขหน้า
+            const prevBtn = document.getElementById("prevPageBtn");
+            const nextBtn = document.getElementById("nextPageBtn");
+            if (prevBtn) prevBtn.disabled = currentPage <= 1;
+            if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+
+            const pageNumContainer = document.getElementById("pageNumbers");
+            if (pageNumContainer) {
+                pageNumContainer.innerHTML = "";
+
+                let startPage = Math.max(1, currentPage - 2);
+                let endPage = Math.min(totalPages, startPage + 4);
+                if (endPage - startPage < 4) {
+                    startPage = Math.max(1, endPage - 4);
+                }
+
+                for (let i = startPage; i <= endPage; i++) {
+                    const btn = document.createElement("button");
+                    btn.className = `btn btn-sm ${i === currentPage ? 'btn-primary' : 'btn-outline'}`;
+                    btn.style.padding = "4px 10px";
+                    btn.textContent = i;
+                    btn.onclick = () => changePage(i);
+                    pageNumContainer.appendChild(btn);
+                }
+            }
+
+            // 5. แสดงข้อมูลในตารางเฉพาะหน้าที่เลือก (pageData)
             const tbody = document.getElementById("rows");
             tbody.replaceChildren();
 
-            if (!filtered.length) {
+            if (!pageData.length) {
                 const tr = document.createElement("tr");
                 const td = document.createElement("td");
                 td.colSpan = 8;
@@ -572,7 +736,7 @@
                 return;
             }
 
-            filtered.forEach(row => {
+            pageData.forEach(row => {
                 const tr = document.createElement("tr");
 
                 const values = [

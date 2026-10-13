@@ -1,7 +1,7 @@
 {
     "node-red": {
         "name": "node-red",
-        "version": "5.0.7",
+        "version": "5.0.8",
         "local": false,
         "user": false,
         "nodes": {
@@ -730,7 +730,8 @@
                 "module": "@flowfuse/node-red-dashboard",
                 "file": "\\Users\\ASUS TUF\\.node-red\\node_modules\\@flowfuse\\node-red-dashboard\\nodes\\widgets\\ui_progress.js"
             }
-        }
+        },
+        "pending_version": "1.33.0"
     },
     "node-red-contrib-telegrambot": {
         "name": "node-red-contrib-telegrambot",
@@ -755,7 +756,8 @@
                 "module": "node-red-contrib-telegrambot",
                 "file": "\\Users\\ASUS TUF\\.node-red\\node_modules\\node-red-contrib-telegrambot\\telegrambot\\99-telegrambot.js"
             }
-        }
+        },
+        "pending_version": "19.0.3"
     },
     "node-red-node-mysql": {
         "name": "node-red-node-mysql",

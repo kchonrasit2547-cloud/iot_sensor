@@ -327,16 +327,7 @@
 
     <main class="content-area">
       <section id="view-energy" class="page-view active">
-        <div class="pz-banner">
-          <div>
-            <div class="pz-banner-val" id="bannerCurrentCost">-- บาท</div>
-          </div>
-          <div style="text-align: right">
-            <div class="pz-banner-lbl">กำลังไฟฟ้ารวมปัจจุบัน (Total Active Power)</div>
-            <div class="pz-banner-state" id="bannerTotalPower">-- W</div>
-            <div style="font-size: 11px; color: #94a3b8; margin-top: 2px" id="bannerLoadStatus"></div>
-          </div>
-        </div>
+
 
         <!-- ค่าหลักของ PZEM ครบทั้ง 3 เฟส -->
         <div class="pz-grid">
@@ -567,20 +558,7 @@
           </div>
         </div>
 
-        <div class="card-panel">
-          <div class="panel-header">
-            <div>
-              <div class="panel-title">ประวัติค่าไฟรายเดือน (3 Phase)</div>
-              <p class="muted">บันทึกบิลค่าไฟเดือนนี้เพื่อเปรียบเทียบย้อนหลัง</p>
-            </div>
-            <div style="display: flex; gap: 8px">
 
-              <button class="btn btn-outline btn-sm" onclick="clearMonthlyHistory()">ล้างประวัติ</button>
-            </div>
-          </div>
-          <div id="monthlyHistoryContainer"
-            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px"></div>
-        </div>
       </section>
     </main>
   </div>
@@ -844,7 +822,10 @@
       let e = numberOrNull(pObj.energyKwh ?? pObj.energy_kwh ?? raw[`e${num}`] ?? raw[`energy_l${num}`] ?? raw[`energy${num}`]);
       if (e === null) {
         const eWh = numberOrNull(pObj.energyWh ?? pObj.energy_wh ?? pObj.energy);
-        if (eWh !== null) e = eWh > 10000 ? eWh / 1000 : eWh;
+        if (eWh !== null) {
+          // ถ้าค่ามากกว่า 1000 แสดงว่าเป็น Wh ให้หาร 1000 เพื่อแปลงเป็น kWh
+          e = eWh > 1000 ? eWh / 1000 : eWh;
+        }
       }
 
       return { voltage: v, current: i, power: p, energyKwh: e };
@@ -867,9 +848,14 @@
       state.totalPower = numberOrNull(raw.totalPower ?? raw.total_power) ??
         (validWatts.length ? validWatts.reduce((a, b) => a + b, 0) : null);
 
+      // ตรวจสอบรวมพลังงาน (ถ้า totalEnergy ส่งมาเป็น Wh ให้หาร 1000)
+      let rawTotalE = numberOrNull(raw.totalEnergy ?? raw.total_energy);
+      if (rawTotalE !== null && rawTotalE > 1000) {
+        rawTotalE = rawTotalE / 1000;
+      }
+
       const validEnergies = [state.l1.energyKwh, state.l2.energyKwh, state.l3.energyKwh].filter(e => e !== null);
-      state.totalEnergyKwh = numberOrNull(raw.totalEnergy ?? raw.total_energy) ??
-        (validEnergies.length ? validEnergies.reduce((a, b) => a + b, 0) : null);
+      state.totalEnergyKwh = rawTotalE ?? (validEnergies.length ? validEnergies.reduce((a, b) => a + b, 0) : null);
 
       state.lastTimestamp = raw.timestamp || new Date().toLocaleTimeString('th-TH');
 
