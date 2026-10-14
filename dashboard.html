@@ -25,7 +25,6 @@
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-
       <a href="dashboard.html" class="brand-box">
         <div class="brand-icon">⚡</div>
         <div>
@@ -63,8 +62,6 @@
           <span>ประวัติข้อมูลพลังงานไฟฟ้า</span>
         </a>
       </li>
-
-
     </ul>
 
     <ul class="nav-list" style="flex: 0; padding-bottom: 12px;">
@@ -100,8 +97,6 @@
           <h1 id="pageHeadingTitle">ภาพรวมระบบ IoT & เซ็นเซอร์</h1>
         </div>
       </div>
-
-
     </header>
 
     <!-- Content Area -->
@@ -110,8 +105,6 @@
       <div class="system-banner">
         <div>
           <div class="banner-title">ศูนย์กลางระบบ Smart IoT Hub & Telemetry</div>
-
-
         </div>
         <div>
           <a class="btn btn-outline"
@@ -164,8 +157,9 @@
         </div>
       </div>
 
-      <!-- SEPARATED CHARTS: Temperature & Humidity (2 Columns) -->
-      <div class="charts-grid-2col">
+      <!-- SEPARATED CHARTS: Temperature, Humidity & Light Intensity (Responsive Grid) -->
+      <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 20px;">
         <!-- Separated Chart 1: Temperature -->
         <div class="card-panel">
           <div class="panel-header">
@@ -189,6 +183,19 @@
           </div>
           <div class="chart-container">
             <canvas id="dashHumiChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Separated Chart 3: Light Intensity -->
+        <div class="card-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>แนวโน้มความเข้มแสง (Light Intensity Timeline)</span>
+            </div>
+            <span class="stat-badge badge-yellow">lux Real-time</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="dashLightChart"></canvas>
           </div>
         </div>
       </div>
@@ -235,6 +242,7 @@
     const chartLabels = [];
     const tempDataPoints = [];
     const humiDataPoints = [];
+    const lightDataPoints = [];
 
     // Chart 1: Temperature Timeline
     const ctxTemp = document.getElementById('dashTempChart').getContext('2d');
@@ -298,6 +306,37 @@
       }
     });
 
+    // Chart 3: Light Intensity Timeline
+    const ctxLight = document.getElementById('dashLightChart').getContext('2d');
+    const dashLightChart = new Chart(ctxLight, {
+      type: 'line',
+      data: {
+        labels: chartLabels,
+        datasets: [{
+          label: 'ความเข้มแสง (lux)',
+          data: lightDataPoints,
+          borderColor: '#eab308',
+          backgroundColor: 'rgba(234, 179, 8, 0.12)',
+          borderWidth: 2.5,
+          tension: 0.35,
+          fill: true,
+          pointRadius: 3,
+          pointBackgroundColor: '#eab308'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 10 } } },
+          y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { family: 'Inter', size: 10 } } }
+        }
+      }
+    });
+
     // Update Dashboard Snippet Table
     function renderRecentLogs(logs) {
       const tbody = document.getElementById('dashLogsTableBody');
@@ -310,7 +349,7 @@
           <td><strong>${item.time}</strong></td>
           <td><span style="color:#f97316; font-weight:600;">${item.temp} °C</span></td>
           <td><span style="color:#0284c7; font-weight:600;">${item.humi} %</span></td>
-          <td><span style="color:#0284c7; font-weight:600;">${item.light} lux</span></td>
+          <td><span style="color:#eab308; font-weight:600;">${item.light} lux</span></td>
         </tr>
       `).join('');
     }
@@ -342,19 +381,22 @@
       }
 
       // Update Charts
-      if (d.temp !== null || d.humi !== null) {
+      if (d.temp !== null || d.humi !== null || d.light !== null) {
         chartLabels.push(d.timeStr);
         tempDataPoints.push(d.temp !== null ? d.temp : (tempDataPoints[tempDataPoints.length - 1] || 0));
         humiDataPoints.push(d.humi !== null ? d.humi : (humiDataPoints[humiDataPoints.length - 1] || 0));
+        lightDataPoints.push(d.light !== null ? d.light : (lightDataPoints[lightDataPoints.length - 1] || 0));
 
         if (chartLabels.length > maxPoints) {
           chartLabels.shift();
           tempDataPoints.shift();
           humiDataPoints.shift();
+          lightDataPoints.shift();
         }
 
         dashTempChart.update();
         dashHumiChart.update();
+        dashLightChart.update();
       }
 
       // Update Logs Snippet
@@ -393,19 +435,21 @@
         }
       }
 
-      // 3. Seed historical data into temperature and humidity charts
+      // 3. Seed historical data into temperature, humidity, and light charts
       const chartLogs = initialLogs.slice(0, maxPoints).reverse();
       chartLogs.forEach(item => {
         if (item.temp && item.temp !== '--') {
           chartLabels.push(item.time);
           tempDataPoints.push(parseFloat(item.temp));
           humiDataPoints.push(parseFloat(item.humi));
+          lightDataPoints.push(parseFloat(item.light) || 0);
         }
       });
 
       if (chartLabels.length > 0) {
         dashTempChart.update();
         dashHumiChart.update();
+        dashLightChart.update();
       }
 
       // 4. Cached PZEM Power (Safe check)

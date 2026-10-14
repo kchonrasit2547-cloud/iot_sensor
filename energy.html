@@ -506,30 +506,106 @@
           </div>
 
           <div id="formulaContentBox"
-            style="display: none; border-top: 1px solid #f1f5f9; margin-top: 12px; padding-top: 12px; font-size: 13px; color: #334155; line-height: 1.7;">
-            <div style="margin-bottom: 10px;">
-              <strong>พลังงานไฟฟ้า:</strong><br>
-              <code
-                style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 6px; font-family: monospace; font-size: 12px; display: inline-block; margin-top: 4px; color: #0f172a;">
-                ใช้ค่าพลังงานสะสมรวม 3 เฟส (kWh) ที่อ่านได้ตรงจาก PZEM / Node-RED
-              </code>
+            style="display: none; border-top: 1px solid var(--border-color, #e2e8f0); margin-top: 14px; padding-top: 16px; font-size: 13px; color: var(--text-main, #334155); line-height: 1.6;">
+
+            <!-- แหล่งข้อมูลพลังงานไฟฟ้า -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 8px; background: #e0f2fe; color: #0284c7; font-size: 15px;">⚡</span>
+                <div>
+                  <strong style="color: #0f172a; font-size: 13px;">แหล่งข้อมูลพลังงานไฟฟ้า (Energy Source):</strong>
+                  <div style="font-size: 12px; color: #64748b;">ค่าพลังงานสะสมรวม 3 เฟส (kWh) อ่านตรงจากโมดูล PZEM-004T ผ่าน Node-RED ไม่ใช่การสุ่มค่า</div>
+                </div>
+              </div>
+              <span style="background: #e2e8f0; color: #334155; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 6px;">PZEM 3-Phase</span>
             </div>
 
-            <div style="margin-bottom: 10px;">
-              <strong>สูตรค่าไฟประมาณการ:</strong><br>
-              <code
-                style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 6px; font-family: monospace; font-size: 12px; display: inline-block; margin-top: 4px; color: #0f172a;">
-                ค่าไฟประมาณการ = หน่วยไฟฟ้า (kWh) × 4.20 บาท
-              </code>
+            <!-- กริด 2 ฝั่ง: สูตร Real-time กับ สูตรคำนวณบิลเต็มรูปแบบ -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 14px;">
+              
+              <!-- กล่องที่ 1: สูตรประมาณการแบบ Real-time (ระบบ IoT) -->
+              <div style="background: #ffffff; border: 1px solid #e2e8f0; border-top: 3px solid #0284c7; border-radius: 10px; padding: 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                  <strong style="color: #0284c7; font-size: 13px;">💡 1. สูตรประมาณการ Real-time (ระบบ IoT)</strong>
+                  <span style="background: #e0f2fe; color: #0369a1; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px;">ใช้ในระบบนี้</span>
+                </div>
+                <p style="font-size: 11px; color: #64748b; margin-bottom: 10px;">
+                  ใช้สำหรับคำนวณแสดงผลบน Dashboard และการคาดการณ์ค่าไฟล่วงหน้า
+                </p>
+
+                <!-- สูตรย่อย 1.1 -->
+                <div style="margin-bottom: 8px;">
+                  <div style="font-size: 11px; font-weight: 600; color: #475569;">1.1 คำนวณหน่วยไฟฟ้า (kWh)</div>
+                  <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 6px 10px; font-family: monospace; font-size: 11px; color: #0f172a; margin-top: 3px;">
+                    หน่วยไฟ (kWh) = (กำลังไฟ Watt × ชม.) ÷ 1,000
+                  </div>
+                </div>
+
+                <!-- สูตรย่อย 1.2 -->
+                <div style="margin-bottom: 8px;">
+                  <div style="font-size: 11px; font-weight: 600; color: #475569;">1.2 คำนวณค่าไฟต่อชั่วโมง (บาท/ชม.)</div>
+                  <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 6px 10px; font-family: monospace; font-size: 11px; color: #0f172a; margin-top: 3px;">
+                    ค่าไฟ/ชม. = (กำลังไฟ Watt ÷ 1,000) × 4.20 บาท
+                  </div>
+                </div>
+
+                <!-- สูตรย่อย 1.3 -->
+                <div>
+                  <div style="font-size: 11px; font-weight: 600; color: #475569;">1.3 คำนวณค่าไฟสะสม / คาดการณ์</div>
+                  <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 6px 10px; font-family: monospace; font-size: 11px; color: #166534; font-weight: 600; margin-top: 3px;">
+                    ค่าไฟประมาณการ = หน่วยสะสม (kWh) × 4.20 บาท
+                  </div>
+                  <div style="font-size: 10px; color: #94a3b8; margin-top: 4px;">
+                    • ต่อวัน: × 24 ชม. &nbsp;|&nbsp; • ต่อเดือน: × 30 วัน &nbsp;|&nbsp; • ต่อปี: × 365 วัน
+                  </div>
+                </div>
+              </div>
+
+              <!-- กล่องที่ 2: สูตรคำนวณบิลเต็มรูปแบบ (เกณฑ์การไฟฟ้า) -->
+              <div style="background: #ffffff; border: 1px solid #e2e8f0; border-top: 3px solid #7c3aed; border-radius: 10px; padding: 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                  <strong style="color: #7c3aed; font-size: 13px;">📑 2. สูตรคำนวณบิลเต็มรูปแบบ (4 ขั้นตอน)</strong>
+                  <span style="background: #f3e8ff; color: #6b21a8; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px;">เกณฑ์การไฟฟ้า</span>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 8px; font-size: 11px;">
+                  <div style="background: #faf5ff; border: 1px solid #f3e8ff; border-radius: 6px; padding: 6px 10px;">
+                    <span style="font-weight: 600; color: #6b21a8;">ขั้นที่ 1: แปลงหน่วย (kWh)</span><br>
+                    <span style="font-family: monospace; color: #334155;">(วัตต์รวม × ชั่วโมงใช้งาน) ÷ 1,000</span>
+                  </div>
+
+                  <div style="background: #faf5ff; border: 1px solid #f3e8ff; border-radius: 6px; padding: 6px 10px;">
+                    <span style="font-weight: 600; color: #6b21a8;">ขั้นที่ 2: ค่าไฟฟ้าฐาน (อัตราก้าวหน้า)</span>
+                    <div style="font-size: 10px; color: #475569; margin-top: 2px; line-height: 1.4;">
+                      • 1 - 150 หน่วยแรก: หน่วยละ 3.2484 บาท<br>
+                      • 151 - 400 หน่วย: หน่วยละ 4.2218 บาท<br>
+                      • 401 หน่วยขึ้นไป: หน่วยละ 4.4217 บาท
+                    </div>
+                  </div>
+
+                  <div style="background: #faf5ff; border: 1px solid #f3e8ff; border-radius: 6px; padding: 6px 10px;">
+                    <span style="font-weight: 600; color: #6b21a8;">ขั้นที่ 3: ค่า Ft และค่าบริการรายเดือน</span><br>
+                    <span style="font-family: monospace; color: #334155;">(หน่วยรวม × อัตรา Ft) + ค่าบริการคงที่ (~38.22 ฿)</span>
+                  </div>
+
+                  <div style="background: #faf5ff; border: 1px solid #f3e8ff; border-radius: 6px; padding: 6px 10px;">
+                    <span style="font-weight: 600; color: #6b21a8;">ขั้นที่ 4: คิดภาษีมูลค่าเพิ่ม VAT 7%</span><br>
+                    <span style="font-family: monospace; color: #334155;">ค่าไฟสุทธิ = ยอดรวมก่อนภาษี × 1.07</span>
+                  </div>
+                </div>
+              </div>
+
             </div>
 
-            <ul style="padding-left: 18px; margin: 8px 0 0 0; color: #64748b; font-size: 12px;">
-              <li style="margin-bottom: 4px;">อ้างอิงอัตราค่าไฟฟ้าประเภท 3 (กิจการขนาดกลาง/สถานศึกษา) เฉลี่ย ~4.18 -
-                4.20 บาท/หน่วย (รวมค่าไฟฐาน, Ft และ VAT 7%)</li>
-              <li style="margin-bottom: 4px;">ไม่นำค่าบริการรายเดือนของการไฟฟ้ารวมมาคิดทบ
-                เนื่องจากเป็นการวัดไฟย่อยรายห้องภายในอาคาร</li>
-              <li>การประมาณการรายวัน/เดือน/ปี คำนวณจากกำลังไฟรวม ณ ปัจจุบันหากเปิดใช้งานต่อเนื่อง</li>
-            </ul>
+            <!-- กล่องหมายเหตุและเงื่อนไขการคำนวณ -->
+            <div style="background: #f8fafc; border-left: 3px solid #0284c7; border-radius: 0 8px 8px 0; padding: 10px 14px; font-size: 11px; color: #475569; line-height: 1.6;">
+              <strong style="color: #0284c7; font-size: 12px; display: block; margin-bottom: 4px;">📌 ข้อควรรู้และหมายเหตุประกอบ:</strong>
+              <ul style="padding-left: 18px; margin: 0;">
+                <li style="margin-bottom: 3px;"><strong>อัตราเฉลี่ย 4.20 บาท/หน่วย:</strong> อ้างอิงอัตราค่าไฟฟ้าประเภท 3 (กิจการขนาดกลาง/สถานศึกษา) โดยประมาณการถัวเฉลี่ยค่าไฟฐาน + Ft + VAT 7% เรียบร้อยแล้ว</li>
+                <li style="margin-bottom: 3px;"><strong>ไม่รวมค่าบริการรายเดือนของการไฟฟ้า:</strong> เนื่องจากการติดตั้งระบบนี้เป็นการวัดมิเตอร์ย่อย (Sub-metering) ประจำห้องเรียน/พื้นที่ภายในอาคาร</li>
+                <li><strong>การประมาณการล่วงหน้า:</strong> คำนวณจากค่ากำลังไฟฟ้าจริง (Active Power) รวม ณ ปัจจุบัน หากมีโหลดเปิดใช้งานต่อเนื่องตลอดเวลา</li>
+              </ul>
+            </div>
           </div>
         </div>
 
